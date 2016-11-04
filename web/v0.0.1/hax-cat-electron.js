@@ -10156,62 +10156,6 @@ hax.app.visiui.updatecomponent.getDialogLayout = function(workspaceUI,generator,
 
 
 ;
-
-
-hax.app.visiui.addadditionalcomponent = {};
-
-//=====================================
-// UI Entry Point
-//=====================================
-
-hax.app.visiui.addadditionalcomponent.getAddAdditionalComponentCallback = function(app,optionalInitialValues,optionalComponentOptions) {
-    return function() {
-    
-        var onSelect = function(componentType) {
-            var generator = app.getComponentGenerator(componentType);
-            if(generator) {
-                var doAddComponent = hax.app.visiui.updatecomponent.getAddComponentCallback(app,generator,optionalInitialValues,optionalComponentOptions);
-                doAddComponent();
-            }
-            else {
-                alert("Unknown component type: " + componentType);
-            }
-        }
-        //open select component dialog
-        hax.app.visiui.dialog.showSelectComponentDialog(app.additionalComponents,onSelect);
-    }
-}
-
-//=====================================
-// Action
-//=====================================
-
-
-;
-
-
-hax.app.visiui.updatelinks = {};
-
-//=====================================
-// UI Entry Point
-//=====================================
-
-hax.app.visiui.updatelinks.getUpdateLinksCallback = function(app) {
-    return function() {
-        
-        var activeWorkspaceUI = app.getActiveWorkspaceUI();
-        if(!activeWorkspaceUI) {
-            alert("There is no open workspace.");
-            return;
-        }
-        hax.app.visiui.dialog.showUpdateLinksDialog(activeWorkspaceUI);
-    }
-}
-
-//=====================================
-// Action
-//=====================================
-;
 /** This method creates the creates the menu bar, with the attached functionality. 
  * @private */
 hax.app.visiui.Hax.prototype.createMenuBar = function() {
@@ -10266,7 +10210,10 @@ hax.app.visiui.Hax.prototype.createMenuBar = function() {
     
 }
 
+
 ;
+
+
 
 hax.app.visiui.openworkspace = {};
 
@@ -10277,24 +10224,43 @@ hax.app.visiui.openworkspace = {};
 hax.app.visiui.openworkspace.getOpenCallback = function(app) {
     return function() {
     
-        var onOpen = function(workspaceData) {
-                
-            var actionCompletedCallback = function(actionResponse) {
-                if(!actionResponse.getSuccess()) {
-                    alert(actionResponse.getErrorMsg());
-                }
-            };
+        var onOpen = function(err,workspaceData) {
             
-            //open workspace
-            hax.app.visiui.openworkspace.openWorkspace(app,workspaceData,actionCompletedCallback);
+            if(err) {
+                
+                alert("Error: " + err.message);
+                return false;
+            }
+            else {
+                var actionCompletedCallback = function(actionResponse) {
+                    if(!actionResponse.getSuccess()) {
+                        alert(actionResponse.getErrorMsg());
+                    }
+                };
 
-            //we should show some sort of loading message or symbol
-            return true;
+                //open workspace
+                hax.app.visiui.openworkspace.openWorkspace(app,workspaceData,actionCompletedCallback);
+
+                //we should show some sort of loading message or symbol
+                return true;
+            }
         }
         
-        hax.app.visiui.dialog.showOpenWorkspaceDialog(onOpen);
+        //show file open dialog
+        var electron = require('electron').remote;
+        var dialog = electron.dialog;
+        
+		var fileList = dialog.showOpenDialog({properties: ['openFile']});
+			
+        if((fileList)&&(fileList.length > 0)) {
+            var name = fileList[0];
+            var fs = require('fs');
+            fs.readFile(name,onOpen);
+        }
     }
 }
+
+
 
 //=====================================
 // Action
@@ -10375,56 +10341,13 @@ hax.app.visiui.openworkspace.loadWorkspace = function(workspaceUI,workspaceJson,
     workspaceUI.setWorkspace(workspace,workspaceComponentsJson);
 }
 
-
 //------------------------
 // open from url
 //------------------------
 
 /** This method opens an workspace by getting the workspace file from the url. */
 hax.app.visiui.openworkspace.openWorkspaceFromUrl = function(app,url) {
-    var actionCompletedCallback = function(actionResponse) {
-        if(!actionResponse.getSuccess()) {
-            alert(actionResponse.getErrorMsg());
-        }
-    };
-    
-    hax.app.visiui.openworkspace.openWorkspaceFromUrlImpl(app,url,actionCompletedCallback);
-}
-
-/** This method opens an workspace by getting the workspace file from the url. */
-hax.app.visiui.openworkspace.openWorkspaceFromUrlImpl = function(app,url,actionCompletedCallback) {
-    var onDownload = function(workspaceText) {
-        hax.app.visiui.openworkspace.openWorkspace(app,workspaceText,actionCompletedCallback);
-    }
-    
-    var onFailure = function(msg) {
-        var actionError = new hax.core.ActionError(msg,"AppException",null);
-        var actionResponse = new hax.core.ActionResponse();
-        actionResponse.addError(actionError);
-        actionCompletedCallback(actionResponse);
-    }   
-    hax.app.visiui.openworkspace.doRequest(url,onDownload,onFailure);   
-}
-
-/**
- * This is an http request for the worksheet data
- */
-hax.app.visiui.openworkspace.doRequest= function(url,onDownload,onFailure) {
-	var xmlhttp=new XMLHttpRequest();
-
-    xmlhttp.onreadystatechange=function() {
-        var msg;
-        if (xmlhttp.readyState==4 && xmlhttp.status==200) {
-            onDownload(xmlhttp.responseText);
-        }
-        else if(xmlhttp.readyState==4  && xmlhttp.status >= 400)  {
-            msg = "Error in http request. Status: " + xmlhttp.status;
-            onFailure(msg);
-        }
-    }
-	
-	xmlhttp.open("GET",url,true);
-    xmlhttp.send();
+    alert("Open workspace from URL not supported in electron");
 };
 
 
@@ -10434,16 +10357,55 @@ hax.app.visiui.saveworkspace = {};
 // UI Entry Point
 //=====================================
 
-hax.app.visiui.saveworkspace.getSaveCallback = function(app) {
+hax.app.visiui.saveworkspace.getSaveCallback = function(app,filename) {
     return function() {
         
-        var activeWorkspaceUI = app.getActiveWorkspaceUI();
-        if(activeWorkspaceUI === null) {
+        var workspaceText = hax.app.visiui.saveworkspace.getWorkspaceText();
+        if(!workspaceText) {
             alert("There is no workspace open.");
-            return
+            return;
         }
         
-        hax.app.visiui.dialog.showSaveWorkspaceDialog(app, activeWorkspaceUI);
+        if(filename === undefined) {
+            hax.app.visiui.saveworkspace.showSaveDialog(workspaceText);
+        }
+        else {
+            hax.app.visiui.saveworkspace.saveFile(filename,workspaceText);
+        }
+    }
+}
+
+hax.app.visiui.saveworkspace.getSaveAsCallback = function(app) {
+    return function() {       
+        var workspaceText = hax.app.visiui.saveworkspace.getWorkspaceText();
+        if(!workspaceText) {
+            alert("There is no workspace open.");
+            return;
+        }
+        hax.app.visiui.saveworkspace.showSaveDialog(workspaceText);
+    }
+}
+
+hax.app.visiui.saveworkspace.getWorkspaceText = function() {
+    var activeWorkspaceUI = app.getActiveWorkspaceUI();
+    if(activeWorkspaceUI) {
+        var workspaceJson = activeWorkspaceUI.toJson();
+        return JSON.stringify(workspaceJson);
+    }
+    else {
+        return undefined;
+    }
+}
+    
+hax.app.visiui.saveworkspace.showSaveDialog = function(data) {
+    var electron = require('electron').remote;
+    var dialog = electron.dialog;
+    var filename = dialog.showSaveDialog();
+    if(filename) {
+        hax.app.visiui.saveworkspace.saveFile(filename,data);
+    }
+    else {
+        return false;
     }
 }
 
@@ -10451,158 +10413,75 @@ hax.app.visiui.saveworkspace.getSaveCallback = function(app) {
 // Action
 //=====================================
 
-//for now there is no action
+hax.app.visiui.saveworkspace.saveFile = function(filename,data) {
+    var onComplete = function(err,data) {
+        if(err) {
+            alert("Error: " + err.message);
+        }
+        else {
+            alert("Saved!");
+        }
+    }
+
+    var fs = require('fs');
+    fs.writeFile(filename,data,onComplete);
+}
 ;
 
-/** This method shows a open workspace dialog. The argument onOpenFunction
- * should take the folder text as an argument and return an object with the boolean entry
- * "success" and, if false, a msg in the field "msg". On success the dialog will close. */
-hax.app.visiui.dialog.showOpenWorkspaceDialog = function(onOpenFunction) {
 
-    var dialog = hax.visiui.createDialog({"resizable":true,"movable":true});
-    dialog.setTitle("&nbsp;");
+hax.app.visiui.addadditionalcomponent = {};
 
-    //add a scroll container
-    var contentContainer = hax.visiui.createElement("div",null,
-        {
-			"display":"block",
-            "position":"relative",
-            "top":"0px",
-            "height":"100%",
-            "overflow": "auto"
-        });
-	dialog.setContent(contentContainer);
+//=====================================
+// UI Entry Point
+//=====================================
+
+hax.app.visiui.addadditionalcomponent.getAddAdditionalComponentCallback = function(app,optionalInitialValues,optionalComponentOptions) {
+    return function() {
     
-    var line;
-    
-	var content = hax.visiui.createElement("div",null,
-			{
-				"display":"table",
-				"overflow":"hidden"
-			});
-	contentContainer.appendChild(content);
-  
-    //title
-    line = hax.visiui.createElement("div",{"className":"dialogLine"});
-    line.appendChild(hax.visiui.createElement("div",{"className":"dialogTitle","innerHTML":"Open Workspace"}));
-    content.appendChild(line);
-    
-    //instructions
-    line = hax.visiui.createElement("div",{"className":"dialogLine"});
-    line.appendChild(hax.visiui.createElement("div",{"innerHTML":"Paste saved workspace data in the space below."}));
-    content.appendChild(line);
-    
-    //input
-    line = hax.visiui.createElement("div",{"className":"dialogLine"});
-    var inputElement = hax.visiui.createElement("textarea",{"rows":"15","cols":"75"});
-    line.appendChild(inputElement);
-    content.appendChild(line);
-    
-    //buttons and handler
-    line = hax.visiui.createElement("div",{"className":"dialogLine"});
-    var onCancel = function() {
-        hax.visiui.closeDialog(dialog);
+        var onSelect = function(componentType) {
+            var generator = app.getComponentGenerator(componentType);
+            if(generator) {
+                var doAddComponent = hax.app.visiui.updatecomponent.getAddComponentCallback(app,generator,optionalInitialValues,optionalComponentOptions);
+                doAddComponent();
+            }
+            else {
+                alert("Unknown component type: " + componentType);
+            }
+        }
+        //open select component dialog
+        hax.app.visiui.dialog.showSelectComponentDialog(app.additionalComponents,onSelect);
     }
-    
-    var onOpen = function() {
-        var jsonText = inputElement.value;
-        if(jsonText.length == 0) {
-            alert("Please paste the file into the input field");
+}
+
+//=====================================
+// Action
+//=====================================
+
+
+;
+
+
+hax.app.visiui.updatelinks = {};
+
+//=====================================
+// UI Entry Point
+//=====================================
+
+hax.app.visiui.updatelinks.getUpdateLinksCallback = function(app) {
+    return function() {
+        
+        var activeWorkspaceUI = app.getActiveWorkspaceUI();
+        if(!activeWorkspaceUI) {
+            alert("There is no open workspace.");
             return;
         }
-        
-        var closeDialog = onOpenFunction(jsonText);
-        if(closeDialog) {
-            hax.visiui.closeDialog(dialog);
-        }
-	}
-    
-    line.appendChild(hax.visiui.createElement("button",{"className":"dialogButton","innerHTML":"Open","onclick":onOpen}));
-    line.appendChild(hax.visiui.createElement("button",{"className":"dialogButton","innerHTML":"Cancel","onclick":onCancel}));
-    content.appendChild(line);
-    
-    //show dialog
-    dialog.show();
-    
-    //size the dialog to the content
-    dialog.fitToContent(content);
-    dialog.centerInParent();
+        hax.app.visiui.dialog.showUpdateLinksDialog(activeWorkspaceUI);
+    }
 }
 
-;
-
-/** This method shows a save folder dialog. I simply displays the text of
- * the workspace json for the user to copy and save elsewhere. */
-hax.app.visiui.dialog.showSaveWorkspaceDialog = function(app,workspaceUI) {
-    
-    if((!workspaceUI)||(!workspaceUI.getWorkspace())) {
-        alert("There is no workspace open.");
-        return;
-    }
-    
-    var workspaceJson = workspaceUI.toJson();
-    var workspaceText = JSON.stringify(workspaceJson);
-
-    var dialog = hax.visiui.createDialog({"resizable":true,"movable":true});
-    dialog.setTitle("&nbsp;");
-    
-    //add a scroll container
-    var contentContainer = hax.visiui.createElement("div",null,
-        {
-			"display":"block",
-            "position":"relative",
-            "top":"0px",
-            "height":"100%",
-            "overflow": "auto"
-        });
-	dialog.setContent(contentContainer);
-    
-    var line;
-    
-	var content = hax.visiui.createElement("div",null,
-			{
-				"display":"table",
-				"overflow":"hidden"
-			});
-	contentContainer.appendChild(content);
-    
-    var line;
-  
-    //title
-    line = hax.visiui.createElement("div",{"className":"dialogLine"});
-    line.appendChild(hax.visiui.createElement("div",{"className":"dialogTitle","innerHTML":"Save Workspace"}));
-    content.appendChild(line);
-    
-    //instructions
-    line = hax.visiui.createElement("div",{"className":"dialogLine"});
-    line.appendChild(hax.visiui.createElement("div",{"innerHTML":"Copy the data below and save it in a file to open later."}));
-    content.appendChild(line);
-    
-    //input
-    line = hax.visiui.createElement("div",{"className":"dialogLine"});
-    var inputElement = hax.visiui.createElement("textarea",{"value":workspaceText,"rows":"15","cols":"75"});
-    line.appendChild(inputElement);
-    content.appendChild(line);
-    
-    //buttons and handler
-    line = hax.visiui.createElement("div",{"className":"dialogLine"});
-    var onOk = function() {
-        hax.visiui.closeDialog(dialog);
-    }
-    
-    line.appendChild(hax.visiui.createElement("button",{"className":"dialogButton","innerHTML":"OK","onclick":onOk}));
-    content.appendChild(line);
-
-    dialog.setContent(content);
-    
-    //show dialog
-    dialog.show();
-    
-    //size the dialog to the content
-    dialog.fitToContent(content);
-    dialog.centerInParent();
-}
-
+//=====================================
+// Action
+//=====================================
 ;
 /** Editor that uses the Ace text editor.
  * 
