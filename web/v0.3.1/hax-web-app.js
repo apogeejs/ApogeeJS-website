@@ -1,4 +1,4 @@
-/* Hax Web App Version 0.3.0 */
+/* Hax Web App Version 0.3.1 */
 //main haxapp file
 var haxapp = {};
 
@@ -49,8 +49,16 @@ haxapp.ui.applyStyle = function(element,style) {
 }
 
 //=========================================
-// screate dom methods
+// dom methods
 //=========================================
+
+
+/** This method removes all the content from a DOM element. */
+haxapp.ui.removeAllChildren = function(element) {
+	while(element.lastChild) {
+		element.removeChild(element.lastChild);
+	}
+}
 
 /** This method applies the style json to the dom element. All arguments
  * besides type are optional.
@@ -110,7 +118,7 @@ haxapp.ui.initWindows = function(appElementId) {
     //create the ui elements from the app element
     var appContainer = document.getElementById(appElementId);
     if(!appContainer) {
-        throw hax.util.createError("Container ID not found: " + appElementId);
+        throw hax.base.createError("Container ID not found: " + appElementId);
     }
     
     var elements = {};
@@ -473,7 +481,7 @@ haxapp.ui.WindowFrame = function(parentContainer, options) {
 }
 
 //add components to this class
-hax.util.mixin(haxapp.ui.WindowFrame,hax.EventManager);
+hax.base.mixin(haxapp.ui.WindowFrame,hax.EventManager);
 
 haxapp.ui.WindowFrame.MINIMIZED = -1;
 haxapp.ui.WindowFrame.NORMAL = 0;
@@ -586,7 +594,7 @@ haxapp.ui.WindowFrame.prototype.getMenu = function() {
  * as a div.
  */
 haxapp.ui.WindowFrame.prototype.loadHeaders = function(headerElements) {
-    hax.util.removeAllChildren(this.headerElement);
+    haxapp.ui.removeAllChildren(this.headerElement);
     if(headerElements.length > 0) {
         for(var i = 0; i < headerElements.length; i++) {
 			this.headerElement.appendChild(headerElements[i]);
@@ -1349,8 +1357,8 @@ haxapp.ui.SimpleParentContainer = function(div,initialIsShowing) {
 }
 
 //add components to this class
-hax.util.mixin(haxapp.ui.SimpleParentContainer,hax.EventManager);
-hax.util.mixin(haxapp.ui.SimpleParentContainer,haxapp.ui.ParentContainer);
+hax.base.mixin(haxapp.ui.SimpleParentContainer,hax.EventManager);
+hax.base.mixin(haxapp.ui.SimpleParentContainer,haxapp.ui.ParentContainer);
 
 /** This method must be implemented in inheriting objects. */
 haxapp.ui.SimpleParentContainer.prototype.getContentIsShowing = function() {
@@ -1420,8 +1428,8 @@ haxapp.ui.TabFrame = function(parentDiv,options) {
 }
 
 //add components to this class
-hax.util.mixin(haxapp.ui.TabFrame,hax.EventManager);
-hax.util.mixin(haxapp.ui.TabFrame,haxapp.ui.ParentContainer);
+hax.base.mixin(haxapp.ui.TabFrame,hax.EventManager);
+hax.base.mixin(haxapp.ui.TabFrame,haxapp.ui.ParentContainer);
 
 //events
 haxapp.ui.TabFrame.TAB_SHOWN = "tabShown";
@@ -1640,9 +1648,9 @@ haxapp.ui.Tab = function(name, tabFrame) {
 }
 
 //add components to this class
-hax.util.mixin(haxapp.ui.Tab,hax.EventManager);
-hax.util.mixin(haxapp.ui.Tab,haxapp.ui.ParentContainer);
-hax.util.mixin(haxapp.ui.Tab,haxapp.ui.ParentHighlighter);
+hax.base.mixin(haxapp.ui.Tab,hax.EventManager);
+hax.base.mixin(haxapp.ui.Tab,haxapp.ui.ParentContainer);
+hax.base.mixin(haxapp.ui.Tab,haxapp.ui.ParentHighlighter);
 
 haxapp.ui.Tab.TAB_WINDOW_STYLE = {
     "top":"0px",
@@ -2240,7 +2248,7 @@ haxapp.jsonedit.KeyEntry.prototype.setIsVirtual = function(isVirtual) {
 
 haxapp.jsonedit.KeyEntry.prototype.updateValueElements = function() {
     //remove all from element
-	hax.util.removeAllChildren(this.body);
+	haxapp.ui.removeAllChildren(this.body);
     //recreate
     this.formatBody();
 }
@@ -2411,7 +2419,7 @@ haxapp.jsonedit.KeyEntry.prototype.convertToKeyType = function(key) {
     this.createKeyElement();
     
     //remove and reset all from element
-	hax.util.removeAllChildren(this.body);
+	haxapp.ui.removeAllChildren(this.body);
     this.formatBody();
 }
 
@@ -2425,7 +2433,7 @@ haxapp.jsonedit.KeyEntry.prototype.convertToIndexType = function(index) {
     this.createKeyElement();
     
     //remove and reset all from element
-    hax.util.removeAllChildren(this.body);
+    haxapp.ui.removeAllChildren(this.body);
     this.formatBody();
 }
 
@@ -3485,7 +3493,7 @@ haxapp.jsonedit.EditField.prototype.startEdit = function() {
 			this.editField.value = this.value;
 		}
 		
-		hax.util.removeAllChildren(this.element);
+		haxapp.ui.removeAllChildren(this.element);
         this.element.appendChild(this.editField);
         
         //select the entry
@@ -3734,7 +3742,7 @@ haxapp.jsonedit.JsonEditArea.prototype.loadContextMenu = function() {
 
 haxapp.jsonedit.JsonEditArea.prototype.updateValueElements = function() {
     //remove all from element
-	hax.util.removeAllChildren(this.body);
+	haxapp.ui.removeAllChildren(this.body);
     //recreate
     this.formatBody();
 }
@@ -3832,7 +3840,7 @@ haxapp.app.Hax = function(containerId) {
 }
 	
 //add components to this class
-hax.util.mixin(haxapp.app.Hax,hax.EventManager);
+hax.base.mixin(haxapp.app.Hax,hax.EventManager);
 
 haxapp.app.Hax.DEFAULT_WORKSPACE_NAME = "workspace";
 
@@ -3881,7 +3889,7 @@ haxapp.app.Hax.prototype.addWorkspaceUI = function(workspaceUI,name) {
     
     //we can only have one workspace of a given name!
     if(this.workspaceUIs[name]) {
-        throw hax.util.createError("There is already an open workspace with the name " + name,false);
+        throw hax.base.createError("There is already an open workspace with the name " + name,false);
     }
     
 	var tab = this.tabFrame.addTab(name);
@@ -4293,7 +4301,7 @@ haxapp.app.Component.init = function(workspaceUI,object,generator,options) {
     
     this.parentContainer = this.workspaceUI.getParentContainerObject(object);
     if(!this.parentContainer) {
-        throw hax.util.createError("Parent object not found: " + object.getFullName());
+        throw hax.base.createError("Parent object not found: " + object.getFullName());
     }
     
     this.workspaceUI.registerMember(this.object,this);
@@ -4857,7 +4865,7 @@ haxapp.app.TableEditComponent.initUI = function() {
 haxapp.app.TableEditComponent.showModeElement = function(viewModeElement) {
     
 	var contentDiv = this.getContentElement();
-	hax.util.removeAllChildren(contentDiv);
+	haxapp.ui.removeAllChildren(contentDiv);
 	
     if(viewModeElement) {
 		var viewDiv = viewModeElement.getElement();
@@ -4982,7 +4990,7 @@ haxapp.app.WorkspaceUI.prototype.getParentContainerObject = function(object) {
     var parentKey = haxapp.app.WorkspaceUI.getObjectKey(parent);
     var parentComponentInfo = this.componentMap[parentKey];
     if(!parentComponentInfo.parentContainer) {
-        throw hax.util.createError("Parent container not found!");
+        throw hax.base.createError("Parent container not found!");
     }
     return parentComponentInfo.parentContainer;
 }
@@ -4994,7 +5002,7 @@ haxapp.app.WorkspaceUI.prototype.registerMember = function(object,component) {
     
     //make sure this is for us
     if(object.getWorkspace() !== this.workspace) {
-        throw hax.util.createError("Component registered in wrong workspace: " + object.getFullName());
+        throw hax.base.createError("Component registered in wrong workspace: " + object.getFullName());
     }
     
     //store the ui object
@@ -5002,7 +5010,7 @@ haxapp.app.WorkspaceUI.prototype.registerMember = function(object,component) {
 	
 	if(this.componentMap[key]) {
 		//already exists! (we need to catch this earlier if we want it to not be fatal. But we should catch it here too.)
-        throw hax.util.createError("There is already a component with the given name.",true);
+        throw hax.base.createError("There is already a component with the given name.",true);
 	}
 	
     var componentInfo = {};
@@ -5154,7 +5162,7 @@ haxapp.app.WorkspaceUI.prototype.loadComponentFromJson = function(member,json) {
         generator.createComponentFromJson(this,member,json);
     }
     else {
-        throw hax.util.createError("Component type not found: " + componentType);
+        throw hax.base.createError("Component type not found: " + componentType);
     }
 }
 
@@ -5234,9 +5242,9 @@ haxapp.app.FolderComponent = function(workspaceUI,folder,componentJson) {
 };
 
 //add components to this class
-hax.util.mixin(haxapp.app.FolderComponent,haxapp.app.Component);
-hax.util.mixin(haxapp.app.FolderComponent,haxapp.ui.ParentContainer);
-hax.util.mixin(haxapp.app.FolderComponent,haxapp.ui.ParentHighlighter);
+hax.base.mixin(haxapp.app.FolderComponent,haxapp.app.Component);
+hax.base.mixin(haxapp.app.FolderComponent,haxapp.ui.ParentContainer);
+hax.base.mixin(haxapp.app.FolderComponent,haxapp.ui.ParentHighlighter);
 
 //----------------------
 // ParentContainer Methods
@@ -5329,8 +5337,8 @@ haxapp.app.JsonTableComponent = function(workspaceUI,table,componentJson) {
 };
 
 //add components to this class
-hax.util.mixin(haxapp.app.JsonTableComponent,haxapp.app.Component);
-hax.util.mixin(haxapp.app.JsonTableComponent,haxapp.app.TableEditComponent);
+hax.base.mixin(haxapp.app.JsonTableComponent,haxapp.app.Component);
+hax.base.mixin(haxapp.app.JsonTableComponent,haxapp.app.TableEditComponent);
 
 //==============================
 // Protected and Private Instance Methods
@@ -5467,8 +5475,8 @@ haxapp.app.GridTableComponent = function(workspaceUI,table,componentJson) {
 };
 
 //add components to this class
-hax.util.mixin(haxapp.app.GridTableComponent,haxapp.app.Component);
-hax.util.mixin(haxapp.app.GridTableComponent,haxapp.app.TableEditComponent);
+hax.base.mixin(haxapp.app.GridTableComponent,haxapp.app.Component);
+hax.base.mixin(haxapp.app.GridTableComponent,haxapp.app.TableEditComponent);
 
 //==============================
 // Protected and Private Instance Methods
@@ -5579,8 +5587,8 @@ haxapp.app.FunctionComponent = function(workspaceUI, functionObject, componentJs
 };
 
 //add components to this class
-hax.util.mixin(haxapp.app.FunctionComponent,haxapp.app.Component);
-hax.util.mixin(haxapp.app.FunctionComponent,haxapp.app.TableEditComponent);
+hax.base.mixin(haxapp.app.FunctionComponent,haxapp.app.Component);
+hax.base.mixin(haxapp.app.FunctionComponent,haxapp.app.TableEditComponent);
 
 //==============================
 // Protected and Private Instance Methods
@@ -5719,9 +5727,9 @@ haxapp.app.FolderFunctionComponent = function(workspaceUI,folderFunction,compone
 };
 
 //add components to this class
-hax.util.mixin(haxapp.app.FolderFunctionComponent,haxapp.app.Component);
-hax.util.mixin(haxapp.app.FolderFunctionComponent,haxapp.ui.ParentContainer);
-hax.util.mixin(haxapp.app.FolderFunctionComponent,haxapp.ui.ParentHighlighter);
+hax.base.mixin(haxapp.app.FolderFunctionComponent,haxapp.app.Component);
+hax.base.mixin(haxapp.app.FolderFunctionComponent,haxapp.ui.ParentContainer);
+hax.base.mixin(haxapp.app.FolderFunctionComponent,haxapp.ui.ParentHighlighter);
 
 //----------------------
 // ParentContainer Methods
@@ -5869,8 +5877,8 @@ haxapp.app.BasicControlComponent = function(workspaceUI,control,generator,compon
 };
 
 //add components to this class
-hax.util.mixin(haxapp.app.BasicControlComponent,haxapp.app.Component);
-hax.util.mixin(haxapp.app.BasicControlComponent,haxapp.app.TableEditComponent);
+hax.base.mixin(haxapp.app.BasicControlComponent,haxapp.app.Component);
+hax.base.mixin(haxapp.app.BasicControlComponent,haxapp.app.TableEditComponent);
 
 //==============================
 // Protected and Private Instance Methods
@@ -5981,8 +5989,8 @@ haxapp.app.CustomControlComponent = function(workspaceUI,control,componentJson) 
 };
 
 //add components to this class
-hax.util.mixin(haxapp.app.CustomControlComponent,haxapp.app.Component);
-hax.util.mixin(haxapp.app.CustomControlComponent,haxapp.app.TableEditComponent);
+hax.base.mixin(haxapp.app.CustomControlComponent,haxapp.app.Component);
+hax.base.mixin(haxapp.app.CustomControlComponent,haxapp.app.TableEditComponent);
 
 //==============================
 //Resource Accessors
@@ -7785,7 +7793,7 @@ haxapp.app.JsonFormEditor.prototype.showData = function(data,editOk) {
     this.workingData = hax.util.deepJsonCopy(data);
     this.editOk = editOk;
     
-	hax.util.removeAllChildren(this.editorDiv);
+	haxapp.ui.removeAllChildren(this.editorDiv);
 	this.editor = new haxapp.jsonedit.JsonEditArea(this.editorDiv,data,editOk);
     
     this.editor.setEditCallback(this.editCallback);

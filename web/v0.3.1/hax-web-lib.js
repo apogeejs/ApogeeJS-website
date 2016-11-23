@@ -1,4 +1,4 @@
-/* Hax Web Lib Version 0.3.0 */
+/* Hax Web Lib Version 0.3.1 */
 
 var __globals__ = window;
 
@@ -8,6 +8,143 @@ var __globals__ = window;
 hax = {};
 
 ;
+hax.action = {};
+
+/** This class encapsulates a response to an action. It include a success flag,
+ * a list of ActionErrors, and a fatal flag. Success is set to true unless there
+ * are errors set. The fatal flag indicates that one of the errors was a fatal error.
+ * When processing an action, only model data errors should be set. A code error 
+ * will be translated to a data error when recalculate is called. Application 
+ * errors can also be set. */
+hax.ActionResponse = function() {
+    this.success = true;
+    this.errors = [];
+    this.fatal = false;
+}
+
+/** This method adds an error to the error list for this action. It also sets 
+ * success to false. */
+hax.ActionResponse.prototype.addError = function(actionError) {
+    this.success = false;
+    if(actionError.getIsFatal()) {
+        this.fatal = true;
+    }
+    
+    if(this.errors.indexOf(actionError) < 0) {
+        this.errors.push(actionError);
+    }
+}
+
+/** This method returns false if there were any errors during this action. */
+hax.ActionResponse.prototype.getSuccess = function() {
+    return this.success;
+}
+
+/** This method returns the error message for this action. It is only valid if success = false. */
+hax.ActionResponse.prototype.getErrorMsg = function() {
+    var msg = "";
+    if(this.fatal) {
+        msg += "Unknown Error: The application is in an indeterminant state. It is recommended it be closed.\n";
+    }
+    for(var i = 0; i < this.errors.length; i++) {
+        var actionError = this.errors[i];
+        var line = "";
+        if(actionError.member) {
+            line += actionError.member.getName() + ": ";
+        }
+        line += actionError.msg;
+        msg += line + "\n";
+    }
+    return msg;
+}
+        
+
+
+
+
+;
+
+
+/** This method class is an action error object, to be used in an action return value. 
+ * The error type is a classification string. If the error is associated with a member
+ * the member can be set here. */
+hax.ActionError = function(msg,errorType,optionalMember) {
+    this.msg = (msg != null) ? msg : hax.ActionError.UNKNOWN_ERROR_MESSAGE;
+    this.errorType = errorType;
+    this.member = optionalMember;
+    
+    this.isFatal = false;
+    this.parentException = null;
+}
+
+hax.ActionError.UNKNOWN_ERROR_MESSAGE = "Unknown Error";
+
+//"User App" - This is an error in the users application code
+//"Custom Control - Update" - in "update" of custom control (cleared and set)
+//"FolderFunction - Code" - error in setting the folderFunction function
+//"User" - This is an operator error
+//"Model" - This is an error in the data model, like a missing generator
+//"Code" - error in use model code (I used on folderFunction and in code. Maybe I should split these.)
+//"Calculate" - error when the object function is set as data (includes execution if necessary)
+//
+///** This is an error in the user model code. */
+//hax.ActionError.ACTION_ERROR_MODEL = "model";
+///** This is an error in the application code. */
+//hax.ActionError.ACTION_ERROR_APP = "app";
+///** This is an error in the user appliation level code, such as custom components. */
+//hax.ActionError.ACTION_ERROR_USER_APP = "user app";
+///** This is an operator error. */
+//hax.ActionError.ACTION_ERROR_USER = "user";
+
+/** This sets the exception that triggered this error. */
+hax.ActionError.prototype.setParentException = function(exception) {
+    this.parentException = exception;
+}
+
+/** This sets the exception that triggered this error. */
+hax.ActionError.prototype.setIsFatal= function(isFatal) {
+    this.isFatal = isFatal;
+}
+
+/** This returns true if this is a fatal error. */
+hax.ActionError.prototype.getIsFatal= function() {
+    return this.isFatal;
+}
+
+/** This gets the type of error. */
+hax.ActionError.prototype.getType= function() {
+    return this.errorType;
+}
+
+/** This method processes a fatal application exception, returning an ActionError object
+ * marked as fatal. This should be use when the app lication is left in an unknown state. 
+ * The resulting error message is the message from the
+ * exception. An optional prefix may be added using the argument optionalErrorMsgPrefix.
+ * This method also prints the stack trace for the exception. */
+hax.ActionError.processException = function(exception,type,defaultToFatal,optionalErrorMsgPrefix) {  
+    if(exception.stack) {
+        console.error(exception.stack);
+    }
+    var errorMsg = optionalErrorMsgPrefix ? optionalErrorMsgPrefix : "";
+    if(exception.message) errorMsg += exception.message;
+    if(errorMsg.length == 0) errorMsg = "Unknown error";
+    var actionError = new hax.ActionError(errorMsg,type,null);
+    actionError.setParentException(exception);
+	
+    var isFatal;
+	if(exception.isFatal !== undefined) {
+		isFatal = exception.isFatal;
+	}
+	else {
+		isFatal = defaultToFatal;
+	}
+	
+    actionError.setIsFatal(isFatal);
+    return actionError;
+}
+
+
+ ;
 /* 
  * This is a mixin to give event functionality.
  */
@@ -818,7 +955,7 @@ hax.codeAnalysis.markLocalVariables = function(processInfo) {
  * }
  * @private */
 hax.codeAnalysis.createParsingError = function(errorMsg,location) {
-    var error = hax.util.createError(errorMsg,false);
+    var error = hax.base.createError(errorMsg,false);
     if(location) {
         error.lineNumber = location.start.line;
         error.column = location.start.column;
@@ -915,12 +1052,42 @@ hax.calculation.callRecalculateList = function(recalculateList,actionResponse) {
     return success;
 }
 ;
-hax.util = {};
+/** This namespace contains some basic functions for the application. */
+hax.base = {};
+
+/** This method creates an integer has value for a string. */
+hax.base.mixin = function(destObject,mixinObject) {
+    for(var key in mixinObject) {
+        destObject.prototype[key] = mixinObject[key];
+    }
+}
+
+/** This method takes a field which can be an object, 
+ *array or other value. If it is an object or array it 
+ *freezes that object and all of its children, recursively. */
+hax.base.deepFreeze = function(field) {
+    if((field === null)||(field === undefined)) return;
+    
+    var type = hax.util.getObjectType(field);
+	var i;
+	if(type == "Object") {
+		Object.freeze(field);
+		for(i in field) {
+			hax.base.deepFreeze(field[i]);
+		}
+	}
+	else if(type == "Array") {
+		Object.freeze(field);
+		for(i = 0; i < field.length; i++) {
+			hax.base.deepFreeze(field[i]);
+		}
+	}
+}
 
 /** This method creates an error object, which has a "message" in the format
  *of a system error. The isFatal flag can be set to specify if this is a fatal or nonfatal
  *error. It may also be omitted. A base error may also be set. */
-hax.util.createError = function(msg,optionalIsFatal,optionalBaseError) {
+hax.base.createError = function(msg,optionalIsFatal,optionalBaseError) {
     var error = new Error(msg);
 	if(optionalIsFatal !== undefined) {
 		error.isFatal = optionalIsFatal;
@@ -931,13 +1098,21 @@ hax.util.createError = function(msg,optionalIsFatal,optionalBaseError) {
     return error;
 }
 
-
-/** This method creates an integer has value for a string. */
-hax.util.mixin = function(destObject,mixinObject) {
-    for(var key in mixinObject) {
-        destObject.prototype[key] = mixinObject[key];
+/** This creates a new array with elements from the first that are not in the second. 
+ * I wasn't really sure where to put this. So it ended up here. */
+hax.base.getListInFirstButNotSecond = function(firstList,secondList) {
+    var newList = [];
+    for(var i = 0; i < firstList.length; i++) {
+        var entry = firstList[i];
+        if(secondList.indexOf(entry) < 0) {
+            newList.push(entry);
+        }
     }
-}
+    return newList;
+};
+/** This namespace includes some utility function available to the user. They 
+ * are also used in the applictaion. */
+hax.util = {};
 
 /** This method creates an integer has value for a string. */
 hax.util.stringHash = function(string) {
@@ -988,28 +1163,6 @@ hax.util.deepJsonCopy = function(data) {
     return JSON.parse(JSON.stringify(data));
 }
 
-/** This method takes a field which can be an object, 
- *array or other value. If it is an object or array it 
- *freezes that object and all of its children, recursively. */
-hax.util.deepFreeze = function(field) {
-    if((field === null)||(field === undefined)) return;
-    
-    var type = hax.util.getObjectType(field);
-	var i;
-	if(type == "Object") {
-		Object.freeze(field);
-		for(i in field) {
-			hax.util.deepFreeze(field[i]);
-		}
-	}
-	else if(type == "Array") {
-		Object.freeze(field);
-		for(i = 0; i < field.length; i++) {
-			hax.util.deepFreeze(field[i]);
-		}
-	}
-}
-
 /** This method does format string functionality. Text should include
  * {i} to insert the ith string argument passed. */
 hax.util.formatString = function(format,stringArgs) {
@@ -1019,25 +1172,6 @@ hax.util.formatString = function(format,stringArgs) {
         return formatParams[index]; 
     });
 };
-
-/** This method removes all the content from a DOM element. */
-hax.util.removeAllChildren = function(element) {
-	while(element.lastChild) {
-		element.removeChild(element.lastChild);
-	}
-}
-
-/** This creates a new array with elements from the first that are not in the second. */
-hax.util.getListInFirstButNotSecond = function(firstList,secondList) {
-    var newList = [];
-    for(var i = 0; i < firstList.length; i++) {
-        var entry = firstList[i];
-        if(secondList.indexOf(entry) < 0) {
-            newList.push(entry);
-        }
-    }
-    return newList;
-}
 
 /** This method reads the query string from a url */
 hax.util.readQueryField = function(field,url) {
@@ -2038,10 +2172,10 @@ hax.Workspace = function(nameOrJson,actionResponseForJson,owner) {
 }
 
 //add components to this class
-hax.util.mixin(hax.Workspace,hax.EventManager);
-hax.util.mixin(hax.Workspace,hax.ContextHolder);
-hax.util.mixin(hax.Workspace,hax.Owner);
-hax.util.mixin(hax.Workspace,hax.RootHolder);
+hax.base.mixin(hax.Workspace,hax.EventManager);
+hax.base.mixin(hax.Workspace,hax.ContextHolder);
+hax.base.mixin(hax.Workspace,hax.Owner);
+hax.base.mixin(hax.Workspace,hax.RootHolder);
 
 /** this method gets the workspace name. */
 hax.Workspace.prototype.getName = function() {
@@ -2152,10 +2286,10 @@ hax.Workspace.prototype.toJson = function() {
 hax.Workspace.prototype.loadFromJson = function(json,actionResponse) {
     var fileType = json.fileType;
 	if(fileType !== hax.Workspace.SAVE_FILE_TYPE) {
-		throw hax.util.createError("Bad file format.",false);
+		throw hax.base.createError("Bad file format.",false);
 	}
     if(json.version !== hax.Workspace.SAVE_FILE_VERSION) {
-        throw hax.util.createError("Incorrect file version. CHECK HAXAPP.COM FOR VERSION CONVERTER.",false);
+        throw hax.base.createError("Incorrect file version. CHECK HAXAPP.COM FOR VERSION CONVERTER.",false);
     }
     
     this.name = json.name;
@@ -2203,11 +2337,11 @@ hax.JsonTable = function(name,owner,initialData) {
 }
 
 //add components to this class
-hax.util.mixin(hax.JsonTable,hax.Child);
-hax.util.mixin(hax.JsonTable,hax.DataHolder);
-hax.util.mixin(hax.JsonTable,hax.Dependent);
-hax.util.mixin(hax.JsonTable,hax.ContextHolder);
-hax.util.mixin(hax.JsonTable,hax.Codeable);
+hax.base.mixin(hax.JsonTable,hax.Child);
+hax.base.mixin(hax.JsonTable,hax.DataHolder);
+hax.base.mixin(hax.JsonTable,hax.Dependent);
+hax.base.mixin(hax.JsonTable,hax.ContextHolder);
+hax.base.mixin(hax.JsonTable,hax.Codeable);
 
 //------------------------------
 // DataHolder Methods
@@ -2219,7 +2353,7 @@ hax.util.mixin(hax.JsonTable,hax.Codeable);
 hax.JsonTable.prototype.setData = function(data) {
     
 	//make this object immutable
-	hax.util.deepFreeze(data);
+	hax.base.deepFreeze(data);
 
 	//store the new object
     return hax.DataHolder.setData.call(this,data);
@@ -2275,11 +2409,11 @@ hax.FunctionTable = function(name,owner,initialData) {
 }
 
 //add components to this class
-hax.util.mixin(hax.FunctionTable,hax.Child);
-hax.util.mixin(hax.FunctionTable,hax.DataHolder);
-hax.util.mixin(hax.FunctionTable,hax.Dependent);
-hax.util.mixin(hax.FunctionTable,hax.ContextHolder);
-hax.util.mixin(hax.FunctionTable,hax.Codeable);
+hax.base.mixin(hax.FunctionTable,hax.Child);
+hax.base.mixin(hax.FunctionTable,hax.DataHolder);
+hax.base.mixin(hax.FunctionTable,hax.Dependent);
+hax.base.mixin(hax.FunctionTable,hax.ContextHolder);
+hax.base.mixin(hax.FunctionTable,hax.Codeable);
 
 //------------------------------
 // Codeable Methods
@@ -2339,10 +2473,10 @@ hax.Control = function(name,owner,initialData) {
 }
 
 //add components to this class
-hax.util.mixin(hax.Control,hax.Child);
-hax.util.mixin(hax.Control,hax.Dependent);
-hax.util.mixin(hax.Control,hax.ContextHolder);
-hax.util.mixin(hax.Control,hax.Codeable);
+hax.base.mixin(hax.Control,hax.Child);
+hax.base.mixin(hax.Control,hax.Dependent);
+hax.base.mixin(hax.Control,hax.ContextHolder);
+hax.base.mixin(hax.Control,hax.Codeable);
 	
 hax.Control.prototype.getResource = function() {	
     return this.resource;
@@ -2418,12 +2552,12 @@ hax.Folder = function(name,owner) {
 }
 
 //add components to this class
-hax.util.mixin(hax.Folder,hax.Child);
-hax.util.mixin(hax.Folder,hax.DataHolder);
-hax.util.mixin(hax.Folder,hax.Dependent);                      
-hax.util.mixin(hax.Folder,hax.ContextHolder);
-hax.util.mixin(hax.Folder,hax.Owner);
-hax.util.mixin(hax.Folder,hax.Parent);
+hax.base.mixin(hax.Folder,hax.Child);
+hax.base.mixin(hax.Folder,hax.DataHolder);
+hax.base.mixin(hax.Folder,hax.Dependent);                      
+hax.base.mixin(hax.Folder,hax.ContextHolder);
+hax.base.mixin(hax.Folder,hax.Owner);
+hax.base.mixin(hax.Folder,hax.Parent);
 
 //------------------------------
 // Parent Methods
@@ -2448,7 +2582,7 @@ hax.Folder.prototype.addChild = function(child) {
     var name = child.getName();
     if(this.childMap[name]) {
         //already exists! not fatal since it is not added to the model yet,
-        throw hax.util.createError("There is already an object with the given name.",false);
+        throw hax.base.createError("There is already an object with the given name.",false);
     }
     //add object
     this.childMap[name] = child;
@@ -2626,12 +2760,12 @@ hax.FolderFunction = function(name,owner,initialData,createEmptyInternalFolder) 
 }
 
 //add components to this class
-hax.util.mixin(hax.FolderFunction,hax.Child);
-hax.util.mixin(hax.FolderFunction,hax.DataHolder);
-hax.util.mixin(hax.FolderFunction,hax.Dependent);
-hax.util.mixin(hax.FolderFunction,hax.ContextHolder);
-hax.util.mixin(hax.FolderFunction,hax.Owner);
-hax.util.mixin(hax.FolderFunction,hax.RootHolder);
+hax.base.mixin(hax.FolderFunction,hax.Child);
+hax.base.mixin(hax.FolderFunction,hax.DataHolder);
+hax.base.mixin(hax.FolderFunction,hax.Dependent);
+hax.base.mixin(hax.FolderFunction,hax.ContextHolder);
+hax.base.mixin(hax.FolderFunction,hax.Owner);
+hax.base.mixin(hax.FolderFunction,hax.RootHolder);
 
 /** This gets the internal forlder for the folderFunction. */
 hax.FolderFunction.prototype.getInternalFolder = function() {
@@ -2864,7 +2998,7 @@ hax.FolderFunction.prototype.getFolderFunctionFunction = function(folderFunction
         }
         else {
             //error exectuing folderFunction function - thro wan exception
-            throw hax.util.createError(actionResponse.getErrorMsg());
+            throw hax.base.createError(actionResponse.getErrorMsg());
         }
     }
     
@@ -2929,143 +3063,6 @@ hax.FolderFunction.generator.createMember = hax.FolderFunction.fromJson;
 
 //register this member
 hax.Workspace.addMemberGenerator(hax.FolderFunction.generator);;
-hax.action = {};
-
-/** This class encapsulates a response to an action. It include a success flag,
- * a list of ActionErrors, and a fatal flag. Success is set to true unless there
- * are errors set. The fatal flag indicates that one of the errors was a fatal error.
- * When processing an action, only model data errors should be set. A code error 
- * will be translated to a data error when recalculate is called. Application 
- * errors can also be set. */
-hax.ActionResponse = function() {
-    this.success = true;
-    this.errors = [];
-    this.fatal = false;
-}
-
-/** This method adds an error to the error list for this action. It also sets 
- * success to false. */
-hax.ActionResponse.prototype.addError = function(actionError) {
-    this.success = false;
-    if(actionError.getIsFatal()) {
-        this.fatal = true;
-    }
-    
-    if(this.errors.indexOf(actionError) < 0) {
-        this.errors.push(actionError);
-    }
-}
-
-/** This method returns false if there were any errors during this action. */
-hax.ActionResponse.prototype.getSuccess = function() {
-    return this.success;
-}
-
-/** This method returns the error message for this action. It is only valid if success = false. */
-hax.ActionResponse.prototype.getErrorMsg = function() {
-    var msg = "";
-    if(this.fatal) {
-        msg += "Unknown Error: The application is in an indeterminant state. It is recommended it be closed.\n";
-    }
-    for(var i = 0; i < this.errors.length; i++) {
-        var actionError = this.errors[i];
-        var line = "";
-        if(actionError.member) {
-            line += actionError.member.getName() + ": ";
-        }
-        line += actionError.msg;
-        msg += line + "\n";
-    }
-    return msg;
-}
-        
-
-
-
-
-;
-
-
-/** This method class is an action error object, to be used in an action return value. 
- * The error type is a classification string. If the error is associated with a member
- * the member can be set here. */
-hax.ActionError = function(msg,errorType,optionalMember) {
-    this.msg = (msg != null) ? msg : hax.ActionError.UNKNOWN_ERROR_MESSAGE;
-    this.errorType = errorType;
-    this.member = optionalMember;
-    
-    this.isFatal = false;
-    this.parentException = null;
-}
-
-hax.ActionError.UNKNOWN_ERROR_MESSAGE = "Unknown Error";
-
-//"User App" - This is an error in the users application code
-//"Custom Control - Update" - in "update" of custom control (cleared and set)
-//"FolderFunction - Code" - error in setting the folderFunction function
-//"User" - This is an operator error
-//"Model" - This is an error in the data model, like a missing generator
-//"Code" - error in use model code (I used on folderFunction and in code. Maybe I should split these.)
-//"Calculate" - error when the object function is set as data (includes execution if necessary)
-//
-///** This is an error in the user model code. */
-//hax.ActionError.ACTION_ERROR_MODEL = "model";
-///** This is an error in the application code. */
-//hax.ActionError.ACTION_ERROR_APP = "app";
-///** This is an error in the user appliation level code, such as custom components. */
-//hax.ActionError.ACTION_ERROR_USER_APP = "user app";
-///** This is an operator error. */
-//hax.ActionError.ACTION_ERROR_USER = "user";
-
-/** This sets the exception that triggered this error. */
-hax.ActionError.prototype.setParentException = function(exception) {
-    this.parentException = exception;
-}
-
-/** This sets the exception that triggered this error. */
-hax.ActionError.prototype.setIsFatal= function(isFatal) {
-    this.isFatal = isFatal;
-}
-
-/** This returns true if this is a fatal error. */
-hax.ActionError.prototype.getIsFatal= function() {
-    return this.isFatal;
-}
-
-/** This gets the type of error. */
-hax.ActionError.prototype.getType= function() {
-    return this.errorType;
-}
-
-/** This method processes a fatal application exception, returning an ActionError object
- * marked as fatal. This should be use when the app lication is left in an unknown state. 
- * The resulting error message is the message from the
- * exception. An optional prefix may be added using the argument optionalErrorMsgPrefix.
- * This method also prints the stack trace for the exception. */
-hax.ActionError.processException = function(exception,type,defaultToFatal,optionalErrorMsgPrefix) {  
-    if(exception.stack) {
-        console.error(exception.stack);
-    }
-    var errorMsg = optionalErrorMsgPrefix ? optionalErrorMsgPrefix : "";
-    if(exception.message) errorMsg += exception.message;
-    if(errorMsg.length == 0) errorMsg = "Unknown error";
-    var actionError = new hax.ActionError(errorMsg,type,null);
-    actionError.setParentException(exception);
-	
-    var isFatal;
-	if(exception.isFatal !== undefined) {
-		isFatal = exception.isFatal;
-	}
-	else {
-		isFatal = defaultToFatal;
-	}
-	
-    actionError.setIsFatal(isFatal);
-    return actionError;
-}
-
-
- ;
 /** This namespace contains functions to process a create of a member */
 hax.createmember = {};
 
@@ -3109,7 +3106,7 @@ hax.createmember.createMember = function(owner,json,optionalActionResponse) {
 
         hax.calculation.callRecalculateList(recalculateList,actionResponse);
         
-        var updatedButNotCreated = hax.util.getListInFirstButNotSecond(recalculateList,creationList);
+        var updatedButNotCreated = hax.base.getListInFirstButNotSecond(recalculateList,creationList);
 
         //dispatch events
         hax.createmember.fireCreatedEventList(creationList);
@@ -3394,7 +3391,7 @@ hax.movemember.moveMember = function(member,name,folder,recalculateList) {
 
     workspace.updateDependeciesForModelChange(recalculateList);
     
-    var updatedButNotMoved = hax.util.getListInFirstButNotSecond(recalculateList,movedMemberList);
+    var updatedButNotMoved = hax.base.getListInFirstButNotSecond(recalculateList,movedMemberList);
 
     //dispatch events
     hax.movemember.fireMovedEventList(movedMemberList,movedOldNameList,movedNewNameList);
