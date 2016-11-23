@@ -1,3 +1,4 @@
+/* Hax Web Lib Version 0.3.0 */
 
 var __globals__ = window;
 
@@ -7,26 +8,13 @@ var __globals__ = window;
 hax = {};
 
 ;
-/** Namespace for the business logic for the hax model. */
-hax.core = {}
-
-///** This is a simple entry point to debug user code */
-//hax.core.getObjectFunction = function(object) {
-//    var objectName = object.getFullName();
-//    var workspaceName = object.getWorkspace().getName();
-//    
-//    return hax.core.functionCode[workspaceName][objectName];
-//}
-
-
-;
 /* 
  * This is a mixin to give event functionality.
  */
-hax.core.EventManager = {};
+hax.EventManager = {};
     
 /** This serves as the constructor for the child object, when extending it. */
-hax.core.EventManager.init = function() {
+hax.EventManager.init = function() {
      /** This field holds the event listeners
     * @private */
     this.listenerTable = {};
@@ -37,7 +25,7 @@ hax.core.EventManager.init = function() {
 }
 
 /** This method adds a listener for the given event. */
-hax.core.EventManager.addListener = function(eventName, callback) {
+hax.EventManager.addListener = function(eventName, callback) {
     var callbackList = this.listenerTable[eventName];
     if(!callbackList) {
         callbackList = [];
@@ -55,7 +43,7 @@ hax.core.EventManager.addListener = function(eventName, callback) {
 }
 
 /** This method removes a listener for the event. */
-hax.core.EventManager.removeListener = function(eventName, callback) {
+hax.EventManager.removeListener = function(eventName, callback) {
     var callbackList = this.listenerTable[eventName];
     if(callbackList) {
         var index = callbackList.indexOf(callback);
@@ -66,7 +54,7 @@ hax.core.EventManager.removeListener = function(eventName, callback) {
 }
 
 /** THis method dispatches an event. */
-hax.core.EventManager.dispatchEvent = function(eventName, eventData) {
+hax.EventManager.dispatchEvent = function(eventName, eventData) {
     var callbackList = this.listenerTable[eventName];
     if(callbackList) {
         for(var i = 0; i < callbackList.length; i++) {
@@ -78,18 +66,18 @@ hax.core.EventManager.dispatchEvent = function(eventName, eventData) {
 
 
 /** This method adds a handler. */
-hax.core.EventManager.addHandler = function(handlerName, callback) {
+hax.EventManager.addHandler = function(handlerName, callback) {
     this.handlerTable[handlerName] = callback;
 }
 
 /** This method clears a handler. */
-hax.core.EventManager.removeHandler = function(handlerName) {
+hax.EventManager.removeHandler = function(handlerName) {
     delete this.handlerTable[handlerName];
 }
 
 /** This method calls a handler by name and returns the result. If no 
  * handler is found an error is thrown. */
-hax.core.EventManager.callHandler = function(handlerName, handlerData) {
+hax.EventManager.callHandler = function(handlerName, handlerData) {
     var callback = this.handlerTable[handlerName];
     if(callback) {
         return callback(handlerData)
@@ -105,31 +93,31 @@ hax.core.EventManager.callHandler = function(handlerName, handlerData) {
 /** This class manages context for the user code. This is used to associate names
  *from the user code with objects from the workspace. The argument passed here is
  *the object assoicatd with the context manager. */
-hax.core.ContextManager = function(member) {
+hax.ContextManager = function(member) {
     this.member = member;
     this.contextList = [];
 }
 
-hax.core.ContextManager.prototype.addToContextList = function(entry) {
+hax.ContextManager.prototype.addToContextList = function(entry) {
     this.contextList.push(entry);
 }
 
-hax.core.ContextManager.prototype.removeFromContextList = function(entry) {
+hax.ContextManager.prototype.removeFromContextList = function(entry) {
     var index = this.contextList.indexOf(entry);
     if(index >= 0) {
         this.contextList.splice(index,1);
     }
 }
 
-hax.core.ContextManager.prototype.clearContextList = function() {
+hax.ContextManager.prototype.clearContextList = function() {
     this.contextList = [];
 }
 
-hax.core.ContextManager.prototype.getBaseData = function(baseName,generation) {
+hax.ContextManager.prototype.getBaseData = function(baseName,generation) {
     return this.hierarchicalLookup("lookupData",baseName,generation);
 }
 
-hax.core.ContextManager.prototype.getImpactor = function(path,generation) {
+hax.ContextManager.prototype.getImpactor = function(path,generation) {
     return this.hierarchicalLookup("lookupImpactor",path,generation);
 }
 
@@ -137,7 +125,7 @@ hax.core.ContextManager.prototype.getImpactor = function(path,generation) {
 // Private Methods
 //==================================
 
-hax.core.ContextManager.prototype.hierarchicalLookup = function(lookupFunctionName,lookupKey,generation) {
+hax.ContextManager.prototype.hierarchicalLookup = function(lookupFunctionName,lookupKey,generation) {
     if(generation === undefined) generation = 0;
 
     //lookup base name in the context list
@@ -157,7 +145,7 @@ hax.core.ContextManager.prototype.hierarchicalLookup = function(lookupFunctionNa
     return undefined;
 }
 
-hax.core.ContextManager.prototype.lookup = function(lookupFunctionName,lookupKey,generation) {
+hax.ContextManager.prototype.lookup = function(lookupFunctionName,lookupKey,generation) {
 	//cycle through the variables used
 	for(var i = 0; i < this.contextList.length; i++) {
         var entry = this.contextList[i];
@@ -172,7 +160,7 @@ hax.core.ContextManager.prototype.lookup = function(lookupFunctionName,lookupKey
     return undefined;
 }
 
-hax.core.ContextManager.prototype.lookupData = function(entry,baseName) {   
+hax.ContextManager.prototype.lookupData = function(entry,baseName) {   
     if(entry.parent) {
         var child = entry.parent.lookupChild(baseName);
         if(child) {
@@ -187,7 +175,7 @@ hax.core.ContextManager.prototype.lookupData = function(entry,baseName) {
     }
 }
 
-hax.core.ContextManager.prototype.lookupImpactor = function(entry,path) {
+hax.ContextManager.prototype.lookupImpactor = function(entry,path) {
     if(entry.parent) {
         return entry.parent.lookupChildFromPath(path);
     }
@@ -200,15 +188,15 @@ hax.core.ContextManager.prototype.lookupImpactor = function(entry,path) {
 
 ;
   
-hax.core.codeCompiler = {};
+hax.codeCompiler = {};
 
 /** This method analyzes the code and creates the object function and dependencies. 
  * The results are loaded into the passed object processedCodeData.
  * @private */
-hax.core.codeCompiler.processCode = function(codeInfo,codeLabel) {
+hax.codeCompiler.processCode = function(codeInfo,codeLabel) {
     
     //analyze the code
-    var combinedFunctionBody = hax.core.codeCompiler.createCombinedFunctionBody(
+    var combinedFunctionBody = hax.codeCompiler.createCombinedFunctionBody(
         codeInfo.argList, 
         codeInfo.functionBody, 
         codeInfo.supplementalCode, 
@@ -217,7 +205,7 @@ hax.core.codeCompiler.processCode = function(codeInfo,codeLabel) {
     //get the accessed variables
     //
     //parse the code and get variabls dependencies
-    var analyzeOutput = hax.core.codeAnalysis.analyzeCode(combinedFunctionBody);
+    var analyzeOutput = hax.codeAnalysis.analyzeCode(combinedFunctionBody);
     
     if(analyzeOutput.success) {
         codeInfo.varInfo = analyzeOutput.varInfo;
@@ -228,7 +216,7 @@ hax.core.codeCompiler.processCode = function(codeInfo,codeLabel) {
     }
 
     //create the object function and context setter from the code text
-    var generatorFunction = hax.core.codeCompiler.createObjectFunction(codeInfo.varInfo, combinedFunctionBody);
+    var generatorFunction = hax.codeCompiler.createObjectFunction(codeInfo.varInfo, combinedFunctionBody);
     codeInfo.generatorFunction = generatorFunction;
     
     return codeInfo;   
@@ -237,7 +225,7 @@ hax.core.codeCompiler.processCode = function(codeInfo,codeLabel) {
 
 /** This method creates the user code object function body. 
  * @private */
-hax.core.codeCompiler.createCombinedFunctionBody = function(argList,
+hax.codeCompiler.createCombinedFunctionBody = function(argList,
         functionBody, 
         supplementalCode,
         codeLabel) {
@@ -245,8 +233,8 @@ hax.core.codeCompiler.createCombinedFunctionBody = function(argList,
     var argListString = argList.join(",");
     
     //create the code body
-    var combinedFunctionBody = hax.core.util.formatString(
-        hax.core.codeCompiler.OBJECT_FUNCTION_FORMAT_TEXT,
+    var combinedFunctionBody = hax.util.formatString(
+        hax.codeCompiler.OBJECT_FUNCTION_FORMAT_TEXT,
 		codeLabel,
         argListString,
         functionBody,
@@ -258,7 +246,7 @@ hax.core.codeCompiler.createCombinedFunctionBody = function(argList,
 
 /** This method creates the wrapped user code object function, including the context variables. 
  * @private */
-hax.core.codeCompiler.createObjectFunction = function(varInfo, combinedFunctionBody) {
+hax.codeCompiler.createObjectFunction = function(varInfo, combinedFunctionBody) {
     
     var contextDeclarationText = "";
     var contextSetterBody = "";
@@ -281,8 +269,8 @@ hax.core.codeCompiler.createObjectFunction = function(varInfo, combinedFunctionB
     }
     
     //create the generator for the object function
-    var generatorBody = hax.core.util.formatString(
-        hax.core.codeCompiler.GENERATOR_FUNCTION_FORMAT_TEXT,
+    var generatorBody = hax.util.formatString(
+        hax.codeCompiler.GENERATOR_FUNCTION_FORMAT_TEXT,
 		contextDeclarationText,
         contextSetterBody,
         combinedFunctionBody
@@ -303,7 +291,7 @@ hax.core.codeCompiler.createObjectFunction = function(varInfo, combinedFunctionB
  * 
  * @private
  */
-hax.core.codeCompiler.OBJECT_FUNCTION_FORMAT_TEXT = [
+hax.codeCompiler.OBJECT_FUNCTION_FORMAT_TEXT = [
 "//{0}",
 "",
 "//supplemental code",
@@ -329,7 +317,7 @@ hax.core.codeCompiler.OBJECT_FUNCTION_FORMAT_TEXT = [
  * 2: object function body
  * @private
  */
-hax.core.codeCompiler.GENERATOR_FUNCTION_FORMAT_TEXT = [
+hax.codeCompiler.GENERATOR_FUNCTION_FORMAT_TEXT = [
 "'use strict'",
 "//declare context variables",
 "{0}",
@@ -362,7 +350,7 @@ hax.core.codeCompiler.GENERATOR_FUNCTION_FORMAT_TEXT = [
  * -- isLocal: true if all uses of a varaible entry are local variables
  **/ 
 
-hax.core.codeAnalysis = {};
+hax.codeAnalysis = {};
 
 /** Syntax for AST, names from Esprima.
  * Each entry is a list of nodes inside a node of a given type. the list
@@ -373,7 +361,7 @@ hax.core.codeAnalysis = {};
  *     modified:[boolean indicating if the field correspondes to a modified variable
  *     declaration:[boolean indicating if the field corrsponds to a field declaration]
  * @private */
-hax.core.codeAnalysis.syntax = {
+hax.codeAnalysis.syntax = {
     AssignmentExpression: [{name:'left',modified:true},{name:'right'}],
     ArrayExpression: [{name:'elements',list:true}],
     ArrowFunctionExpression: [{name:'params',list:true},{name:'body'},{name:'defaults',list:true}],
@@ -492,7 +480,7 @@ hax.core.codeAnalysis.syntax = {
 /** This method parses the code and returns a list of variabls accessed. It throws
  * an exception if there is an error parsing.
  **/
-hax.core.codeAnalysis.analyzeCode = function(functionText) {
+hax.codeAnalysis.analyzeCode = function(functionText) {
 
     var returnValue = {};
 
@@ -508,14 +496,14 @@ hax.core.codeAnalysis.analyzeCode = function(functionText) {
             returnValue.errors = [];
             for(var i = 0; i < ast.errors.length; i++) {
                 var astError = ast.errors[i];
-                var actionError = new hax.core.ActionError(astError.description,"Analyze - Code");
+                var actionError = new hax.ActionError(astError.description,"Analyze - Code");
                 actionError.setParentException(astError);
                 returnValue.errors.push(actionError);
             }
         }
     }
     catch(exception) {
-        var actionError = hax.core.ActionError.processException(exception,"Analyze - Code",false);
+        var actionError = hax.ActionError.processException(exception,"Analyze - Code",false);
         returnValue.success = false;
         returnValue.errors = [];
         returnValue.errors.push(actionError);
@@ -523,7 +511,7 @@ hax.core.codeAnalysis.analyzeCode = function(functionText) {
     }
 
     //get the variable list
-    var varInfo = hax.core.codeAnalysis.getVariableInfo(ast);
+    var varInfo = hax.codeAnalysis.getVariableInfo(ast);
     
     //return the variable info
     returnValue.success = true;
@@ -551,7 +539,7 @@ hax.core.codeAnalysis.analyzeCode = function(functionText) {
  * is modified. (Note this is not exhaustive. Checks that are not doen here will
  * be enforced elsewhere, though it would be preferebly to get them here.
  * @private */
-hax.core.codeAnalysis.getVariableInfo = function(ast) {
+hax.codeAnalysis.getVariableInfo = function(ast) {
     
     //create the var to hold the parse data
     var processInfo = {};
@@ -559,16 +547,16 @@ hax.core.codeAnalysis.getVariableInfo = function(ast) {
     processInfo.scopeTable = {};
     
     //create the base scope
-    var scope = hax.core.codeAnalysis.startScope(processInfo);
+    var scope = hax.codeAnalysis.startScope(processInfo);
 
     //traverse the tree, recursively
-    hax.core.codeAnalysis.processTreeNode(processInfo,ast,false,false);
+    hax.codeAnalysis.processTreeNode(processInfo,ast,false,false);
     
     //finish the base scope
-    hax.core.codeAnalysis.endScope(processInfo,scope);
+    hax.codeAnalysis.endScope(processInfo,scope);
     
     //finish analyzing the accessed variables
-    hax.core.codeAnalysis.markLocalVariables(processInfo);
+    hax.codeAnalysis.markLocalVariables(processInfo);
     
     //return the variable names accessed
     return processInfo.nameTable;
@@ -577,7 +565,7 @@ hax.core.codeAnalysis.getVariableInfo = function(ast) {
 /** This method starts a new loca variable scope, it should be called
  * when a function starts. 
  * @private */
-hax.core.codeAnalysis.startScope = function(processInfo) {
+hax.codeAnalysis.startScope = function(processInfo) {
     //initailize id gerneator
     if(processInfo.scopeIdGenerator === undefined) {
         processInfo.scopeIdGenerator = 0;
@@ -597,7 +585,7 @@ hax.core.codeAnalysis.startScope = function(processInfo) {
 /** This method ends a local variable scope, reverting to the parent scope.
  * It should be called when a function exits. 
  * @private */
-hax.core.codeAnalysis.endScope = function(processInfo) {
+hax.codeAnalysis.endScope = function(processInfo) {
     var currentScope = processInfo.currentScope;
     if(!currentScope) return;
     
@@ -607,44 +595,44 @@ hax.core.codeAnalysis.endScope = function(processInfo) {
 
 /** This method analyzes the AST (abstract syntax tree). 
  * @private */
-hax.core.codeAnalysis.processTreeNode = function(processInfo,node,isModified,isDeclaration) {
+hax.codeAnalysis.processTreeNode = function(processInfo,node,isModified,isDeclaration) {
     
     //process the node type
     if((node.type == "Identifier")||(node.type == "MemberExpression")) {
         //process a variable
-        hax.core.codeAnalysis.processVariable(processInfo,node,isModified,isDeclaration);
+        hax.codeAnalysis.processVariable(processInfo,node,isModified,isDeclaration);
     } 
     else if((node.type == "FunctionDeclaration")||(node.type == "FunctionExpression")) {
         //process the functoin
-        hax.core.codeAnalysis.processFunction(processInfo,node);
+        hax.codeAnalysis.processFunction(processInfo,node);
         
     }
     else if((node.type === "NewExpression")&&(node.callee.type === "Function")) {
         //we currently do not support the function constructor
         //to add it we need to add the local variables and parse the text body
-        throw hax.core.codeAnalysis.createParsingError("Function constructor not currently supported!",node.loc); 
+        throw hax.codeAnalysis.createParsingError("Function constructor not currently supported!",node.loc); 
     }
     else {
         //process some other node
-        hax.core.codeAnalysis.processGenericNode(processInfo,node);
+        hax.codeAnalysis.processGenericNode(processInfo,node);
     }
 }
    
 /** This method process nodes that are not variabls identifiers. This traverses 
  * down the syntax tree.
  * @private */
-hax.core.codeAnalysis.processGenericNode = function(processInfo,node) {
+hax.codeAnalysis.processGenericNode = function(processInfo,node) {
     //load the syntax node info list for this node
-    var nodeInfoList = hax.core.codeAnalysis.syntax[node.type];
+    var nodeInfoList = hax.codeAnalysis.syntax[node.type];
     
     //process this list
     if(nodeInfoList === undefined) {
         //node not found
-        throw hax.core.codeAnalysis.createParsingError("Syntax Tree Node not found: " + node.type,node.loc);
+        throw hax.codeAnalysis.createParsingError("Syntax Tree Node not found: " + node.type,node.loc);
     }
     else if(nodeInfoList === null) {
         //node not supported
-        throw hax.core.codeAnalysis.createParsingError("Syntax node not supported: " + node.type,node.loc);
+        throw hax.codeAnalysis.createParsingError("Syntax node not supported: " + node.type,node.loc);
     }
     else {
         //this is a good node - process it
@@ -663,12 +651,12 @@ hax.core.codeAnalysis.processGenericNode = function(processInfo,node) {
                 if(nodeInfo.list) {
                     //this is a list of child nodes
                     for(var j = 0; j < childField.length; j++) {
-                        hax.core.codeAnalysis.processTreeNode(processInfo,childField[j],nodeInfo.modified,nodeInfo.declaration);
+                        hax.codeAnalysis.processTreeNode(processInfo,childField[j],nodeInfo.modified,nodeInfo.declaration);
                     }
                 }
                 else {
                     //this is a single node
-                    hax.core.codeAnalysis.processTreeNode(processInfo,childField,nodeInfo.modified,nodeInfo.declaration);
+                    hax.codeAnalysis.processTreeNode(processInfo,childField,nodeInfo.modified,nodeInfo.declaration);
                 }
             }
         }
@@ -678,7 +666,7 @@ hax.core.codeAnalysis.processGenericNode = function(processInfo,node) {
 /** This method processes nodes that are function. For functions a new scope is created 
  * for the body of the function.
  * @private */
-hax.core.codeAnalysis.processFunction = function(processInfo,node) {
+hax.codeAnalysis.processFunction = function(processInfo,node) {
     var nodeType = node.type;
     var idNode = node.id;
     var params = node.params;
@@ -692,33 +680,33 @@ hax.core.codeAnalysis.processFunction = function(processInfo,node) {
     
     if((nodeType === "FunctionDeclaration")&&(idNode)) {
         //parse id node (variable name) in the parent scope
-        hax.core.codeAnalysis.processTreeNode(processInfo,idNode,false,true);
+        hax.codeAnalysis.processTreeNode(processInfo,idNode,false,true);
     }
     
     //create a new scope for this function
-    var scope = hax.core.codeAnalysis.startScope(processInfo);
+    var scope = hax.codeAnalysis.startScope(processInfo);
     
     if((nodeType === "FunctionExpression")&&(idNode)) {
         //parse id node (variable name) in the parent scope
-        hax.core.codeAnalysis.processTreeNode(processInfo,idNode,false,true);
+        hax.codeAnalysis.processTreeNode(processInfo,idNode,false,true);
     }
     
     //process the variable list
     for(var i = 0; i < params.length; i++) {
-        hax.core.codeAnalysis.processTreeNode(processInfo,params[i],false,true);
+        hax.codeAnalysis.processTreeNode(processInfo,params[i],false,true);
     }
     
     //process the function body
-    hax.core.codeAnalysis.processTreeNode(processInfo,body,false,false);
+    hax.codeAnalysis.processTreeNode(processInfo,body,false,false);
     
     //end the scope for this function
-    hax.core.codeAnalysis.endScope(processInfo,scope);
+    hax.codeAnalysis.endScope(processInfo,scope);
 }
 
 /** This method processes nodes that are variables (identifiers and member expressions), adding
  * them to the list of variables which are used in tehe formula.
  * @private */
-hax.core.codeAnalysis.processVariable = function(processInfo,node,isModified,isDeclaration) {
+hax.codeAnalysis.processVariable = function(processInfo,node,isModified,isDeclaration) {
     
     //get the variable path and the base name
     var namePath = this.getVariableDotPath(processInfo,node);
@@ -760,7 +748,7 @@ hax.core.codeAnalysis.processVariable = function(processInfo,node,isModified,isD
  * In the case the fields are calculated, we do not attempt to return these
  * fields. We do however factor the expressions nodes into the dependencies. 
  * @private */
-hax.core.codeAnalysis.getVariableDotPath = function(processInfo,node) {
+hax.codeAnalysis.getVariableDotPath = function(processInfo,node) {
     if(node.type == "Identifier") {
         //read the identifier name
         return [node.name];
@@ -788,7 +776,7 @@ hax.core.codeAnalysis.getVariableDotPath = function(processInfo,node) {
 
 /** This method annotates the variable usages that are local variables. 
  * @private */
-hax.core.codeAnalysis.markLocalVariables = function(processInfo) {
+hax.codeAnalysis.markLocalVariables = function(processInfo) {
     for(var key in processInfo.nameTable) {
         var nameEntry = processInfo.nameTable[key];
         var name = nameEntry.name;
@@ -829,8 +817,8 @@ hax.core.codeAnalysis.markLocalVariables = function(processInfo) {
  *     column;[integer column on line number]
  * }
  * @private */
-hax.core.codeAnalysis.createParsingError = function(errorMsg,location) {
-    var error = hax.core.util.createError(errorMsg,false);
+hax.codeAnalysis.createParsingError = function(errorMsg,location) {
+    var error = hax.util.createError(errorMsg,false);
     if(location) {
         error.lineNumber = location.start.line;
         error.column = location.start.column;
@@ -839,12 +827,12 @@ hax.core.codeAnalysis.createParsingError = function(errorMsg,location) {
 }
 ;
 
-hax.core.codeDependencies = {};
+hax.codeDependencies = {};
 
 /** This method takes the varInfo table from the code analysis and returns
  * a lsit of member objects which this member depends on.
  */
-hax.core.codeDependencies.getDependencyInfo = function(varInfo,contextManager) {
+hax.codeDependencies.getDependencyInfo = function(varInfo,contextManager) {
     var dependencyList = [];
 	var objectMap = {};
 	
@@ -878,13 +866,13 @@ hax.core.codeDependencies.getDependencyInfo = function(varInfo,contextManager) {
 };
 /** This namespace contains functions to process an update to an member
  * which inherits from the FunctionBase component. */
-hax.core.calculation = {};
+hax.calculation = {};
 
 
 /** This moethod should be called on an Impactor (DataHolder) or Dependent object that changes.
  * This will allow for any Dependents to be recaculated.
  * @private */
-hax.core.calculation.addToRecalculateList = function(recalculateList,member) {
+hax.calculation.addToRecalculateList = function(recalculateList,member) {
     //if it is in the list, return
     if(recalculateList.indexOf(member) >= 0) return;
      
@@ -898,7 +886,7 @@ hax.core.calculation.addToRecalculateList = function(recalculateList,member) {
     if(member.isDataHolder) {
         var impactsList = member.getImpactsList();
         for(var i = 0; i < impactsList.length; i++) {
-            hax.core.calculation.addToRecalculateList(recalculateList,impactsList[i]);
+            hax.calculation.addToRecalculateList(recalculateList,impactsList[i]);
         }
     }
 }
@@ -906,7 +894,7 @@ hax.core.calculation.addToRecalculateList = function(recalculateList,member) {
 /** This calls execute for each member in the recalculate list. The return value
  * is false if there are any errors.
  * @private */
-hax.core.calculation.callRecalculateList = function(recalculateList,actionResponse) {
+hax.calculation.callRecalculateList = function(recalculateList,actionResponse) {
     var dependent;
     var i;
     var success = true;
@@ -927,12 +915,12 @@ hax.core.calculation.callRecalculateList = function(recalculateList,actionRespon
     return success;
 }
 ;
-hax.core.util = {};
+hax.util = {};
 
 /** This method creates an error object, which has a "message" in the format
  *of a system error. The isFatal flag can be set to specify if this is a fatal or nonfatal
  *error. It may also be omitted. A base error may also be set. */
-hax.core.util.createError = function(msg,optionalIsFatal,optionalBaseError) {
+hax.util.createError = function(msg,optionalIsFatal,optionalBaseError) {
     var error = new Error(msg);
 	if(optionalIsFatal !== undefined) {
 		error.isFatal = optionalIsFatal;
@@ -945,14 +933,14 @@ hax.core.util.createError = function(msg,optionalIsFatal,optionalBaseError) {
 
 
 /** This method creates an integer has value for a string. */
-hax.core.util.mixin = function(destObject,mixinObject) {
+hax.util.mixin = function(destObject,mixinObject) {
     for(var key in mixinObject) {
         destObject.prototype[key] = mixinObject[key];
     }
 }
 
 /** This method creates an integer has value for a string. */
-hax.core.util.stringHash = function(string) {
+hax.util.stringHash = function(string) {
     var HASH_SIZE = 0xffffffff;
     var hash = 0;
     var ch;
@@ -964,13 +952,13 @@ hax.core.util.stringHash = function(string) {
 }
 
 /** This method creates an integer hash value for an object. */
-hax.core.util.objectHash = function(object) {
+hax.util.objectHash = function(object) {
     //this is not real efficient. It should be implemented differently
     var string = JSON.stringify(object);
     return stringHash(string);
 }
 
-hax.core.util.constructors = {
+hax.util.constructors = {
     "String": ("").constructor,
     "Number": (3).constructor,
     "Boolean": (true).constructor,
@@ -981,10 +969,10 @@ hax.core.util.constructors = {
 }
 
 /** This method returns the object type. */
-hax.core.util.getObjectType = function(object) {
+hax.util.getObjectType = function(object) {
     var constructor = object.constructor;
-    for(var key in hax.core.util.constructors) {
-        if(constructor == hax.core.util.constructors[key]) {
+    for(var key in hax.util.constructors) {
+        if(constructor == hax.util.constructors[key]) {
             return key;
         }	
     }
@@ -994,7 +982,7 @@ hax.core.util.getObjectType = function(object) {
 
 /** This method creates a deep copy of an object, array or value. Note that
  * undefined is not a valid value in JSON. */
-hax.core.util.deepJsonCopy = function(data) {
+hax.util.deepJsonCopy = function(data) {
     if(data === null) return null;
     if(data === undefined) return undefined;
     return JSON.parse(JSON.stringify(data));
@@ -1003,28 +991,28 @@ hax.core.util.deepJsonCopy = function(data) {
 /** This method takes a field which can be an object, 
  *array or other value. If it is an object or array it 
  *freezes that object and all of its children, recursively. */
-hax.core.util.deepFreeze = function(field) {
+hax.util.deepFreeze = function(field) {
     if((field === null)||(field === undefined)) return;
     
-    var type = hax.core.util.getObjectType(field);
+    var type = hax.util.getObjectType(field);
 	var i;
 	if(type == "Object") {
 		Object.freeze(field);
 		for(i in field) {
-			hax.core.util.deepFreeze(field[i]);
+			hax.util.deepFreeze(field[i]);
 		}
 	}
 	else if(type == "Array") {
 		Object.freeze(field);
 		for(i = 0; i < field.length; i++) {
-			hax.core.util.deepFreeze(field[i]);
+			hax.util.deepFreeze(field[i]);
 		}
 	}
 }
 
 /** This method does format string functionality. Text should include
  * {i} to insert the ith string argument passed. */
-hax.core.util.formatString = function(format,stringArgs) {
+hax.util.formatString = function(format,stringArgs) {
     var formatParams = arguments;
     return format.replace(/{(\d+)}/g, function(match,p1) {
         var index = Number(p1) + 1;
@@ -1033,14 +1021,14 @@ hax.core.util.formatString = function(format,stringArgs) {
 };
 
 /** This method removes all the content from a DOM element. */
-hax.core.util.removeAllChildren = function(element) {
+hax.util.removeAllChildren = function(element) {
 	while(element.lastChild) {
 		element.removeChild(element.lastChild);
 	}
 }
 
 /** This creates a new array with elements from the first that are not in the second. */
-hax.core.util.getListInFirstButNotSecond = function(firstList,secondList) {
+hax.util.getListInFirstButNotSecond = function(firstList,secondList) {
     var newList = [];
     for(var i = 0; i < firstList.length; i++) {
         var entry = firstList[i];
@@ -1052,7 +1040,7 @@ hax.core.util.getListInFirstButNotSecond = function(firstList,secondList) {
 }
 
 /** This method reads the query string from a url */
-hax.core.util.readQueryField = function(field,url) {
+hax.util.readQueryField = function(field,url) {
     var href = url ? url : window.location.href;
     var reg = new RegExp( '[?&]' + field + '=([^&#]*)', 'i' );
     var string = reg.exec(href);
@@ -1066,19 +1054,19 @@ hax.core.util.readQueryField = function(field,url) {
  * COMPONENT DEPENDENCIES:
  * 
  */
-hax.core.Child = {};
+hax.Child = {};
     
 /** This serves as the constructor for the child object, when extending it. 
  * The owner should be the parent that holds this child or the object that holds
  * the hierarchy (maybe the workspace). If the owner is not a parent, this is typically
  * a folder and it is called the root folder. */
-hax.core.Child.init = function(name,generator) {
+hax.Child.init = function(name,generator) {
     this.name = name;
     this.generator = generator;
     this.errors = [];  
 }
 
-hax.core.Child.initOwner = function(owner) {
+hax.Child.initOwner = function(owner) {
     this.owner = owner;
     if(owner.isParent) {
         this.owner.addChild(this);
@@ -1088,7 +1076,7 @@ hax.core.Child.initOwner = function(owner) {
     }
 }
 
-hax.core.Child.move = function(newName,newOwner) {
+hax.Child.move = function(newName,newOwner) {
     //remove from old owner
     if(this.owner) {
         if(this.owner.isParent) {
@@ -1108,15 +1096,15 @@ hax.core.Child.move = function(newName,newOwner) {
 
 /** This property tells if this object is a child.
  * This property should not be implemented on non-children. */
-hax.core.Child.isChild = true
+hax.Child.isChild = true
 
 /** this method gets the name. */
-hax.core.Child.getName = function() {
+hax.Child.getName = function() {
     return this.name;
 }
 
 /** This method returns the full name in dot notation for this object. */
-hax.core.Child.getFullName = function() {
+hax.Child.getFullName = function() {
     if(this.owner) {
         return this.owner.getPossesionNameBase() + this.name;
     }
@@ -1127,18 +1115,18 @@ hax.core.Child.getFullName = function() {
 
 /** This method returns a display name for the child object. By default it returns
 /* the object name but can by overriden by the child implementation. */
-hax.core.Child.getDisplayName = function() {
+hax.Child.getDisplayName = function() {
     return this.name;
 }
 
 /** This returns the owner for this child. */
-hax.core.Child.getOwner = function() {
+hax.Child.getOwner = function() {
     return this.owner;
 }
 
 /** This returns the parent for this child. For the root folder
  * this value is null. */
-hax.core.Child.getParent = function() {
+hax.Child.getParent = function() {
     if((this.owner)&&(this.owner.isParent)) {
         return this.owner;
     }
@@ -1148,7 +1136,7 @@ hax.core.Child.getParent = function() {
 }
 
 /** this method gets the workspace. */
-hax.core.Child.getWorkspace = function() {
+hax.Child.getWorkspace = function() {
    if(this.owner) {
        return this.owner.getWorkspace();
    }
@@ -1158,7 +1146,7 @@ hax.core.Child.getWorkspace = function() {
 }
 
 /** this method gets the root folder/namespace for this object. */
-hax.core.Child.getRoot = function() {
+hax.Child.getRoot = function() {
     var ancestor = this;
 	while(ancestor) {
 		var owner = ancestor.getOwner();
@@ -1174,17 +1162,17 @@ hax.core.Child.getRoot = function() {
 }
 
 /** This method sets the pre calc error for this dependent. */
-hax.core.Child.addError = function(error) {
+hax.Child.addError = function(error) {
     this.errors.push(error);
 }
 
 /** This method sets the pre calc error for this dependent. */
-hax.core.Child.addErrors = function(errorList) {
+hax.Child.addErrors = function(errorList) {
     this.errors = this.errors.concat(errorList);
 }
 
 /** This method clears the error list. */
-hax.core.Child.clearErrors = function(type) {
+hax.Child.clearErrors = function(type) {
     var newList = [];
     if(type != null) {    
         for(var i = 0; i < this.errors.length; i++) {
@@ -1198,17 +1186,17 @@ hax.core.Child.clearErrors = function(type) {
 }
 
 /** This returns true if there is a pre calc error. */
-hax.core.Child.hasError = function() {
+hax.Child.hasError = function() {
     return (this.errors.length > 0);
 }
 
 /** This returns the pre calc error. */
-hax.core.Child.getErrors = function() {
+hax.Child.getErrors = function() {
     return this.errors;
 }
 
 /** This method writes the child to a json. */
-hax.core.Child.toJson = function() {
+hax.Child.toJson = function() {
 	var json = {};
     json.name = this.name;
     json.type = this.generator.type;
@@ -1225,7 +1213,7 @@ hax.core.Child.toJson = function() {
 
 ///** This method creates a child from a json. IT should be implemented as a static
 // * function in extending objects. */ 
-//hax.core.Child.fromJson = function(workspace,json,updateDataList,actionResponse) {
+//hax.Child.fromJson = function(workspace,json,updateDataList,actionResponse) {
 //}
 
 //========================================
@@ -1236,7 +1224,7 @@ hax.core.Child.toJson = function() {
  * can extend this function, but it should call this base version of the function
  * if it does.  
  * @protected */
-hax.core.Child.onDeleteChild = function() {
+hax.Child.onDeleteChild = function() {
     if(!(this.owner)) return;
     
 	if(this.owner.isParent) {
@@ -1252,7 +1240,7 @@ hax.core.Child.onDeleteChild = function() {
 //be omitted
 ///** This method adds any additional data to the json saved for this child. 
 // * @protected */
-//hax.core.Child.addToJson = function(json) {
+//hax.Child.addToJson = function(json) {
 //}
 
 //Implement this method if there is update data for this json. otherwise it may
@@ -1261,7 +1249,7 @@ hax.core.Child.onDeleteChild = function() {
 //* to match the current object. It may return "undefined" if there is no update
 //* data needed. 
 //* @protected */
-//hax.core.Child.getUpdateData = function() {
+//hax.Child.getUpdateData = function() {
 //}
 
 ;
@@ -1271,18 +1259,18 @@ hax.core.Child.onDeleteChild = function() {
  * 
  * COMPONENT DEPENDENCIES:
  */
-hax.core.ContextHolder = {};
+hax.ContextHolder = {};
 
 /** This initializes the component */
-hax.core.ContextHolder.init = function() {
+hax.ContextHolder.init = function() {
     //will be set on demand
     this.contextManager = null;
 }
 
-hax.core.ContextHolder.isContextHolder = true;
+hax.ContextHolder.isContextHolder = true;
 
 /** This method retrieves the context manager. */
-hax.core.ContextHolder.getContextManager = function() {
+hax.ContextHolder.getContextManager = function() {
     if(!this.contextManager) {
         //set the context manager
         this.contextManager = this.createContextManager();
@@ -1293,10 +1281,10 @@ hax.core.ContextHolder.getContextManager = function() {
 
 //this method must be implemneted in extending classes
 ///** This method retrieve creates the loaded context manager. */
-//hax.core.ContextHolder.createContextManager = function();
+//hax.ContextHolder.createContextManager = function();
 
 /** This is used only if the context manager should be replaced with an existing one.. */
-hax.core.ContextHolder.setContextManager = function(contextManager) {
+hax.ContextHolder.setContextManager = function(contextManager) {
     this.contextManager = contextManager;
 }
 
@@ -1313,10 +1301,10 @@ hax.core.ContextHolder.setContextManager = function(contextManager) {
  * COMPONENT DEPENDENCIES:
  * - A DataHolder must be a Child.
  */
-hax.core.DataHolder = {};
+hax.DataHolder = {};
 
 /** This initializes the component */
-hax.core.DataHolder.init = function() {
+hax.DataHolder.init = function() {
     this.data = null;
     
     //these are a list of members that depend on this member
@@ -1327,32 +1315,32 @@ hax.core.DataHolder.init = function() {
 
 /** This property tells if this object is a data holder.
  * This property should not be implemented on non-data holders. */
-hax.core.DataHolder.isDataHolder = true;
+hax.DataHolder.isDataHolder = true;
 
 /** This sets the value of dataSet to false. It is automatically set to true in set data. */
-hax.core.DataHolder.clearDataSet = function() {
+hax.DataHolder.clearDataSet = function() {
     this.dataSet = false;
 }
 
 /** This returns true if the data has been set.  This value must be managed externally. */
-hax.core.DataHolder.getDataSet = function() {
+hax.DataHolder.getDataSet = function() {
     return this.dataSet;
 }
 
 /** this method gets the data map. */
-hax.core.Child.getData = function() {
+hax.Child.getData = function() {
     return this.data;
 }
 
 /** This returns an array of members this member impacts. */
-hax.core.DataHolder.getImpactsList = function() {
+hax.DataHolder.getImpactsList = function() {
     return this.impactsList;
 }
 
 /** This method sets the data for this object. This is the object used by the 
  * code which is identified by this name, for example the JSON object associated
  * with a JSON table. Besides hold the data object, this updates the parent data map. */
-hax.core.DataHolder.setData = function(data) {
+hax.DataHolder.setData = function(data) {
     this.data = data;
     this.dataSet = true;
     
@@ -1369,7 +1357,7 @@ hax.core.DataHolder.setData = function(data) {
 /** This method adds a data member to the imapacts list for this node.
  * The return value is true if the member was added and false if it was already there. 
  * @private */
-hax.core.DataHolder.addToImpactsList = function(member) {
+hax.DataHolder.addToImpactsList = function(member) {
     //exclude this member
     if(member === this) return;
     
@@ -1385,7 +1373,7 @@ hax.core.DataHolder.addToImpactsList = function(member) {
 
 /** This method removes a data member from the imapacts list for this node. 
  * @private */
-hax.core.DataHolder.removeFromImpactsList = function(member) {
+hax.DataHolder.removeFromImpactsList = function(member) {
     //it should appear only once
     for(var i = 0; i < this.impactsList.length; i++) {
         if(this.impactsList[i] == member) {
@@ -1412,10 +1400,10 @@ hax.core.DataHolder.removeFromImpactsList = function(member) {
  * - A Dependent must be a Child.
  * 
  */
-hax.core.Dependent = {};
+hax.Dependent = {};
 
 /** This initializes the component */
-hax.core.Dependent.init = function() {
+hax.Dependent.init = function() {
     
     //this is the list of dependencies
     this.dependsOnList = [];
@@ -1424,46 +1412,46 @@ hax.core.Dependent.init = function() {
 
 /** This property tells if this object is a dependent.
  * This property should not be implemented on non-dependents. */
-hax.core.Dependent.isDependent = true;
+hax.Dependent.isDependent = true;
 
 /** This returns a list of the members that this member depends on. */
-hax.core.Dependent.getDependsOn = function() {
+hax.Dependent.getDependsOn = function() {
     return this.dependsOnList;
 }
 
 /** This returns false if the dependencies are (known to be) not up to date. */
-hax.core.Dependent.getDependenciesSetFlag = function() {
+hax.Dependent.getDependenciesSetFlag = function() {
     return this.dependenciesSet;
 }
 
 /** This sets the dependencies set flag. It is used mainly to set the flag to false when something changes extenally. */
-hax.core.Dependent.setDependenciesSetFlag = function(dependenciesSet) {
+hax.Dependent.setDependenciesSetFlag = function(dependenciesSet) {
     this.dependenciesSet = dependenciesSet;
 }
 
 //Must be implemented in extending object
 ///** This method udpates the dependencies if needed because
 // *a variable was added or removed from the workspace.  */
-//hax.core.Dependent.updateDependeciesForModelChange = function(object);
+//hax.Dependent.updateDependeciesForModelChange = function(object);
 
 ///** This is a check to see if the object should be checked for dependencies 
 // * for recalculation. It is safe for this method to always return false and
 // allow the calculation to happen. 
 // * @private */
-//hax.core.Dependent.needsCalculating = function();
+//hax.Dependent.needsCalculating = function();
 
 ///** This updates the member based on a change in a dependency.  */
-//hax.core.Dependent.prepareForCalculate = function();
+//hax.Dependent.prepareForCalculate = function();
 
 ///** This updates the member based on a change in a dependency.  */
-//hax.core.Dependent.calculate = function();
+//hax.Dependent.calculate = function();
 
 ///** This method initializes the data for this function.  */
-//hax.core.Dependent.initFunction = function();
+//hax.Dependent.initFunction = function();
 
 /** This method makes sure any impactors are set. It sets a dependency 
  * error if one or more of the dependencies has a error. */
-hax.core.Dependent.initializeImpactors = function() {
+hax.Dependent.initializeImpactors = function() {
     var errorDependencies = [];    
     
     //make sure dependencies are up to date
@@ -1483,7 +1471,7 @@ hax.core.Dependent.initializeImpactors = function() {
 }
 
 /** This method does any needed cleanup when the dependent is depeted.. */
-hax.core.Dependent.onDeleteDependent = function() {
+hax.Dependent.onDeleteDependent = function() {
     //remove this dependent from the impactor
     for(var i = 0; i < this.dependsOnList.length; i++) {
         var remoteMember = this.dependsOnList[i];
@@ -1496,7 +1484,7 @@ hax.core.Dependent.onDeleteDependent = function() {
 //===================================
 
 /** This sets the dependencies based on the code for the member. */
-hax.core.Dependent.updateDependencies = function(newDependsOn) {
+hax.Dependent.updateDependencies = function(newDependsOn) {
     
     var dependenciesUpdated = false;
     
@@ -1554,14 +1542,14 @@ hax.core.Dependent.updateDependencies = function(newDependsOn) {
 
 /** This method creates an dependency error, given a list of impactors that have an error. 
  * @private */
-hax.core.Dependent.createDependencyError = function(errorDependencies) {
+hax.Dependent.createDependencyError = function(errorDependencies) {
         //dependency error found
         var message = "Error in dependency: ";
         for(var i = 0; i < errorDependencies.length; i++) {
             if(i > 0) message += ", ";
             message += errorDependencies[i].getFullName();
         }
-        var actionError = new hax.core.ActionError(message,"Calculation - Dependency",this);
+        var actionError = new hax.ActionError(message,"Calculation - Dependency",this);
         this.addError(actionError);   
 
 }
@@ -1577,12 +1565,12 @@ hax.core.Dependent.createDependencyError = function(errorDependencies) {
  * - A Codeable must be Dependent. 
  * - A Codeable must be ContextHolder
  */
-hax.core.Codeable = {};
+hax.Codeable = {};
 
 /** This initializes the component. argList is the arguments for the object function.
  * dataEvaluatesObjectFunction is used to determine if the object function for this
  * codeable can be set before the context and impactors are initialized. */
-hax.core.Codeable.init = function(argList,dataEvaluatesObjectFunction) {
+hax.Codeable.init = function(argList,dataEvaluatesObjectFunction) {
     
     //arguments of the member function
     this.argList = argList;
@@ -1605,25 +1593,25 @@ hax.core.Codeable.init = function(argList,dataEvaluatesObjectFunction) {
 
 /** This property tells if this object is a codeable.
  * This property should not be implemented on non-codeables. */
-hax.core.Codeable.isCodeable = true
+hax.Codeable.isCodeable = true
 
 /** This method returns the argument list.  */
-hax.core.Codeable.getArgList = function() {
+hax.Codeable.getArgList = function() {
     return this.argList;
 }
 
 /** This method returns the fucntion body for this member.  */
-hax.core.Codeable.getFunctionBody = function() {
+hax.Codeable.getFunctionBody = function() {
     return this.functionBody;
 }
 
 /** This method returns the supplemental code for this member.  */
-hax.core.Codeable.getSupplementalCode = function() {
+hax.Codeable.getSupplementalCode = function() {
     return this.supplementalCode;
 }
 
 /** This method returns the formula for this member.  */
-hax.core.Codeable.setCodeInfo = function(codeInfo) {
+hax.Codeable.setCodeInfo = function(codeInfo) {
 
     //set the base data
     this.argList = codeInfo.argList;
@@ -1640,7 +1628,7 @@ hax.core.Codeable.setCodeInfo = function(codeInfo) {
             this.codeErrors = [];
         }
         catch(ex) {
-            this.codeErrors.push(hax.core.ActionError.processException(ex,"Codeable - Set Code",false));
+            this.codeErrors.push(hax.ActionError.processException(ex,"Codeable - Set Code",false));
         }
     }
     else {
@@ -1660,18 +1648,18 @@ hax.core.Codeable.setCodeInfo = function(codeInfo) {
 }
 
 /** This method returns the formula for this member.  */
-hax.core.Codeable.initializeDependencies = function() {
+hax.Codeable.initializeDependencies = function() {
     
     if((this.hasCode())&&(this.varInfo)&&(this.codeErrors.length === 0)) {
         try {
-            var newDependencyList = hax.core.codeDependencies.getDependencyInfo(this.varInfo,
+            var newDependencyList = hax.codeDependencies.getDependencyInfo(this.varInfo,
                    this.getContextManager());
 
             //update dependencies
             this.updateDependencies(newDependencyList);
         }
         catch(ex) {
-            this.codeErrors.push(hax.core.ActionError.processException(ex,"Codeable - Set Dependencies",false));
+            this.codeErrors.push(hax.ActionError.processException(ex,"Codeable - Set Dependencies",false));
         }
     }
     else {
@@ -1682,24 +1670,24 @@ hax.core.Codeable.initializeDependencies = function() {
 
 /** This method udpates the dependencies if needed because
  *the passed variable was added.  */
-hax.core.Codeable.updateDependeciesForModelChange = function(recalculateList) {
+hax.Codeable.updateDependeciesForModelChange = function(recalculateList) {
     if((this.hasCode())&&(this.varInfo)) {
                   
         //calculate new dependencies
-        var newDependencyList = hax.core.codeDependencies.getDependencyInfo(this.varInfo,
+        var newDependencyList = hax.codeDependencies.getDependencyInfo(this.varInfo,
                this.getContextManager());
           
         //update the dependency list
         var dependenciesChanged = this.updateDependencies(newDependencyList);
         if(dependenciesChanged) {
             //add to update list
-            hax.core.calculation.addToRecalculateList(recalculateList,this);
+            hax.calculation.addToRecalculateList(recalculateList,this);
         }  
     }
 }
     
 /** This method returns the formula for this member.  */
-hax.core.Codeable.clearCode = function() {
+hax.Codeable.clearCode = function() {
     this.codeSet = false;
     this.functionBody = "";
     this.supplementalCode = "";
@@ -1714,25 +1702,25 @@ hax.core.Codeable.clearCode = function() {
 }
 
 /** This method returns the formula for this member.  */
-hax.core.Codeable.hasCode = function() {
+hax.Codeable.hasCode = function() {
     return this.codeSet;
 }
 
 /** If this is true the member is ready to be executed. 
  * @private */
-hax.core.Codeable.needsCalculating = function() {
+hax.Codeable.needsCalculating = function() {
 	return (this.codeSet)&&(this.getDependenciesSetFlag());
 }
 
 /** This updates the member based on a change in a dependency.  */
-hax.core.Codeable.prepareForCalculate = function() {
+hax.Codeable.prepareForCalculate = function() {
     if(this.isDataHolder) this.clearDataSet();
     this.clearErrors();
     this.functionInitialized = false;
 }
 
 /** This method sets the data object for the member.  */
-hax.core.Codeable.calculate = function() {
+hax.Codeable.calculate = function() {
     
     if(((this.isDataHolder)&&(this.getDataSet()))||(this.hasError())) return;
     
@@ -1743,7 +1731,7 @@ hax.core.Codeable.calculate = function() {
     
     if((!this.objectFunction)||(!this.contextSetter)) {
         var msg = "Function not found for member: " + this.getName();
-        var actionError = new hax.core.ActionError(msg,"Codeable - Calculate",this);
+        var actionError = new hax.ActionError(msg,"Codeable - Calculate",this);
         this.addError(actionError);
         return;
     } 
@@ -1758,21 +1746,21 @@ hax.core.Codeable.calculate = function() {
         }
 
         var errorMsg = (error.message) ? error.message : "Unknown error";
-        var actionError = new hax.core.ActionError(errorMsg,"Codeable - Calculate",this);
+        var actionError = new hax.ActionError(errorMsg,"Codeable - Calculate",this);
         actionError.setParentException(error);
         this.addError(actionError);
     }
 }
 
 /** This makes sure user code of object function is ready to execute.  */
-hax.core.Codeable.initFunction = function() {
+hax.Codeable.initFunction = function() {
     
     if(this.functionInitialized) return;
     
     //make sure this in only called once
     if(this.calcInProgress) {
         var errorMsg = "Circular reference error";
-        var actionError = new hax.core.ActionError(errorMsg,"Codeable - Calculate",this);
+        var actionError = new hax.ActionError(errorMsg,"Codeable - Calculate",this);
         this.addError(actionError);
         //clear calc in progress flag
         this.calcInProgress = false;
@@ -1798,7 +1786,7 @@ hax.core.Codeable.initFunction = function() {
             console.error(error.stack);
         }
         var errorMsg = (error.message) ? error.message : "Unknown error";
-        var actionError = new hax.core.ActionError(errorMsg,"Codeable - Calculate",this);
+        var actionError = new hax.ActionError(errorMsg,"Codeable - Calculate",this);
         actionError.setParentException(error);
         this.addError(actionError);
     }
@@ -1813,7 +1801,7 @@ hax.core.Codeable.initFunction = function() {
 
 /** This gets an update structure to upsate a newly instantiated child
 /* to match the current object. */
-hax.core.Codeable.getUpdateData = function() {
+hax.Codeable.getUpdateData = function() {
     var updateData = {};
     if(this.hasCode()) {
         updateData.argList = this.getArgList();
@@ -1831,8 +1819,8 @@ hax.core.Codeable.getUpdateData = function() {
 //------------------------------
 
 /** This method retrieve creates the loaded context manager. */
-hax.core.Codeable.createContextManager = function() {
-    return new hax.core.ContextManager(this);
+hax.Codeable.createContextManager = function() {
+    return new hax.ContextManager(this);
 }
 
 //===================================
@@ -1842,15 +1830,15 @@ hax.core.Codeable.createContextManager = function() {
 //implementations must implement this function
 //This method takes the object function generated from code and processes it
 //to set the data for the object. (protected)
-//hax.core.Codeable.processObjectFunction 
+//hax.Codeable.processObjectFunction 
 
 /** This method sets the object function. */
-hax.core.Codeable.setObjectFunction = function(objectFunction) {
+hax.Codeable.setObjectFunction = function(objectFunction) {
     this.objectFunction = objectFunction;
 }
 
 /** This method sets the object function. */
-hax.core.Codeable.setContextSetter = function(contextSetter) {
+hax.Codeable.setContextSetter = function(contextSetter) {
     this.contextSetter = contextSetter;
 }
 
@@ -1867,26 +1855,26 @@ hax.core.Codeable.setContextSetter = function(contextSetter) {
  * COMPONENT DEPENDENCIES:
  * An Owner must be a Context Holder
  */
-hax.core.Owner = {};
+hax.Owner = {};
 
 /** This initializes the component */
-hax.core.Owner.init = function() {
+hax.Owner.init = function() {
 }
 
-hax.core.Owner.isOwner = true;
+hax.Owner.isOwner = true;
 
 //must be implemented in extending object
 ///** This method retrieves the workspace for the child of this owner. */
-//hax.core.Owner.getWorkspace = function();
+//hax.Owner.getWorkspace = function();
 
 //must be implemented in extending object
 ///** This method retrieves the full name whichis relevent for a root folder owned
 // * by this object. */
-//hax.core.Owner.getPossesionNameBase = function();
+//hax.Owner.getPossesionNameBase = function();
 
 //must be implented by extending object
 ///** This method retrieves the context manager for this owner. */
-//hax.core.Owner.getContextManager = function();
+//hax.Owner.getContextManager = function();
 
 
 ;
@@ -1902,34 +1890,34 @@ hax.core.Owner.isOwner = true;
  * - A Parent must be a Child.
  * - A Parent must be an Owner.
  */
-hax.core.Parent = {};
+hax.Parent = {};
 
 /** This initializes the component */
-hax.core.Parent.init = function() {
+hax.Parent.init = function() {
 }
 
-hax.core.Parent.isParent = true;
+hax.Parent.isParent = true;
 
 
 /** this is used to identify if this is the root folder. */
-hax.core.Parent.isRoot = function() {
+hax.Parent.isRoot = function() {
     //undefined may be OK too. If there is populated object this is not root.
     return (this.getParent() == null); 
 }
 
 ///** this method gets a map of child names to children. This may not be the structure
 // * of the data in the parent, but it is the prefered common representation. */
-//hax.core.Parent.getChildMap = function();
+//hax.Parent.getChildMap = function();
 
 // Must be implemented in extending object
 ///** This method looks up a child from this folder.  */
-//hax.core.Folder.lookupChild = function(name);
+//hax.Folder.lookupChild = function(name);
 
 /** This method looks up a child using an arry of names corresponding to the
  * path from this folder to the object.  Note: the method will return the 
  * fist non-folder it finds, even if the path is not completed. In this case
  * it is assumed the path refers to a field inside this object. */
-hax.core.Parent.lookupChildFromPath = function(path) {
+hax.Parent.lookupChildFromPath = function(path) {
 	var object = this;
 	for(var i = 0; ((object)&&(i < path.length)&&(object.isParent)); i++) {
 		object = object.lookupChild(path[i]);
@@ -1940,24 +1928,24 @@ hax.core.Parent.lookupChildFromPath = function(path) {
 // Must be implemented in extending object
 ///** This method adds the child to this parent. 
 // * It will fail if the name already exists.  */
-//hax.core.Parent.addChild = function(child);
+//hax.Parent.addChild = function(child);
 
 // Must be implemented in extending object
 ///** This method removes this child from this parent.  */
-//hax.core.Folder.removeChild = function(child);
+//hax.Folder.removeChild = function(child);
 
 // Must be implemented in extending object
 ///** This method updates the data object for this child. */
-//hax.core.Folder.updateData = function(child);
+//hax.Folder.updateData = function(child);
 
 //------------------------------
 //ContextHolder methods
 //------------------------------
 
 /** This method retrieve creates the loaded context manager. */
-hax.core.Parent.createContextManager = function() {
+hax.Parent.createContextManager = function() {
     //set the context manager
-    var contextManager = new hax.core.ContextManager(this);
+    var contextManager = new hax.ContextManager(this);
     //add an entry for this folder. Make it local unless this si a root folder
     var myEntry = {};
     myEntry.isLocal = !this.isRoot();
@@ -1972,7 +1960,7 @@ hax.core.Parent.createContextManager = function() {
 //------------------------------
 
 /** this method gets the hame the children inherit for the full name. */
-hax.core.Parent.getPossesionNameBase = function() {
+hax.Parent.getPossesionNameBase = function() {
     if(this.isRoot()) {
         if(this.owner) {
             return this.owner.getPossesionNameBase();
@@ -1987,7 +1975,7 @@ hax.core.Parent.getPossesionNameBase = function() {
 }
 
 /** This method returns the full name in dot notation for this object. */
-hax.core.Parent.getFullName = function() {
+hax.Parent.getFullName = function() {
     if(this.isRoot()) {
         if(this.owner) {
             return this.owner.getPossesionNameBase();
@@ -1997,7 +1985,7 @@ hax.core.Parent.getFullName = function() {
         }
     }
     else {
-        return hax.core.Child.getFullName.call(this);
+        return hax.Child.getFullName.call(this);
     }
 }
 
@@ -2010,39 +1998,39 @@ hax.core.Parent.getFullName = function() {
  * COMPONENT DEPENDENCIES:
  * - A RootHolder must be an Owner.
  */
-hax.core.RootHolder = {};
+hax.RootHolder = {};
 
 /** This initializes the component */
-hax.core.RootHolder.init = function() {
+hax.RootHolder.init = function() {
 }
 
-hax.core.RootHolder.isRootHolder = true;
+hax.RootHolder.isRootHolder = true;
 
 // Must be implemented in extending object
 ///** This method sets the root object.  */
-//hax.core.RootHolder.setRoot = function(child);
+//hax.RootHolder.setRoot = function(child);
 
 // Must be implemented in extending object
 ///** This method returns the root object.  */
-//hax.core.RootHolder.getRoot = function();
+//hax.RootHolder.getRoot = function();
 
 ;
 /** This is the workspace. Typically owner should be null. */
-hax.core.Workspace = function(nameOrJson,actionResponseForJson,owner) {
+hax.Workspace = function(nameOrJson,actionResponseForJson,owner) {
     //base init
-    hax.core.EventManager.init.call(this);
-    hax.core.ContextHolder.init.call(this);
-    hax.core.Owner.init.call(this);
-    hax.core.RootHolder.init.call(this);
+    hax.EventManager.init.call(this);
+    hax.ContextHolder.init.call(this);
+    hax.Owner.init.call(this);
+    hax.RootHolder.init.call(this);
     
     if(owner === undefined) owner = null;
     this.owner = owner;
     
-    var inputArgType = hax.core.util.getObjectType(nameOrJson);
+    var inputArgType = hax.util.getObjectType(nameOrJson);
     
     if(inputArgType === "String") {
         this.name = nameOrJson;
-        this.rootFolder = new hax.core.Folder(nameOrJson,this);
+        this.rootFolder = new hax.Folder(nameOrJson,this);
     }
     else {
         this.loadFromJson(nameOrJson,actionResponseForJson);
@@ -2050,41 +2038,41 @@ hax.core.Workspace = function(nameOrJson,actionResponseForJson,owner) {
 }
 
 //add components to this class
-hax.core.util.mixin(hax.core.Workspace,hax.core.EventManager);
-hax.core.util.mixin(hax.core.Workspace,hax.core.ContextHolder);
-hax.core.util.mixin(hax.core.Workspace,hax.core.Owner);
-hax.core.util.mixin(hax.core.Workspace,hax.core.RootHolder);
+hax.util.mixin(hax.Workspace,hax.EventManager);
+hax.util.mixin(hax.Workspace,hax.ContextHolder);
+hax.util.mixin(hax.Workspace,hax.Owner);
+hax.util.mixin(hax.Workspace,hax.RootHolder);
 
 /** this method gets the workspace name. */
-hax.core.Workspace.prototype.getName = function() {
+hax.Workspace.prototype.getName = function() {
     return this.name;
 }
 
 /** this method gets the root package for the workspace. */
-hax.core.Workspace.prototype.getRoot = function() {
+hax.Workspace.prototype.getRoot = function() {
     return this.rootFolder;
 }
 
 /** This method sets the root object - implemented from RootHolder.  */
-hax.core.Workspace.prototype.setRoot = function(child) {
+hax.Workspace.prototype.setRoot = function(child) {
     this.rootFolder = child;
 }
 
 /** This allows for a workspace to have a parent. For a normal workspace this should be null. 
  * This is used for finding variables in scope. */
-hax.core.Workspace.prototype.getOwner = function() {
+hax.Workspace.prototype.getOwner = function() {
     return this.owner;
 }
 
 /** This method updates the dependencies of any children in the workspace. */
-hax.core.Workspace.prototype.updateDependeciesForModelChange = function(recalculateList) {
+hax.Workspace.prototype.updateDependeciesForModelChange = function(recalculateList) {
     if(this.rootFolder) {
         this.rootFolder.updateDependeciesForModelChange(recalculateList);
     }
 }
 
 /** This method removes any data from this workspace on closing. */
-hax.core.Workspace.prototype.close = function() {
+hax.Workspace.prototype.close = function() {
 }
 
 //------------------------------
@@ -2092,12 +2080,12 @@ hax.core.Workspace.prototype.close = function() {
 //------------------------------
 
 /** this method is implemented for the Owner component/mixin. */
-hax.core.Workspace.prototype.getWorkspace = function() {
+hax.Workspace.prototype.getWorkspace = function() {
    return this;
 }
 
 /** this method gets the hame the children inherit for the full name. */
-hax.core.Workspace.prototype.getPossesionNameBase = function() {
+hax.Workspace.prototype.getPossesionNameBase = function() {
     return this.name + ":";
 }
 
@@ -2106,9 +2094,9 @@ hax.core.Workspace.prototype.getPossesionNameBase = function() {
 //------------------------------
 
 /** This method retrieve creates the loaded context manager. */
-hax.core.Workspace.prototype.createContextManager = function() {
+hax.Workspace.prototype.createContextManager = function() {
     //set the context manager
-    var contextManager = new hax.core.ContextManager(this);
+    var contextManager = new hax.ContextManager(this);
     //global variables from window object
     var globalVarEntry = {};
     globalVarEntry.isLocal = false;
@@ -2125,15 +2113,15 @@ hax.core.Workspace.prototype.createContextManager = function() {
 
 /** This method makes a virtual workspace that contains a copy of the give folder
  * as the root folder. Optionally the context manager may be set. */
-hax.core.Workspace.createVirtualWorkpaceFromFolder = function(name,origRootFolder,ownerInWorkspace) {
+hax.Workspace.createVirtualWorkpaceFromFolder = function(name,origRootFolder,ownerInWorkspace) {
 	//create a workspace json from the root folder json
 	var workspaceJson = {};
     workspaceJson.name = name;
-    workspaceJson.fileType = hax.core.Workspace.SAVE_FILE_TYPE;
-    workspaceJson.version = hax.core.Workspace.SAVE_FILE_VERSION;
+    workspaceJson.fileType = hax.Workspace.SAVE_FILE_TYPE;
+    workspaceJson.version = hax.Workspace.SAVE_FILE_VERSION;
     workspaceJson.data = origRootFolder.toJson();
 	
-    return new hax.core.Workspace(workspaceJson,null,ownerInWorkspace);
+    return new hax.Workspace(workspaceJson,null,ownerInWorkspace);
 }
 
 //============================
@@ -2141,16 +2129,16 @@ hax.core.Workspace.createVirtualWorkpaceFromFolder = function(name,origRootFolde
 //============================
 
 /** This is the supported file type. */
-hax.core.Workspace.SAVE_FILE_TYPE = "hax workspace";
+hax.Workspace.SAVE_FILE_TYPE = "hax workspace";
 
 /** This is the supported file version. */
-hax.core.Workspace.SAVE_FILE_VERSION = 0.1;
+hax.Workspace.SAVE_FILE_VERSION = 0.2;
 
-hax.core.Workspace.prototype.toJson = function() {
+hax.Workspace.prototype.toJson = function() {
     var json = {};
     json.name = this.name;
-    json.fileType = hax.core.Workspace.SAVE_FILE_TYPE;
-    json.version = hax.core.Workspace.SAVE_FILE_VERSION;
+    json.fileType = hax.Workspace.SAVE_FILE_TYPE;
+    json.version = hax.Workspace.SAVE_FILE_VERSION;
     
     //components
     json.data = this.rootFolder.toJson();
@@ -2161,35 +2149,20 @@ hax.core.Workspace.prototype.toJson = function() {
 
 /** This is loads data from the given json into this workspace. 
  * @private */
-hax.core.Workspace.prototype.loadFromJson = function(json,actionResponse) {
+hax.Workspace.prototype.loadFromJson = function(json,actionResponse) {
     var fileType = json.fileType;
-	if(fileType !== hax.core.Workspace.SAVE_FILE_TYPE) {
-		throw hax.core.util.createError("Bad file format.",false);
+	if(fileType !== hax.Workspace.SAVE_FILE_TYPE) {
+		throw hax.util.createError("Bad file format.",false);
 	}
-    if(json.version !== hax.core.Workspace.SAVE_FILE_VERSION) {
-        throw hax.core.util.createError("Incorrect file version.",false);
+    if(json.version !== hax.Workspace.SAVE_FILE_VERSION) {
+        throw hax.util.createError("Incorrect file version. CHECK HAXAPP.COM FOR VERSION CONVERTER.",false);
     }
     
     this.name = json.name;
 	
-	//load context links
-	if(json.contextManager) {
-		//for now just include this one. Later we need to have some options
-		//for saving and opening
-		//THIS IS ONLY FOR THE WORKSHEET IMPLEMENTATION FOR NOW!
-		this.setContextManager(json.contextManager);
-	}
-	
-	//recreate the root folder and its children
-    //this.rootFolder = hax.core.createmember.createMember(this,json.data,actionResponse);
-    //DOH! This currently doesn't because create member assumes the root folder is set. 
-    //maybe we should update so setting the owner on the root folder sets the root folder,
-    //such as if the alternative to a parent is a "rootholder" or something like that.
-    //for now I will jsut copy everything in create member
-    
-    if(!actionResponse) actionResponse = new hax.core.ActionResponse();
+    if(!actionResponse) actionResponse = new hax.ActionResponse();
 
-    hax.core.createmember.createMember(this,json.data,actionResponse);
+    hax.createmember.createMember(this,json.data,actionResponse);
     
     return actionResponse;
 }
@@ -2198,25 +2171,25 @@ hax.core.Workspace.prototype.loadFromJson = function(json,actionResponse) {
 // Member generator functions
 //================================
 
-hax.core.Workspace.memberGenerators = {};
+hax.Workspace.memberGenerators = {};
 
 /** This methods retrieves the member generator for the given type. */
-hax.core.Workspace.getMemberGenerator = function(type) {
-    return hax.core.Workspace.memberGenerators[type];
+hax.Workspace.getMemberGenerator = function(type) {
+    return hax.Workspace.memberGenerators[type];
 }
 
 /** This method registers the member generator for a given named type. */
-hax.core.Workspace.addMemberGenerator = function(generator) {
-    hax.core.Workspace.memberGenerators[generator.type] = generator;
+hax.Workspace.addMemberGenerator = function(generator) {
+    hax.Workspace.memberGenerators[generator.type] = generator;
 };
 /** This class encapsulatees a data table for a JSON object */
-hax.core.JsonTable = function(name,owner,initialData) {
+hax.JsonTable = function(name,owner,initialData) {
     //base init
-    hax.core.Child.init.call(this,name,hax.core.JsonTable.generator);
-    hax.core.DataHolder.init.call(this);
-    hax.core.Dependent.init.call(this);
-    hax.core.ContextHolder.init.call(this);
-	hax.core.Codeable.init.call(this,[],true);
+    hax.Child.init.call(this,name,hax.JsonTable.generator);
+    hax.DataHolder.init.call(this);
+    hax.Dependent.init.call(this);
+    hax.ContextHolder.init.call(this);
+	hax.Codeable.init.call(this,[],true);
     
     this.initOwner(owner);
     
@@ -2226,15 +2199,15 @@ hax.core.JsonTable = function(name,owner,initialData) {
         initialData = {};
         initialData.data = "";
     }  
-    hax.core.updatemember.applyCodeOrData(this,initialData);
+    hax.updatemember.applyCodeOrData(this,initialData);
 }
 
 //add components to this class
-hax.core.util.mixin(hax.core.JsonTable,hax.core.Child);
-hax.core.util.mixin(hax.core.JsonTable,hax.core.DataHolder);
-hax.core.util.mixin(hax.core.JsonTable,hax.core.Dependent);
-hax.core.util.mixin(hax.core.JsonTable,hax.core.ContextHolder);
-hax.core.util.mixin(hax.core.JsonTable,hax.core.Codeable);
+hax.util.mixin(hax.JsonTable,hax.Child);
+hax.util.mixin(hax.JsonTable,hax.DataHolder);
+hax.util.mixin(hax.JsonTable,hax.Dependent);
+hax.util.mixin(hax.JsonTable,hax.ContextHolder);
+hax.util.mixin(hax.JsonTable,hax.Codeable);
 
 //------------------------------
 // DataHolder Methods
@@ -2243,20 +2216,20 @@ hax.core.util.mixin(hax.core.JsonTable,hax.core.Codeable);
 /** This method extends set data from DataHOlder. It also
  * freezes the object so it is immutable. (in the future we may
  * consider copying instead, or allowing a choice)*/
-hax.core.JsonTable.prototype.setData = function(data) {
+hax.JsonTable.prototype.setData = function(data) {
     
 	//make this object immutable
-	hax.core.util.deepFreeze(data);
+	hax.util.deepFreeze(data);
 
 	//store the new object
-    return hax.core.DataHolder.setData.call(this,data);
+    return hax.DataHolder.setData.call(this,data);
 }
 
 //------------------------------
 // Codeable Methods
 //------------------------------
 	
-hax.core.JsonTable.prototype.processObjectFunction = function(objectFunction) {	
+hax.JsonTable.prototype.processObjectFunction = function(objectFunction) {	
     //tjhe data is the output of the function
     var data = objectFunction();
 	this.setData(data);
@@ -2268,29 +2241,29 @@ hax.core.JsonTable.prototype.processObjectFunction = function(objectFunction) {
 
 /** This method creates a child from a json. It should be implemented as a static
  * method in a non-abstract class. */ 
-hax.core.JsonTable.fromJson = function(owner,json,actionResponse) {
-    return new hax.core.JsonTable(json.name,owner,json.updateData);
+hax.JsonTable.fromJson = function(owner,json,actionResponse) {
+    return new hax.JsonTable(json.name,owner,json.updateData);
 }
 
 //============================
 // Static methods
 //============================
 
-hax.core.JsonTable.generator = {};
-hax.core.JsonTable.generator.displayName = "Table";
-hax.core.JsonTable.generator.type = "hax.core.JsonTable";
-hax.core.JsonTable.generator.createMember = hax.core.JsonTable.fromJson;
+hax.JsonTable.generator = {};
+hax.JsonTable.generator.displayName = "Table";
+hax.JsonTable.generator.type = "hax.JsonTable";
+hax.JsonTable.generator.createMember = hax.JsonTable.fromJson;
 
 //register this member
-hax.core.Workspace.addMemberGenerator(hax.core.JsonTable.generator);;
+hax.Workspace.addMemberGenerator(hax.JsonTable.generator);;
 /** This is a function. */
-hax.core.FunctionTable = function(name,owner,initialData) {
+hax.FunctionTable = function(name,owner,initialData) {
     //base init
-    hax.core.Child.init.call(this,name,hax.core.FunctionTable.generator);
-    hax.core.DataHolder.init.call(this);
-    hax.core.Dependent.init.call(this);
-    hax.core.ContextHolder.init.call(this);
-	hax.core.Codeable.init.call(this,argList,false);
+    hax.Child.init.call(this,name,hax.FunctionTable.generator);
+    hax.DataHolder.init.call(this);
+    hax.Dependent.init.call(this);
+    hax.ContextHolder.init.call(this);
+	hax.Codeable.init.call(this,argList,false);
     
     this.initOwner(owner);
     
@@ -2298,21 +2271,21 @@ hax.core.FunctionTable = function(name,owner,initialData) {
     var argList = initialData.argList ? initialData.argList : [];
     var functionBody = initialData.functionBody ? initialData.functionBody : "";
     var supplementalCode = initialData.supplementalCode ? initialData.supplementalCode : "";
-    hax.core.updatemember.applyCode(this,argList,functionBody,supplementalCode);
+    hax.updatemember.applyCode(this,argList,functionBody,supplementalCode);
 }
 
 //add components to this class
-hax.core.util.mixin(hax.core.FunctionTable,hax.core.Child);
-hax.core.util.mixin(hax.core.FunctionTable,hax.core.DataHolder);
-hax.core.util.mixin(hax.core.FunctionTable,hax.core.Dependent);
-hax.core.util.mixin(hax.core.FunctionTable,hax.core.ContextHolder);
-hax.core.util.mixin(hax.core.FunctionTable,hax.core.Codeable);
+hax.util.mixin(hax.FunctionTable,hax.Child);
+hax.util.mixin(hax.FunctionTable,hax.DataHolder);
+hax.util.mixin(hax.FunctionTable,hax.Dependent);
+hax.util.mixin(hax.FunctionTable,hax.ContextHolder);
+hax.util.mixin(hax.FunctionTable,hax.Codeable);
 
 //------------------------------
 // Codeable Methods
 //------------------------------
 
-hax.core.FunctionTable.prototype.processObjectFunction = function(objectFunction) {	
+hax.FunctionTable.prototype.processObjectFunction = function(objectFunction) {	
     //tjhe data is the function
 	this.setData(objectFunction);
 }
@@ -2322,7 +2295,7 @@ hax.core.FunctionTable.prototype.processObjectFunction = function(objectFunction
 //------------------------------
 
 /** This overrides the get title method of child to return the function declaration. */
-hax.core.FunctionTable.prototype.getDisplayName = function() {
+hax.FunctionTable.prototype.getDisplayName = function() {
     var name = this.getName();
     var argList = this.getArgList();
     var argListString = argList.join(",");
@@ -2331,28 +2304,28 @@ hax.core.FunctionTable.prototype.getDisplayName = function() {
 
 /** This method creates a child from a json. It should be implemented as a static
  * method in a non-abstract class. */ 
-hax.core.FunctionTable.fromJson = function(owner,json,actionResponse) {
-    return new hax.core.FunctionTable(json.name,owner,json.updateData);
+hax.FunctionTable.fromJson = function(owner,json,actionResponse) {
+    return new hax.FunctionTable(json.name,owner,json.updateData);
 }
 
 //============================
 // Static methods
 //============================
 
-hax.core.FunctionTable.generator = {};
-hax.core.FunctionTable.generator.displayName = "Function";
-hax.core.FunctionTable.generator.type = "hax.core.FunctionTable";
-hax.core.FunctionTable.generator.createMember = hax.core.FunctionTable.fromJson;
+hax.FunctionTable.generator = {};
+hax.FunctionTable.generator.displayName = "Function";
+hax.FunctionTable.generator.type = "hax.FunctionTable";
+hax.FunctionTable.generator.createMember = hax.FunctionTable.fromJson;
 
 //register this member
-hax.core.Workspace.addMemberGenerator(hax.core.FunctionTable.generator);;
+hax.Workspace.addMemberGenerator(hax.FunctionTable.generator);;
 /** This class encapsulatees a member used to IO. t does not hold data in the model. */
-hax.core.Control = function(name,owner,initialData) {
+hax.Control = function(name,owner,initialData) {
     //base init
-    hax.core.Child.init.call(this,name,hax.core.Control.generator);
-    hax.core.Dependent.init.call(this);
-    hax.core.ContextHolder.init.call(this);
-	hax.core.Codeable.init.call(this,["resource"],true);
+    hax.Child.init.call(this,name,hax.Control.generator);
+    hax.Dependent.init.call(this);
+    hax.ContextHolder.init.call(this);
+	hax.Codeable.init.call(this,["resource"],true);
     
     this.initOwner(owner);
     
@@ -2362,21 +2335,21 @@ hax.core.Control = function(name,owner,initialData) {
     var argList = initialData.argList ? initialData.argList : ["resource"];
     var functionBody = initialData.functionBody ? initialData.functionBody : "";
     var supplementalCode = initialData.supplementalCode ? initialData.supplementalCode : "";
-    hax.core.updatemember.applyCode(this,argList,functionBody,supplementalCode);
+    hax.updatemember.applyCode(this,argList,functionBody,supplementalCode);
 }
 
 //add components to this class
-hax.core.util.mixin(hax.core.Control,hax.core.Child);
-hax.core.util.mixin(hax.core.Control,hax.core.Dependent);
-hax.core.util.mixin(hax.core.Control,hax.core.ContextHolder);
-hax.core.util.mixin(hax.core.Control,hax.core.Codeable);
+hax.util.mixin(hax.Control,hax.Child);
+hax.util.mixin(hax.Control,hax.Dependent);
+hax.util.mixin(hax.Control,hax.ContextHolder);
+hax.util.mixin(hax.Control,hax.Codeable);
 	
-hax.core.Control.prototype.getResource = function() {	
+hax.Control.prototype.getResource = function() {	
     return this.resource;
 }    
 
 /** This method updates the resource for this resource. */
-hax.core.Control.prototype.updateResource = function(resource) {	
+hax.Control.prototype.updateResource = function(resource) {	
     this.resource = resource;
 	
     //re-execute, if needed
@@ -2389,7 +2362,7 @@ hax.core.Control.prototype.updateResource = function(resource) {
 // Codeable Methods
 //------------------------------
 
-hax.core.Control.prototype.processObjectFunction = function(objectFunction) {	
+hax.Control.prototype.processObjectFunction = function(objectFunction) {	
     //exectue the object function passing the resource object.
     if(this.resource) {
         objectFunction(this.resource);
@@ -2402,21 +2375,21 @@ hax.core.Control.prototype.processObjectFunction = function(objectFunction) {
 
 /** This method creates a child from a json. It should be implemented as a static
  * method in a non-abstract class. */ 
-hax.core.Control.fromJson = function(owner,json,actionResponse) {   
-    return new hax.core.Control(json.name,owner,json.updateData);
+hax.Control.fromJson = function(owner,json,actionResponse) {   
+    return new hax.Control(json.name,owner,json.updateData);
 }
 
 //============================
 // Static methods
 //============================
 
-hax.core.Control.generator = {};
-hax.core.Control.generator.displayName = "Control";
-hax.core.Control.generator.type = "hax.core.Control";
-hax.core.Control.generator.createMember = hax.core.Control.fromJson;
+hax.Control.generator = {};
+hax.Control.generator.displayName = "Control";
+hax.Control.generator.type = "hax.Control";
+hax.Control.generator.createMember = hax.Control.fromJson;
 
 //register this member
-hax.core.Workspace.addMemberGenerator(hax.core.Control.generator);
+hax.Workspace.addMemberGenerator(hax.Control.generator);
 
 
 
@@ -2424,14 +2397,14 @@ hax.core.Workspace.addMemberGenerator(hax.core.Control.generator);
 
 ;
 /** This is a folder. */
-hax.core.Folder = function(name,owner) {
+hax.Folder = function(name,owner) {
     //base init
-    hax.core.Child.init.call(this,name,hax.core.Folder.generator);
-    hax.core.DataHolder.init.call(this);
-    hax.core.Dependent.init.call(this);
-    hax.core.ContextHolder.init.call(this);
-    hax.core.Owner.init.call(this);
-    hax.core.Parent.init.call(this);
+    hax.Child.init.call(this,name,hax.Folder.generator);
+    hax.DataHolder.init.call(this);
+    hax.Dependent.init.call(this);
+    hax.ContextHolder.init.call(this);
+    hax.Owner.init.call(this);
+    hax.Parent.init.call(this);
     
     this.initOwner(owner);
 
@@ -2445,37 +2418,37 @@ hax.core.Folder = function(name,owner) {
 }
 
 //add components to this class
-hax.core.util.mixin(hax.core.Folder,hax.core.Child);
-hax.core.util.mixin(hax.core.Folder,hax.core.DataHolder);
-hax.core.util.mixin(hax.core.Folder,hax.core.Dependent);                      
-hax.core.util.mixin(hax.core.Folder,hax.core.ContextHolder);
-hax.core.util.mixin(hax.core.Folder,hax.core.Owner);
-hax.core.util.mixin(hax.core.Folder,hax.core.Parent);
+hax.util.mixin(hax.Folder,hax.Child);
+hax.util.mixin(hax.Folder,hax.DataHolder);
+hax.util.mixin(hax.Folder,hax.Dependent);                      
+hax.util.mixin(hax.Folder,hax.ContextHolder);
+hax.util.mixin(hax.Folder,hax.Owner);
+hax.util.mixin(hax.Folder,hax.Parent);
 
 //------------------------------
 // Parent Methods
 //------------------------------
 
 /** this method gets the table map. */
-hax.core.Folder.prototype.getChildMap = function() {
+hax.Folder.prototype.getChildMap = function() {
     return this.childMap;
 }
 
 /** This method looks up a child from this folder.  */
-hax.core.Folder.prototype.lookupChild = function(name) {
+hax.Folder.prototype.lookupChild = function(name) {
     //check look for object in this folder
     return this.childMap[name];
 }
 
 /** This method adds a table to the folder. It also sets the folder for the
  *table object to this folder. It will fail if the name already exists.  */
-hax.core.Folder.prototype.addChild = function(child) {
+hax.Folder.prototype.addChild = function(child) {
 	
     //check if it exists first
     var name = child.getName();
     if(this.childMap[name]) {
         //already exists! not fatal since it is not added to the model yet,
-        throw hax.core.util.createError("There is already an object with the given name.",false);
+        throw hax.util.createError("There is already an object with the given name.",false);
     }
     //add object
     this.childMap[name] = child;
@@ -2492,7 +2465,7 @@ hax.core.Folder.prototype.addChild = function(child) {
 }
 
 /** This method removes a table from the folder. */
-hax.core.Folder.prototype.removeChild = function(child) {
+hax.Folder.prototype.removeChild = function(child) {
     //make sure this is a child of this object
 	var parent = child.getParent();
     if((!parent)||(parent !== this)) return;
@@ -2509,7 +2482,7 @@ hax.core.Folder.prototype.removeChild = function(child) {
 }
 
 /** This method updates the table data object in the folder data map. */
-hax.core.Folder.prototype.updateData = function(child) {
+hax.Folder.prototype.updateData = function(child) {
 	if(!child.isDataHolder) return;
 	
     var name = child.getName();
@@ -2523,12 +2496,12 @@ hax.core.Folder.prototype.updateData = function(child) {
 
 /** There is no calculation for the folder base on dependents. 
  * @private */
-hax.core.Folder.prototype.needsCalculating = function() {
+hax.Folder.prototype.needsCalculating = function() {
     return false;
 }
 
 /** There is no calculation in the folder.  */
-hax.core.Folder.prototype.calculate = function() {
+hax.Folder.prototype.calculate = function() {
     
 }
 
@@ -2538,7 +2511,7 @@ hax.core.Folder.prototype.calculate = function() {
 
 /** This method updates the dependencies of any children
  * based on an object being added. */
-hax.core.Folder.prototype.updateDependeciesForModelChange = function(recalculateList) {
+hax.Folder.prototype.updateDependeciesForModelChange = function(recalculateList) {
     for(var key in this.childMap) {
         var child = this.childMap[key];
         if(child.isDependent) {
@@ -2553,8 +2526,8 @@ hax.core.Folder.prototype.updateDependeciesForModelChange = function(recalculate
 
 /** This method creates a child from a json. It should be implemented as a static
  * method in a non-abstract class. */ 
-hax.core.Folder.fromJson = function(owner,json,childrenJsonOutputList) {
-    var folder = new hax.core.Folder(json.name,owner);
+hax.Folder.fromJson = function(owner,json,childrenJsonOutputList) {
+    var folder = new hax.Folder(json.name,owner);
     
     for(var key in json.children) {
         var childJson = json.children[key];
@@ -2566,7 +2539,7 @@ hax.core.Folder.fromJson = function(owner,json,childrenJsonOutputList) {
 
 /** This method adds any additional data to the json to save for this child. 
  * @protected */
-hax.core.Folder.prototype.addToJson = function(json) {
+hax.Folder.prototype.addToJson = function(json) {
 	json.children = {};
     
     for(var key in this.childMap) {
@@ -2581,7 +2554,7 @@ hax.core.Folder.prototype.addToJson = function(json) {
 
 /** This method updates the table data object in the folder data map. 
  * @private */
-hax.core.Folder.prototype.calculateDependents = function() {
+hax.Folder.prototype.calculateDependents = function() {
     var newDependsOn = [];
     for(var name in this.childMap) {
         var object = this.childMap[name];
@@ -2595,7 +2568,7 @@ hax.core.Folder.prototype.calculateDependents = function() {
 /** This method creates a new immutable data map, either adding a give name and data or
  * removing a name. To remove a name from the map, leave "addData" as undefined. 
  * @private */
-hax.core.Folder.prototype.spliceDataMap = function(addOrRemoveName,addData) {
+hax.Folder.prototype.spliceDataMap = function(addOrRemoveName,addData) {
 	var newDataMap = {};
 	
 	//copy old data
@@ -2619,23 +2592,23 @@ hax.core.Folder.prototype.spliceDataMap = function(addOrRemoveName,addData) {
 // Static methods
 //============================
 
-hax.core.Folder.generator = {};
-hax.core.Folder.generator.displayName = "Folder";
-hax.core.Folder.generator.type = "hax.core.Folder";
-hax.core.Folder.generator.createMember = hax.core.Folder.fromJson;
+hax.Folder.generator = {};
+hax.Folder.generator.displayName = "Folder";
+hax.Folder.generator.type = "hax.Folder";
+hax.Folder.generator.createMember = hax.Folder.fromJson;
 
 //register this member
-hax.core.Workspace.addMemberGenerator(hax.core.Folder.generator);;
+hax.Workspace.addMemberGenerator(hax.Folder.generator);;
 /** This is a folderFunction, which is basically a function
  * that is expanded into data objects. */
-hax.core.FolderFunction = function(name,owner,initialData,createEmptyInternalFolder) {
+hax.FolderFunction = function(name,owner,initialData,createEmptyInternalFolder) {
     //base init
-    hax.core.Child.init.call(this,name,hax.core.FolderFunction.generator);
-    hax.core.DataHolder.init.call(this);
-    hax.core.Dependent.init.call(this);
-    hax.core.ContextHolder.init.call(this);
-    hax.core.Owner.init.call(this);
-    hax.core.RootHolder.init.call(this);
+    hax.Child.init.call(this,name,hax.FolderFunction.generator);
+    hax.DataHolder.init.call(this);
+    hax.Dependent.init.call(this);
+    hax.ContextHolder.init.call(this);
+    hax.Owner.init.call(this);
+    hax.RootHolder.init.call(this);
     
     this.initOwner(owner);
     
@@ -2647,43 +2620,43 @@ hax.core.FolderFunction = function(name,owner,initialData,createEmptyInternalFol
     
     //recreate the root folder if info is specified
     if(createEmptyInternalFolder) {
-        var internalFolder = new hax.core.Folder(name,this);
+        var internalFolder = new hax.Folder(name,this);
         this.setRoot(internalFolder);
     }
 }
 
 //add components to this class
-hax.core.util.mixin(hax.core.FolderFunction,hax.core.Child);
-hax.core.util.mixin(hax.core.FolderFunction,hax.core.DataHolder);
-hax.core.util.mixin(hax.core.FolderFunction,hax.core.Dependent);
-hax.core.util.mixin(hax.core.FolderFunction,hax.core.ContextHolder);
-hax.core.util.mixin(hax.core.FolderFunction,hax.core.Owner);
-hax.core.util.mixin(hax.core.FolderFunction,hax.core.RootHolder);
+hax.util.mixin(hax.FolderFunction,hax.Child);
+hax.util.mixin(hax.FolderFunction,hax.DataHolder);
+hax.util.mixin(hax.FolderFunction,hax.Dependent);
+hax.util.mixin(hax.FolderFunction,hax.ContextHolder);
+hax.util.mixin(hax.FolderFunction,hax.Owner);
+hax.util.mixin(hax.FolderFunction,hax.RootHolder);
 
 /** This gets the internal forlder for the folderFunction. */
-hax.core.FolderFunction.prototype.getInternalFolder = function() {
+hax.FolderFunction.prototype.getInternalFolder = function() {
     return this.internalFolder;
 }
 
 /** Implemnetation of get root for folder function. */
-hax.core.FolderFunction.prototype.getRoot = function() {
+hax.FolderFunction.prototype.getRoot = function() {
     return this.getInternalFolder();
 }
 
 /** This method sets the root object - implemented from RootHolder.  */
-hax.core.FolderFunction.prototype.setRoot = function(child) {
+hax.FolderFunction.prototype.setRoot = function(child) {
     this.internalFolder = child;
     var newDependsOn = [child];
     this.updateDependencies(newDependsOn);
 }
 
 /** This gets the name of the return object for the folderFunction function. */
-hax.core.FolderFunction.prototype.getReturnValueString = function() {
+hax.FolderFunction.prototype.getReturnValueString = function() {
     return this.returnValueString;
 }
 
 /** This gets the arg list of the folderFunction function. */
-hax.core.FolderFunction.prototype.getArgList = function() {
+hax.FolderFunction.prototype.getArgList = function() {
     return this.argList;
 }
 
@@ -2692,7 +2665,7 @@ hax.core.FolderFunction.prototype.getArgList = function() {
 //------------------------------
 
 /** This overrides the get displaymethod of child to return the function declaration. */
-hax.core.FolderFunction.prototype.getDisplayName = function() {
+hax.FolderFunction.prototype.getDisplayName = function() {
     var name = this.getName();
     var argList = this.getArgList();
     var argListString = argList.join(",");
@@ -2708,12 +2681,12 @@ hax.core.FolderFunction.prototype.getDisplayName = function() {
 /** This method is called when the child is deleted. If necessary the implementation
  * can extend this function, but it should call this base version of the function
  * if it does.  */
-hax.core.FolderFunction.prototype.onDelete = function() {
+hax.FolderFunction.prototype.onDelete = function() {
     
     var returnValue;
     
     if(this.internalFolder) {
-        var actionResponse = hax.core.deletemember.deleteMember(this.internalFolder);
+        var actionResponse = hax.deletemember.deleteMember(this.internalFolder);
         if(!actionResponse.getSuccess()) {
             //show an error message
             var msg = actionResponse.getErrorMsg();
@@ -2724,13 +2697,13 @@ hax.core.FolderFunction.prototype.onDelete = function() {
 //I don't know what to do if this fails. Figure that out.
     
     //call the base delete
-    returnValue = hax.core.Child.onDelete.call(this);
+    returnValue = hax.Child.onDelete.call(this);
 	return returnValue;
 }
 
 /** This method creates a child from a json. It should be implemented as a static
  * method in a non-abstract class. */ 
-hax.core.FolderFunction.fromJson = function(owner,json,childrenJsonOutputList) {
+hax.FolderFunction.fromJson = function(owner,json,childrenJsonOutputList) {
     var initialData = {};
     initialData.argList = json.argList;
     initialData.returnValue = json.returnValue;
@@ -2745,12 +2718,12 @@ hax.core.FolderFunction.fromJson = function(owner,json,childrenJsonOutputList) {
     }
 
     
-    return new hax.core.FolderFunction(json.name,owner,initialData,createEmptyInternalFolder);
+    return new hax.FolderFunction(json.name,owner,initialData,createEmptyInternalFolder);
 }
 
 /** This method adds any additional data to the json saved for this child. 
  * @protected */
-hax.core.FolderFunction.prototype.addToJson = function(json) {
+hax.FolderFunction.prototype.addToJson = function(json) {
     json.argList = this.argList;
     json.returnValue = this.returnValueString;
     json.internalFolder = this.internalFolder.toJson();
@@ -2762,12 +2735,12 @@ hax.core.FolderFunction.prototype.addToJson = function(json) {
     
 
 /** If this is true the member must be executed. */
-hax.core.FolderFunction.prototype.needsCalculating = function() {
+hax.FolderFunction.prototype.needsCalculating = function() {
 	return true;
 }
 
 /** This updates the member based on a change in a dependency.  */
-hax.core.FolderFunction.prototype.prepareForCalculate = function() {
+hax.FolderFunction.prototype.prepareForCalculate = function() {
     this.clearDataSet();
 }
 
@@ -2776,7 +2749,7 @@ hax.core.FolderFunction.prototype.prepareForCalculate = function() {
 
 /** This updates the member data based on the function. It returns
  * true for success and false if there is an error.  */
-hax.core.FolderFunction.prototype.calculate = function() {
+hax.FolderFunction.prototype.calculate = function() {
     
     var folderFunctionErrors = [];
     
@@ -2798,7 +2771,7 @@ hax.core.FolderFunction.prototype.calculate = function() {
 
 /** This method updates the dependencies of any children
  * based on an object being added. */
-hax.core.FolderFunction.prototype.updateDependeciesForModelChange = function(recalculateList) {
+hax.FolderFunction.prototype.updateDependeciesForModelChange = function(recalculateList) {
     if(this.internalFolder) {
         this.internalFolder.updateDependeciesForModelChange(recalculateList);
     }
@@ -2809,8 +2782,8 @@ hax.core.FolderFunction.prototype.updateDependeciesForModelChange = function(rec
 //------------------------------
 
 /** This method retrieve creates the loaded context manager. */
-hax.core.FolderFunction.prototype.createContextManager = function() {
-    return new hax.core.ContextManager(this);
+hax.FolderFunction.prototype.createContextManager = function() {
+    return new hax.ContextManager(this);
 }
 
 //------------------------------
@@ -2818,7 +2791,7 @@ hax.core.FolderFunction.prototype.createContextManager = function() {
 //------------------------------
 
 /** this method gets the hame the children inherit for the full name. */
-hax.core.FolderFunction.prototype.getPossesionNameBase = function() {
+hax.FolderFunction.prototype.getPossesionNameBase = function() {
     return this.getFullName() + ":";
 }
 
@@ -2828,19 +2801,19 @@ hax.core.FolderFunction.prototype.getPossesionNameBase = function() {
 //==============================
 
 /** This is called from the update action. It should not be called externally. */
-hax.core.FolderFunction.prototype.setReturnValueString = function(returnValueString) {
+hax.FolderFunction.prototype.setReturnValueString = function(returnValueString) {
     this.returnValueString = returnValueString;
 }
 
 /** This is called from the update action. It should not be called externally. */
-hax.core.FolderFunction.prototype.setArgList = function(argList) {
+hax.FolderFunction.prototype.setArgList = function(argList) {
     this.argList = argList;
 }
 
 /** This method creates the folderFunction function. It is called from the update action 
  * and should not be called externally. 
  * @private */
-hax.core.FolderFunction.prototype.getFolderFunctionFunction = function(folderFunctionErrors) {
+hax.FolderFunction.prototype.getFolderFunctionFunction = function(folderFunctionErrors) {
 
     //create a copy of the workspace to do the function calculation - we don't update the UI display version
     var virtualWorkspace;
@@ -2878,7 +2851,7 @@ hax.core.FolderFunction.prototype.getFolderFunctionFunction = function(folderFun
         }
 
         //apply the update
-        var actionResponse = hax.core.updatemember.updateObjects(updateDataList);        
+        var actionResponse = hax.updatemember.updateObjects(updateDataList);        
         if(actionResponse.getSuccess()) {
             //retrieve the result
             if(returnValueTable) {
@@ -2891,7 +2864,7 @@ hax.core.FolderFunction.prototype.getFolderFunctionFunction = function(folderFun
         }
         else {
             //error exectuing folderFunction function - thro wan exception
-            throw hax.core.util.createError(actionResponse.getErrorMsg());
+            throw hax.util.createError(actionResponse.getErrorMsg());
         }
     }
     
@@ -2900,12 +2873,12 @@ hax.core.FolderFunction.prototype.getFolderFunctionFunction = function(folderFun
 
 /** This method creates a copy of the workspace to be used for the function evvaluation. 
  * @private */
-hax.core.FolderFunction.prototype.createVirtualWorkspace = function(folderFunctionErrors) {
+hax.FolderFunction.prototype.createVirtualWorkspace = function(folderFunctionErrors) {
     try {
-		return hax.core.Workspace.createVirtualWorkpaceFromFolder("temp",this.internalFolder,this.getOwner());
+		return hax.Workspace.createVirtualWorkpaceFromFolder("temp",this.internalFolder,this.getOwner());
 	}
 	catch(error) {
-        var actionError = hax.core.ActionError.processException(exception,"FolderFunction - Code",false);
+        var actionError = hax.ActionError.processException(exception,"FolderFunction - Code",false);
 		folderFunctionErrors.push(actionError);
 		return null;
 	}
@@ -2913,7 +2886,7 @@ hax.core.FolderFunction.prototype.createVirtualWorkspace = function(folderFuncti
 
 /** This method loads the input argument members from the virtual workspace. 
  * @private */
-hax.core.FolderFunction.prototype.loadInputElements = function(rootFolder,folderFunctionErrors) {
+hax.FolderFunction.prototype.loadInputElements = function(rootFolder,folderFunctionErrors) {
     var argMembers = [];
     for(var i = 0; i < this.argList.length; i++) {
         var argName = this.argList[i];
@@ -2924,7 +2897,7 @@ hax.core.FolderFunction.prototype.loadInputElements = function(rootFolder,folder
 //		else {
 //            //missing input element
 //            var msg = "Input element not found in folderFunction: " + argName;
-//            var actionError = new hax.core.ActionError(msg,"FolderFunction - Code",this);
+//            var actionError = new hax.ActionError(msg,"FolderFunction - Code",this);
 //            folderFunctionErrors.push(actionError);
 //        }       
     }
@@ -2933,12 +2906,12 @@ hax.core.FolderFunction.prototype.loadInputElements = function(rootFolder,folder
 
 /** This method loads the output member from the virtual workspace. 
  * @private  */
-hax.core.FolderFunction.prototype.loadOutputElement = function(rootFolder,folderFunctionErrors) {
+hax.FolderFunction.prototype.loadOutputElement = function(rootFolder,folderFunctionErrors) {
     var returnValueMember = rootFolder.lookupChild(this.returnValueString);
 //    if(!returnValueMember) {
 //        //missing input element
 //        var msg = "Return element not found in folderFunction: " + this.returnValueString;
-//        var actionError = new hax.core.ActionError(msg,"FolderFunction - Code",this);
+//        var actionError = new hax.ActionError(msg,"FolderFunction - Code",this);
 //        folderFunctionErrors.push(actionError);
 //    }
     return returnValueMember;
@@ -2949,14 +2922,14 @@ hax.core.FolderFunction.prototype.loadOutputElement = function(rootFolder,folder
 // Static methods
 //============================
 
-hax.core.FolderFunction.generator = {};
-hax.core.FolderFunction.generator.displayName = "Folder Function";
-hax.core.FolderFunction.generator.type = "hax.core.FolderFunction";
-hax.core.FolderFunction.generator.createMember = hax.core.FolderFunction.fromJson;
+hax.FolderFunction.generator = {};
+hax.FolderFunction.generator.displayName = "Folder Function";
+hax.FolderFunction.generator.type = "hax.FolderFunction";
+hax.FolderFunction.generator.createMember = hax.FolderFunction.fromJson;
 
 //register this member
-hax.core.Workspace.addMemberGenerator(hax.core.FolderFunction.generator);;
-hax.core.action = {};
+hax.Workspace.addMemberGenerator(hax.FolderFunction.generator);;
+hax.action = {};
 
 /** This class encapsulates a response to an action. It include a success flag,
  * a list of ActionErrors, and a fatal flag. Success is set to true unless there
@@ -2964,7 +2937,7 @@ hax.core.action = {};
  * When processing an action, only model data errors should be set. A code error 
  * will be translated to a data error when recalculate is called. Application 
  * errors can also be set. */
-hax.core.ActionResponse = function() {
+hax.ActionResponse = function() {
     this.success = true;
     this.errors = [];
     this.fatal = false;
@@ -2972,7 +2945,7 @@ hax.core.ActionResponse = function() {
 
 /** This method adds an error to the error list for this action. It also sets 
  * success to false. */
-hax.core.ActionResponse.prototype.addError = function(actionError) {
+hax.ActionResponse.prototype.addError = function(actionError) {
     this.success = false;
     if(actionError.getIsFatal()) {
         this.fatal = true;
@@ -2984,12 +2957,12 @@ hax.core.ActionResponse.prototype.addError = function(actionError) {
 }
 
 /** This method returns false if there were any errors during this action. */
-hax.core.ActionResponse.prototype.getSuccess = function() {
+hax.ActionResponse.prototype.getSuccess = function() {
     return this.success;
 }
 
 /** This method returns the error message for this action. It is only valid if success = false. */
-hax.core.ActionResponse.prototype.getErrorMsg = function() {
+hax.ActionResponse.prototype.getErrorMsg = function() {
     var msg = "";
     if(this.fatal) {
         msg += "Unknown Error: The application is in an indeterminant state. It is recommended it be closed.\n";
@@ -3016,8 +2989,8 @@ hax.core.ActionResponse.prototype.getErrorMsg = function() {
 /** This method class is an action error object, to be used in an action return value. 
  * The error type is a classification string. If the error is associated with a member
  * the member can be set here. */
-hax.core.ActionError = function(msg,errorType,optionalMember) {
-    this.msg = (msg != null) ? msg : hax.core.ActionError.UNKNOWN_ERROR_MESSAGE;
+hax.ActionError = function(msg,errorType,optionalMember) {
+    this.msg = (msg != null) ? msg : hax.ActionError.UNKNOWN_ERROR_MESSAGE;
     this.errorType = errorType;
     this.member = optionalMember;
     
@@ -3025,7 +2998,7 @@ hax.core.ActionError = function(msg,errorType,optionalMember) {
     this.parentException = null;
 }
 
-hax.core.ActionError.UNKNOWN_ERROR_MESSAGE = "Unknown Error";
+hax.ActionError.UNKNOWN_ERROR_MESSAGE = "Unknown Error";
 
 //"User App" - This is an error in the users application code
 //"Custom Control - Update" - in "update" of custom control (cleared and set)
@@ -3036,31 +3009,31 @@ hax.core.ActionError.UNKNOWN_ERROR_MESSAGE = "Unknown Error";
 //"Calculate" - error when the object function is set as data (includes execution if necessary)
 //
 ///** This is an error in the user model code. */
-//hax.core.ActionError.ACTION_ERROR_MODEL = "model";
+//hax.ActionError.ACTION_ERROR_MODEL = "model";
 ///** This is an error in the application code. */
-//hax.core.ActionError.ACTION_ERROR_APP = "app";
+//hax.ActionError.ACTION_ERROR_APP = "app";
 ///** This is an error in the user appliation level code, such as custom components. */
-//hax.core.ActionError.ACTION_ERROR_USER_APP = "user app";
+//hax.ActionError.ACTION_ERROR_USER_APP = "user app";
 ///** This is an operator error. */
-//hax.core.ActionError.ACTION_ERROR_USER = "user";
+//hax.ActionError.ACTION_ERROR_USER = "user";
 
 /** This sets the exception that triggered this error. */
-hax.core.ActionError.prototype.setParentException = function(exception) {
+hax.ActionError.prototype.setParentException = function(exception) {
     this.parentException = exception;
 }
 
 /** This sets the exception that triggered this error. */
-hax.core.ActionError.prototype.setIsFatal= function(isFatal) {
+hax.ActionError.prototype.setIsFatal= function(isFatal) {
     this.isFatal = isFatal;
 }
 
 /** This returns true if this is a fatal error. */
-hax.core.ActionError.prototype.getIsFatal= function() {
+hax.ActionError.prototype.getIsFatal= function() {
     return this.isFatal;
 }
 
 /** This gets the type of error. */
-hax.core.ActionError.prototype.getType= function() {
+hax.ActionError.prototype.getType= function() {
     return this.errorType;
 }
 
@@ -3069,14 +3042,14 @@ hax.core.ActionError.prototype.getType= function() {
  * The resulting error message is the message from the
  * exception. An optional prefix may be added using the argument optionalErrorMsgPrefix.
  * This method also prints the stack trace for the exception. */
-hax.core.ActionError.processException = function(exception,type,defaultToFatal,optionalErrorMsgPrefix) {  
+hax.ActionError.processException = function(exception,type,defaultToFatal,optionalErrorMsgPrefix) {  
     if(exception.stack) {
         console.error(exception.stack);
     }
     var errorMsg = optionalErrorMsgPrefix ? optionalErrorMsgPrefix : "";
     if(exception.message) errorMsg += exception.message;
     if(errorMsg.length == 0) errorMsg = "Unknown error";
-    var actionError = new hax.core.ActionError(errorMsg,type,null);
+    var actionError = new hax.ActionError(errorMsg,type,null);
     actionError.setParentException(exception);
 	
     var isFatal;
@@ -3094,7 +3067,7 @@ hax.core.ActionError.processException = function(exception,type,defaultToFatal,o
 
  ;
 /** This namespace contains functions to process a create of a member */
-hax.core.createmember = {};
+hax.createmember = {};
 
 /** member CREATED EVENT
  * This listener event is fired when after a member is created, to be used to respond
@@ -3103,30 +3076,30 @@ hax.core.createmember = {};
  * Event member Format:
  * [member]
  */
-hax.core.createmember.MEMBER_CREATED_EVENT = "memberCreated";
+hax.createmember.MEMBER_CREATED_EVENT = "memberCreated";
 
-hax.core.createmember.fireCreatedEvent = function(member) {
+hax.createmember.fireCreatedEvent = function(member) {
     var workspace = member.getWorkspace();
-    workspace.dispatchEvent(hax.core.createmember.MEMBER_CREATED_EVENT,member);
+    workspace.dispatchEvent(hax.createmember.MEMBER_CREATED_EVENT,member);
 }
 
-hax.core.createmember.fireCreatedEventList = function(memberList) {
+hax.createmember.fireCreatedEventList = function(memberList) {
     for(var i = 0; i < memberList.length; i++) {
-        hax.core.createmember.fireCreatedEvent(memberList[i]);
+        hax.createmember.fireCreatedEvent(memberList[i]);
     }
 }
 
 /** This method creates member according the input json, in the given folder.
  * The return value is an ActionResponse object. Optionally, an existing action response
  * may be passed in or otherwise one will be created here. */
-hax.core.createmember.createMember = function(owner,json,optionalActionResponse) {
-	var actionResponse = optionalActionResponse ? optionalActionResponse : new hax.core.ActionResponse();
+hax.createmember.createMember = function(owner,json,optionalActionResponse) {
+	var actionResponse = optionalActionResponse ? optionalActionResponse : new hax.ActionResponse();
     
     try {      
         var recalculateList = [];
         var creationList = [];
         
-        var member = hax.core.createmember.instantiateMember(owner,json,creationList,actionResponse);
+        var member = hax.createmember.instantiateMember(owner,json,creationList,actionResponse);
         
         //add the member to the action response
         actionResponse.member = member;
@@ -3134,17 +3107,17 @@ hax.core.createmember.createMember = function(owner,json,optionalActionResponse)
         var workspace = member.getWorkspace();
         workspace.updateDependeciesForModelChange(recalculateList);
 
-        hax.core.calculation.callRecalculateList(recalculateList,actionResponse);
+        hax.calculation.callRecalculateList(recalculateList,actionResponse);
         
-        var updatedButNotCreated = hax.core.util.getListInFirstButNotSecond(recalculateList,creationList);
+        var updatedButNotCreated = hax.util.getListInFirstButNotSecond(recalculateList,creationList);
 
         //dispatch events
-        hax.core.createmember.fireCreatedEventList(creationList);
-        hax.core.updatemember.fireUpdatedEventList(updatedButNotCreated);
+        hax.createmember.fireCreatedEventList(creationList);
+        hax.updatemember.fireUpdatedEventList(updatedButNotCreated);
 	}
 	catch(error) {
         //unknown application error
-        var actionError = hax.core.ActionError.processException(error,"AppException",true);
+        var actionError = hax.ActionError.processException(error,"AppException",true);
         actionResponse.addError(actionError);
     }
     
@@ -3153,14 +3126,14 @@ hax.core.createmember.createMember = function(owner,json,optionalActionResponse)
 }
 
 /** This method instantiates a member, without setting the update data. */
-hax.core.createmember.instantiateMember = function(owner,json,creationList,actionResponse) {
+hax.createmember.instantiateMember = function(owner,json,creationList,actionResponse) {
     //create member
-    var generator = hax.core.Workspace.getMemberGenerator(json.type);
+    var generator = hax.Workspace.getMemberGenerator(json.type);
 
     if(!generator) {
        //type not found
        var errorMsg = "Member type not found: " + json.type;
-       var actionError = new hax.core.ActionError(errorMsg,"Model",null);
+       var actionError = new hax.ActionError(errorMsg,"Model",null);
        
        actionResponse.addError(actionError);
        
@@ -3174,14 +3147,14 @@ hax.core.createmember.instantiateMember = function(owner,json,creationList,actio
     //instantiate children if there are any
     for(var i = 0; i < childJsonOutputList.length; i++) {
         var childJson = childJsonOutputList[i];
-        hax.core.createmember.instantiateMember(member,childJson,creationList,actionResponse);
+        hax.createmember.instantiateMember(member,childJson,creationList,actionResponse);
     }
     
     return member;
 };
 /** This namespace contains functions to process an update to an member
  * which inherits from the FunctionBase component. */
-hax.core.updatemember = {};
+hax.updatemember = {};
 
 /** member UPDATED EVENT
  * This listener event is fired when after a member is updated, to be used to respond
@@ -3190,32 +3163,32 @@ hax.core.updatemember = {};
  * Event member Format:
  * [member]
  */
-hax.core.updatemember.MEMBER_UPDATED_EVENT = "memberUpdated";
+hax.updatemember.MEMBER_UPDATED_EVENT = "memberUpdated";
 
-hax.core.updatemember.CODE_APPLIED = 0;
-hax.core.updatemember.DATA_APPLIED = 1;
+hax.updatemember.CODE_APPLIED = 0;
+hax.updatemember.DATA_APPLIED = 1;
 
-hax.core.updatemember.fireUpdatedEvent = function(member) {
+hax.updatemember.fireUpdatedEvent = function(member) {
     var workspace = member.getWorkspace();
-    workspace.dispatchEvent(hax.core.updatemember.MEMBER_UPDATED_EVENT,member);
+    workspace.dispatchEvent(hax.updatemember.MEMBER_UPDATED_EVENT,member);
 }
 
-hax.core.updatemember.fireUpdatedEventList = function(memberList) {
+hax.updatemember.fireUpdatedEventList = function(memberList) {
     for(var i = 0; i < memberList.length; i++) {
-        hax.core.updatemember.fireUpdatedEvent(memberList[i]);
+        hax.updatemember.fireUpdatedEvent(memberList[i]);
     }
 }
 
 /** This method updates the object function for a given member. 
  * The return value is an ActionResponse object. Optionally, an existing action response
  * may be passed in or otherwise one will be created here. */
-hax.core.updatemember.updateCode = function(member,argList,functionBody,supplementalCode,optionalActionResponse) {
-	var actionResponse = optionalActionResponse ? optionalActionResponse : new hax.core.ActionResponse();
+hax.updatemember.updateCode = function(member,argList,functionBody,supplementalCode,optionalActionResponse) {
+	var actionResponse = optionalActionResponse ? optionalActionResponse : new hax.ActionResponse();
     
     try {
         var recalculateList = [];
 
-        hax.core.updatemember.applyCode(member,
+        hax.updatemember.applyCode(member,
             argList,
             functionBody,
             supplementalCode,
@@ -3224,15 +3197,15 @@ hax.core.updatemember.updateCode = function(member,argList,functionBody,suppleme
         //set dependencies
         member.initializeDependencies();
             
-        hax.core.calculation.addToRecalculateList(recalculateList,member);
+        hax.calculation.addToRecalculateList(recalculateList,member);
 
-        hax.core.calculation.callRecalculateList(recalculateList,actionResponse);
+        hax.calculation.callRecalculateList(recalculateList,actionResponse);
         
         //fire updated events
-        hax.core.updatemember.fireUpdatedEventList(recalculateList);
+        hax.updatemember.fireUpdatedEventList(recalculateList);
     }
     catch(error) {
-        var actionError = hax.core.ActionError.processException(error,"AppException",true);
+        var actionError = hax.ActionError.processException(error,"AppException",true);
         actionResponse.addError(actionError);
     }
     
@@ -3242,24 +3215,24 @@ hax.core.updatemember.updateCode = function(member,argList,functionBody,suppleme
 /** This method updates the data for a given member. 
  * The return value is an ActionResponse object. Optionally, an existing action response
  * may be passed in or otherwise one will be created here. */
-hax.core.updatemember.updateData = function(member,data,optionalActionResponse) {
-	var actionResponse = optionalActionResponse ? optionalActionResponse : new hax.core.ActionResponse();
+hax.updatemember.updateData = function(member,data,optionalActionResponse) {
+	var actionResponse = optionalActionResponse ? optionalActionResponse : new hax.ActionResponse();
     
     try {
         var recalculateList = [];
 
-        hax.core.updatemember.applyData(member,data,recalculateList);
+        hax.updatemember.applyData(member,data,recalculateList);
         
-        hax.core.calculation.addToRecalculateList(recalculateList,member);
+        hax.calculation.addToRecalculateList(recalculateList,member);
 
-        hax.core.calculation.callRecalculateList(recalculateList,actionResponse);
+        hax.calculation.callRecalculateList(recalculateList,actionResponse);
 
         //fire updated events
-        hax.core.updatemember.fireUpdatedEvent(member);
-        hax.core.updatemember.fireUpdatedEventList(recalculateList);
+        hax.updatemember.fireUpdatedEvent(member);
+        hax.updatemember.fireUpdatedEventList(recalculateList);
     }
     catch(error) {
-        var actionError = hax.core.ActionError.processException(error,"AppException",true);
+        var actionError = hax.ActionError.processException(error,"AppException",true);
         actionResponse.addError(actionError);
     }
     
@@ -3269,8 +3242,8 @@ hax.core.updatemember.updateData = function(member,data,optionalActionResponse) 
 /** This method updates the object function or the data for a list of members. 
  * The return value is an ActionResponse object. Optionally, an existing action response
  * may be passed in or otherwise one will be created here. */
-hax.core.updatemember.updateObjects = function(updateDataList,optionalActionResponse) {
-	var actionResponse = optionalActionResponse ? optionalActionResponse : new hax.core.ActionResponse();
+hax.updatemember.updateObjects = function(updateDataList,optionalActionResponse) {
+	var actionResponse = optionalActionResponse ? optionalActionResponse : new hax.ActionResponse();
     
     try {
         var recalculateList = [];   
@@ -3281,11 +3254,11 @@ hax.core.updatemember.updateObjects = function(updateDataList,optionalActionResp
             var argData = updateDataList[i];
             var member = argData.member;
             
-            var codeOrData = hax.core.updatemember.applyCodeOrData(member,argData);
+            var codeOrData = hax.updatemember.applyCodeOrData(member,argData);
             
             //if this is code we need to initialize
             //set dependencies
-            if(codeOrData === hax.core.updatemember.CODE_APPLIED) {
+            if(codeOrData === hax.updatemember.CODE_APPLIED) {
                 member.initializeDependencies();
             }
             else {
@@ -3293,18 +3266,18 @@ hax.core.updatemember.updateObjects = function(updateDataList,optionalActionResp
             }
             
             //update recalculate list
-            hax.core.calculation.addToRecalculateList(recalculateList,member);
+            hax.calculation.addToRecalculateList(recalculateList,member);
         }
 
         //recalculate after all have been added
-        hax.core.calculation.callRecalculateList(recalculateList,actionResponse);
+        hax.calculation.callRecalculateList(recalculateList,actionResponse);
 
         //fire updated events
-        hax.core.updatemember.fireUpdatedEventList(setDataList);
-        hax.core.updatemember.fireUpdatedEventList(recalculateList);
+        hax.updatemember.fireUpdatedEventList(setDataList);
+        hax.updatemember.fireUpdatedEventList(recalculateList);
     }
     catch(error) {
-        var actionError = hax.core.ActionError.processException(error,"AppException",true);
+        var actionError = hax.ActionError.processException(error,"AppException",true);
         actionResponse.addError(actionError);
     }
     
@@ -3315,28 +3288,28 @@ hax.core.updatemember.updateObjects = function(updateDataList,optionalActionResp
 // Private Functions
 //=====================================
 
-hax.core.updatemember.applyCodeOrData = function(member,updateData) {
+hax.updatemember.applyCodeOrData = function(member,updateData) {
     var data = updateData.data;
     var argList = updateData.argList; 
     var functionBody = updateData.functionBody;
     var supplementalCode = updateData.supplementalCode;
 
     if(functionBody !== undefined) {
-        hax.core.updatemember.applyCode(member,
+        hax.updatemember.applyCode(member,
             argList,
             functionBody,
             supplementalCode);
-        return hax.core.updatemember.CODE_APPLIED;
+        return hax.updatemember.CODE_APPLIED;
     }
     else if(data !== undefined) {
-        hax.core.updatemember.applyData(member,
+        hax.updatemember.applyData(member,
             data);
-        return hax.core.updatemember.DATA_APPLIED;
+        return hax.updatemember.DATA_APPLIED;
     }
 }
 /** This method updates the code and object function in a member based on the
  * passed code.*/
-hax.core.updatemember.applyCode = function(codeable,argList,functionBody,supplementalCode) {
+hax.updatemember.applyCode = function(codeable,argList,functionBody,supplementalCode) {
     
     var codeInfo ={};
     codeInfo.argList = argList;
@@ -3347,7 +3320,7 @@ hax.core.updatemember.applyCode = function(codeable,argList,functionBody,supplem
     var codeLabel = codeable.getFullName();
     
     //process the code text into javascript code
-    hax.core.codeCompiler.processCode(codeInfo,
+    hax.codeCompiler.processCode(codeInfo,
         codeLabel);
 
     //save the code
@@ -3355,7 +3328,7 @@ hax.core.updatemember.applyCode = function(codeable,argList,functionBody,supplem
 }
 
 /** This method sets the data for a member. */
-hax.core.updatemember.applyData = function(dataHolder,data) {
+hax.updatemember.applyData = function(dataHolder,data) {
     
     dataHolder.clearErrors();
     //clear the code if this is a codeable object
@@ -3371,17 +3344,17 @@ hax.core.updatemember.applyData = function(dataHolder,data) {
 ;
 /** This namespace contains functions to process an update the object function
  *for a folderFunction. */
-hax.core.updatefolderFunction = {};
+hax.updatefolderFunction = {};
 
-hax.core.updatefolderFunction.updatePropertyValues = function(folderFunction,argList,returnValueString,recalculateList) {
+hax.updatefolderFunction.updatePropertyValues = function(folderFunction,argList,returnValueString,recalculateList) {
     folderFunction.setArgList(argList);
     folderFunction.setReturnValueString(returnValueString);
 
-    hax.core.calculation.addToRecalculateList(recalculateList,folderFunction);
+    hax.calculation.addToRecalculateList(recalculateList,folderFunction);
 }
 ;
 /** This namespace contains functions to process a create of a member */
-hax.core.movemember = {};
+hax.movemember = {};
 
 /** member MOVE EVENT
  * This listener event is fired when after a member is moveded, meaning either
@@ -3391,10 +3364,10 @@ hax.core.movemember = {};
  * Event member Format:
  * [member]
  */
-hax.core.movemember.MEMBER_MOVED_EVENT = "memberMoved";
+hax.movemember.MEMBER_MOVED_EVENT = "memberMoved";
 
 
-hax.core.movemember.fireMovedEventList = function(movedMemberList,movedOldNameList,movedNewNameList) {
+hax.movemember.fireMovedEventList = function(movedMemberList,movedOldNameList,movedNewNameList) {
     for(var i = 0; i < movedMemberList.length; i++) {
         var member = movedMemberList[i];
         var workspace = member.getWorkspace();
@@ -3402,51 +3375,51 @@ hax.core.movemember.fireMovedEventList = function(movedMemberList,movedOldNameLi
         memberInfo.member = member;
         memberInfo.oldFullName = movedOldNameList[i];
         memberInfo.newFullName = movedNewNameList[i];
-        workspace.dispatchEvent(hax.core.movemember.MEMBER_MOVED_EVENT,memberInfo);
+        workspace.dispatchEvent(hax.movemember.MEMBER_MOVED_EVENT,memberInfo);
     }
 }
 
 /** This method creates member according the input json, in the given folder.
  * The return value is an ActionResponse object. Optionally, an existing action response
  * may be passed in or otherwise one will be created here. */
-hax.core.movemember.moveMember = function(member,name,folder,recalculateList) {
+hax.movemember.moveMember = function(member,name,folder,recalculateList) {
         
     var movedMemberList = [];
-    hax.core.movemember.loadMovedList(member,movedMemberList);
-    var movedOldNameList = hax.core.movemember.getNameList(movedMemberList);
+    hax.movemember.loadMovedList(member,movedMemberList);
+    var movedOldNameList = hax.movemember.getNameList(movedMemberList);
     member.move(name,folder);
-    var movedNewNameList = hax.core.movemember.getNameList(movedMemberList);
+    var movedNewNameList = hax.movemember.getNameList(movedMemberList);
 
     var workspace = member.getWorkspace();
 
     workspace.updateDependeciesForModelChange(recalculateList);
     
-    var updatedButNotMoved = hax.core.util.getListInFirstButNotSecond(recalculateList,movedMemberList);
+    var updatedButNotMoved = hax.util.getListInFirstButNotSecond(recalculateList,movedMemberList);
 
     //dispatch events
-    hax.core.movemember.fireMovedEventList(movedMemberList,movedOldNameList,movedNewNameList);
-    hax.core.updatemember.fireUpdatedEventList(updatedButNotMoved);
+    hax.movemember.fireMovedEventList(movedMemberList,movedOldNameList,movedNewNameList);
+    hax.updatemember.fireUpdatedEventList(updatedButNotMoved);
 }
 
 //this creates the moved info list, including the member and the old name, but not the new name
-hax.core.movemember.loadMovedList = function(member,movedMemberList) {
+hax.movemember.loadMovedList = function(member,movedMemberList) {
     movedMemberList.push(member);
     
     if(member.isParent) {
         var childMap = member.getChildMap();
         for(var key in childMap) {
             var child = childMap[key];
-            hax.core.movemember.loadMovedList(child,movedMemberList);
+            hax.movemember.loadMovedList(child,movedMemberList);
         }
     }
     else if(member.isRootHolder) {
         var root = member.getRoot();
-        hax.core.movemember.loadMovedList(root,movedMemberList);
+        hax.movemember.loadMovedList(root,movedMemberList);
     }
 }
 
 //this adds the new name to the moved list
-hax.core.movemember.getNameList = function(movedMemberList) {
+hax.movemember.getNameList = function(movedMemberList) {
     var nameList = [];
     for(var i = 0; i < movedMemberList.length; i++) {
         nameList[i] = movedMemberList[i].getFullName();
@@ -3455,7 +3428,7 @@ hax.core.movemember.getNameList = function(movedMemberList) {
 }
 ;
 /** This namespace contains the action to delete a member. */
-hax.core.deletemember = {};
+hax.deletemember = {};
 
 /** MEMBER DELETED EVENT
  * This listener event is fired when after a member is deleted, to be used to respond
@@ -3464,13 +3437,13 @@ hax.core.deletemember = {};
  * Event object Format:
  * [child]
  */
-hax.core.deletemember.MEMBER_DELETED_EVENT = "memberDeleted";
+hax.deletemember.MEMBER_DELETED_EVENT = "memberDeleted";
 
-hax.core.deletemember.fireDeletedEventList = function(deleteInfoList) {
+hax.deletemember.fireDeletedEventList = function(deleteInfoList) {
     for(var i = 0; i < deleteInfoList.length; i++) {
         var deleteInfo = deleteInfoList[i];
         var workspace = deleteInfo.workspace;
-        workspace.dispatchEvent(hax.core.deletemember.MEMBER_DELETED_EVENT,deleteInfo);
+        workspace.dispatchEvent(hax.deletemember.MEMBER_DELETED_EVENT,deleteInfo);
     }
 }
 
@@ -3478,8 +3451,8 @@ hax.core.deletemember.fireDeletedEventList = function(deleteInfoList) {
 /** This method should be called to delete a child. The return value is an ActionResponse.
  * It will by default create its own action response object, however optionally an
  * existing action response may be passed in. */
-hax.core.deletemember.deleteMember = function(member,optionalActionResponse) {
-	var actionResponse = optionalActionResponse ? optionalActionResponse : new hax.core.ActionResponse();
+hax.deletemember.deleteMember = function(member,optionalActionResponse) {
+	var actionResponse = optionalActionResponse ? optionalActionResponse : new hax.ActionResponse();
     
     try {
         
@@ -3488,7 +3461,7 @@ hax.core.deletemember.deleteMember = function(member,optionalActionResponse) {
         
         var workspace = member.getWorkspace();
         
-        hax.core.deletemember.fillDeleteInfoList(member,deleteInfoList);
+        hax.deletemember.fillDeleteInfoList(member,deleteInfoList);
         for(var i = 0; i < deleteInfoList.length; i++) {
             //call delete handlers
             var deleteInfo = deleteInfoList[i];
@@ -3501,15 +3474,15 @@ hax.core.deletemember.deleteMember = function(member,optionalActionResponse) {
         }
         workspace.updateDependeciesForModelChange(recalculateList);
 
-        hax.core.calculation.callRecalculateList(recalculateList,actionResponse);
+        hax.calculation.callRecalculateList(recalculateList,actionResponse);
 
         //dispatch events
-        hax.core.deletemember.fireDeletedEventList(deleteInfoList);
-        hax.core.updatemember.fireUpdatedEventList(recalculateList);
+        hax.deletemember.fireDeletedEventList(deleteInfoList);
+        hax.updatemember.fireUpdatedEventList(recalculateList);
 	}
 	catch(error) {
         //unknown application error
-        var actionError = hax.core.ActionError.processException(error,"AppException",true);
+        var actionError = hax.ActionError.processException(error,"AppException",true);
         actionResponse.addError(actionError);
     }
     
@@ -3519,7 +3492,7 @@ hax.core.deletemember.deleteMember = function(member,optionalActionResponse) {
 }
 
 
-hax.core.deletemember.fillDeleteInfoList =  function(member,deleteInfoList) {
+hax.deletemember.fillDeleteInfoList =  function(member,deleteInfoList) {
     var deleteInfo = {};
     deleteInfo.member = member;
     deleteInfo.workspace = member.getWorkspace();
@@ -3529,12 +3502,12 @@ hax.core.deletemember.fillDeleteInfoList =  function(member,deleteInfoList) {
         var childMap = member.getChildMap();
         for(var key in childMap) {
             var child = childMap[key];
-            hax.core.deletemember.fillDeleteInfoList(child,deleteInfoList);
+            hax.deletemember.fillDeleteInfoList(child,deleteInfoList);
         }
     }
     else if(member.isRootHolder) {
         var root = member.getRoot();
-        hax.core.deletemember.fillDeleteInfoList(root,deleteInfoList);
+        hax.deletemember.fillDeleteInfoList(root,deleteInfoList);
     }
 }
 

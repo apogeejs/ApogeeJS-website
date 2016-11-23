@@ -7,34 +7,34 @@
         
 		<script type="text/javascript" src="../../hax.js"></script>
         <script type="text/javascript" src="../../core/core.js"></script>
-		<script type="text/javascript" src="../../core/lib/EventManager.js"></script>
-        <script type="text/javascript" src="../../core/lib/ContextManager.js"></script>
-        <script type="text/javascript" src="../../core/lib/codeCompiler.js"></script>
-        <script type="text/javascript" src="../../core/lib/codeAnalysis.js"></script>
-		<script type="text/javascript" src="../../core/lib/codeDependencies.js"></script>
-		<script type="text/javascript" src="../../core/lib/workspaceCalculation.js"></script>
-        <script type="text/javascript" src="../../core/lib/util.js"></script>
-        <script type="text/javascript" src="../../core/datacomponents/Child.js"></script>
-        <script type="text/javascript" src="../../core/datacomponents/ContextHolder.js"></script>
-        <script type="text/javascript" src="../../core/datacomponents/DataHolder.js"></script>
-        <script type="text/javascript" src="../../core/datacomponents/Dependent.js"></script>
-        <script type="text/javascript" src="../../core/datacomponents/Codeable.js"></script>
-        <script type="text/javascript" src="../../core/datacomponents/Owner.js"></script>
-        <script type="text/javascript" src="../../core/datacomponents/Parent.js"></script>
-        <script type="text/javascript" src="../../core/datacomponents/RootHolder.js"></script>
-        <script type="text/javascript" src="../../core/data/Workspace.js"></script>
-        <script type="text/javascript" src="../../core/data/JsonTable.js"></script>
-        <script type="text/javascript" src="../../core/data/FunctionTable.js"></script>
-        <script type="text/javascript" src="../../core/data/Control.js"></script>
-        <script type="text/javascript" src="../../core/data/Folder.js"></script>
-        <script type="text/javascript" src="../../core/data/FolderFunction.js"></script>
-        <script type="text/javascript" src="../../core/actions/ActionResponse.js"></script>
-        <script type="text/javascript" src="../../core/actions/ActionError.js"></script>
-        <script type="text/javascript" src="../../core/actions/createmember.js"></script>
-        <script type="text/javascript" src="../../core/actions/updatemember.js"></script>
-        <script type="text/javascript" src="../../core/actions/updatefolderfunction.js"></script>
-		<script type="text/javascript" src="../../core/actions/movemember.js"></script>
-        <script type="text/javascript" src="../../core/actions/deletemember.js"></script>
+		<script type="text/javascript" src="../../hax/lib/EventManager.js"></script>
+        <script type="text/javascript" src="../../hax/lib/ContextManager.js"></script>
+        <script type="text/javascript" src="../../hax/lib/codeCompiler.js"></script>
+        <script type="text/javascript" src="../../hax/lib/codeAnalysis.js"></script>
+		<script type="text/javascript" src="../../hax/lib/codeDependencies.js"></script>
+		<script type="text/javascript" src="../../hax/lib/workspaceCalculation.js"></script>
+        <script type="text/javascript" src="../../hax/lib/util.js"></script>
+        <script type="text/javascript" src="../../hax/datacomponents/Child.js"></script>
+        <script type="text/javascript" src="../../hax/datacomponents/ContextHolder.js"></script>
+        <script type="text/javascript" src="../../hax/datacomponents/DataHolder.js"></script>
+        <script type="text/javascript" src="../../hax/datacomponents/Dependent.js"></script>
+        <script type="text/javascript" src="../../hax/datacomponents/Codeable.js"></script>
+        <script type="text/javascript" src="../../hax/datacomponents/Owner.js"></script>
+        <script type="text/javascript" src="../../hax/datacomponents/Parent.js"></script>
+        <script type="text/javascript" src="../../hax/datacomponents/RootHolder.js"></script>
+        <script type="text/javascript" src="../../hax/data/Workspace.js"></script>
+        <script type="text/javascript" src="../../hax/data/JsonTable.js"></script>
+        <script type="text/javascript" src="../../hax/data/FunctionTable.js"></script>
+        <script type="text/javascript" src="../../hax/data/Control.js"></script>
+        <script type="text/javascript" src="../../hax/data/Folder.js"></script>
+        <script type="text/javascript" src="../../hax/data/FolderFunction.js"></script>
+        <script type="text/javascript" src="../../hax/actions/ActionResponse.js"></script>
+        <script type="text/javascript" src="../../hax/actions/ActionError.js"></script>
+        <script type="text/javascript" src="../../hax/actions/createmember.js"></script>
+        <script type="text/javascript" src="../../hax/actions/updatemember.js"></script>
+        <script type="text/javascript" src="../../hax/actions/updatefolderfunction.js"></script>
+		<script type="text/javascript" src="../../hax/actions/movemember.js"></script>
+        <script type="text/javascript" src="../../hax/actions/deletemember.js"></script>
 
 		<script>
             var app = null;
@@ -44,12 +44,12 @@
 				
 				//open the model
 				var headlessWorkspaceJson = inputObject.workspaceJson.workspace;
-                var workspace = new hax.core.Workspace(headlessWorkspaceJson);
+                var workspace = new hax.Workspace(headlessWorkspaceJson);
 				var rootFolder = workspace.getRoot();
 				
 				//set the input
 				var inputTable = rootFolder.lookupChild(inputObject.inputTable);
-				hax.core.updatemember.updateData(inputTable,inputObject.inputJson);
+				hax.updatemember.updateData(inputTable,inputObject.inputJson);
 				
 				//get the output
 				var outputTable = rootFolder.lookupChild(inputObject.outputTable);

@@ -116,13 +116,13 @@ var GoogleChartComponent = {};
 /** This method creates the control. */
 GoogleChartComponent.createComponent = function(workspaceUI,data,componentOptions) {
 	var resource = new GoogleChartResource();
-	return hax.app.visiui.BasicControlComponent.createBaseComponent(workspaceUI,data,resource,GoogleChartComponent.generator,componentOptions);
+	return haxapp.app.BasicControlComponent.createBaseComponent(workspaceUI,data,resource,GoogleChartComponent.generator,componentOptions);
 }
 
 GoogleChartComponent.createComponentFromJson = function(workspaceUI,member,componentJson) {
 	var resource = new GoogleChartResource();
 	member.updateResource(resource);
-    return hax.app.visiui.BasicControlComponent.createBaseComponentFromJson(workspaceUI,member,GoogleChartComponent.generator,componentJson);
+    return haxapp.app.BasicControlComponent.createBaseComponentFromJson(workspaceUI,member,GoogleChartComponent.generator,componentJson);
 }
 
 //======================================

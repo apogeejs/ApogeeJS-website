@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Hax Home</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="stylesheet" href="/web/base.css">
+        <style>           
+            .introP {
+            }
+            .compareTable {
+                margin-left: 20px;
+                margin-left: 20px;
+                margin-top: 40px;
+                margin-bottom: 40px;
+                /*border-collapse: collapse;*/
+                border: #1f297d 1px solid;
+            }
+            .titleCell {
+                font-size: x-large;
+                font-weight: bold;
+                text-align: center;
+                padding: 10px;
+            }
+            .strengthCell {
+                font-style: italic;
+                text-align: center;
+                padding: 10px;
+            }
+            .imageCell {
+                text-align: center;
+                padding: 10px;
+            }
+            .bulletCell {
+                padding: 5px;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- header -->
+        <a class="headerLink" href="/web/home.html"><img class="headerLogo" src="/web/logo51.png"></a>
+        <a class="headerLink" href="/web/home.html">Home</a>
+        <a class="headerLink" href="/hax.html">Application</a>
+        <a class="headerLink" href="/web/tutorials/tutorials.html">Tutorials</a>
+        <a class="headerLink" href="/web/reference/reference.html">Reference</a>
+        <a class="headerLink" href="/web/downloads/downloads.html">Downloads</a>
+        <a class="headerLink" href="/web/about.html">About</a>
+        <hr class="headerBreak">
+        <!-- end header -->
+        <p class="introP">
+            Hax is a <b>programming tool</b> inspired by the Spreadsheet.
+        </p>
+        <p class="introP">
+            Hax does not replace the spreadsheet, it is more of a <b>power user version of the spreadsheet</b> 
+            or a <b>quick and easy programming environment</b>. See the comparison below:
+        </p>        
+        <table class="compareTable">
+            <tr>
+                <td class="titleCell">
+                    Spreadsheet
+                </td>
+                <td class="titleCell">
+                    Hax
+                </td>
+            </tr>
+            <tr>
+                <td class="strengthCell">
+                    <em>Best for: simple models, data entry, data presentation.</em>
+                </td>
+                <td class="strengthCell">
+                    <em>Best for: complex models, data manipulation, JSON data.</em>
+                </td>
+            </tr>
+            <tr>
+                <td class="imageCell">
+                    <img src="simpleSpreadsheet_small.png">
+                </td>
+                <td class="imageCell">
+                    <img src="simpleModelNFormula_small.png">
+                </td>
+            </tr>
+            <tr>
+                <td class="bulletCell">
+                    <ul>
+                        <li>A <b>grid of cells</b>, each cell is named according to its <b>location in the grid</b>.</li>
+                    </ul>
+                </td>
+                <td class="bulletCell">
+                    <ul>
+                        <li>Hax replaces cells with <b>individual tables</b>. Tables are given <b>descriptive names</b> such as "revenue".</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <td class="bulletCell">
+                    <ul>
+                        <li>Each cell has a static value or a formula to calculate this value.</li>
+                    </ul>
+                </td>
+                <td class="bulletCell">
+                    <ul>
+                        <li>Each table has a static value or a formula to calculate the value.</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <td class="bulletCell">
+                    <ul>
+                        <li>A cell value is a <b>simple value</b> like a number or a string.</li>
+                    </ul>
+                </td>
+                <td class="bulletCell">
+                    <ul>
+                        <li>A table value is a <b>data structure</b> such as an array, or something more complex.</li>
+                    </ul>
+                </td>
+            </tr>
+        </table>
+        <h2>Motivation for Hax</h2>
+        <p>
+            The motivation behind Hax was to make it easier to write real code in a spreadsheet-like tool.
+        </p>
+        <ul>
+            <li>The variables names from a spreadsheet, such as <b><em>B$5</em></b>, are replaced with descriptive names such as 
+                <b><em>revenue</em></b> to make the code more understandable.</li>
+            <li>The formulas are applied to entire data structures, so <b>loops or recursive functions</b> can be used, rather than
+                        <b>copying and pasting</b> formulas over a range of cells.</li>
+        </ul>
+        <p>
+            These new features make the tool more of a coding environment. Admittedly there is
+            extra overhead in writing this code. For simple models, the spreadsheet is easier.
+            However, once the model gets more complex, it is much easier to organize, debug and 
+            maintain in Hax.
+        </p>
+        
+        <h2>Implementation</h2>
+        <p>The Hax web application runs completely in the browser and is written in javascript. The user scripting language
+            is also javascript.
+        </p>
+        <p>Because Hax is uses javascript, the data format for data structures is JSON. This is a convenient
+            because JSON is one of the most prevelent data formats, such as for metadata files and data transfer
+            in web services.    
+        </p>
+        
+        <h2>Compatibility</h2>
+        <ul>
+            <li>Desktop Chrome, Firefox browsers tested. Safari also supported.</li>
+            <li>Edge support coming soon</li>
+            <li>Internet Explorer not supported</li>
+            <li>Desktop support only. Touch not supported.</li>
+        </ul>
+        
+    </body>
+</html>

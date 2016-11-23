@@ -6,8 +6,9 @@
         <script type="text/javascript" src="https://cdn.jsdelivr.net/ace/1.2.3/min/ace.js"></script>
         <script src="https://cdn.rawgit.com/jquery/esprima/2.7.2/esprima.js"></script>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handsontable/0.28.4/handsontable.full.min.js"></script>
-        <script type="text/javascript" src="v0.0.1/hax-lib-web.min.js"></script>
-		<link rel="stylesheet" type="text/css" href="v0.0.1/hax-cat.css">
+        <script type="text/javascript" src="v0.3.0/hax-web-lib.min.js"></script>
+        <script type="text/javascript" src="v0.3.0/hax-web-app.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="v0.3.0/haxapp.css">
         <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/handsontable/0.28.4/handsontable.full.min.css">
 		<style id="styles_for_doc">
 			body {
@@ -65,8 +66,8 @@
             'use strict'
             var app = null;
 			function init() {
-                hax.visiui.initResourcePath("v0.0.1/resources");
-                app = new hax.app.visiui.Hax("appContainer");
+                haxapp.ui.initResourcePath("v0.3.0/resources");
+                app = new haxapp.app.Hax("appContainer");
             }
             
             function registerComponent(controlBundle) {

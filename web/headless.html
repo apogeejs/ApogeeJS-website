@@ -5,7 +5,7 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <script src="https://cdn.rawgit.com/jquery/esprima/2.7.2/esprima.js"></script>
         
-		<script type="text/javascript" src="v0.0.1/hax-core-lib-web.min.js"></script>
+		<script type="text/javascript" src="v0.3.0/hax-web-lib.min.js"></script>
 
 		<script>
             var app = null;
@@ -15,12 +15,12 @@
 				
 				//open the model
 				var headlessWorkspaceJson = inputObject.workspaceJson.workspace;
-                var workspace = new hax.core.Workspace(headlessWorkspaceJson);
+                var workspace = new hax.Workspace(headlessWorkspaceJson);
 				var rootFolder = workspace.getRoot();
 				
 				//set the input
 				var inputTable = rootFolder.lookupChild(inputObject.inputTable);
-				hax.core.updatemember.updateData(inputTable,inputObject.inputJson);
+				hax.updatemember.updateData(inputTable,inputObject.inputJson);
 				
 				//get the output
 				var outputTable = rootFolder.lookupChild(inputObject.outputTable);

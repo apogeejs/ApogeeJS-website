@@ -56,7 +56,7 @@ SimpleGeojsonResource.prototype.setComponent = function(component) {
             instance.map.invalidateSize();
         }
     }
-    hax.visiui.setResizeListener(this.mapDiv, resizeCallback);
+    haxapp.ui.setResizeListener(this.mapDiv, resizeCallback);
     
     
     //end initailize UI --------------------------------------------------------
@@ -107,13 +107,13 @@ var SimpleGeojsonComponent = {};
 /** This method creates the control. */
 SimpleGeojsonComponent.createComponent = function(workspaceUI,data,componentOptions) {
     var resource = new SimpleGeojsonResource();
-	return hax.app.visiui.BasicControlComponent.createBaseComponent(workspaceUI,data,resource,SimpleGeojsonComponent.generator,componentOptions);
+	return haxapp.app.BasicControlComponent.createBaseComponent(workspaceUI,data,resource,SimpleGeojsonComponent.generator,componentOptions);
 }
 
 SimpleGeojsonComponent.createComponentFromJson = function(workspaceUI,member,componentJson) {
     var resource = new SimpleGeojsonResource();
 	member.updateResource(resource);
-    return hax.app.visiui.BasicControlComponent.createBaseComponentFromJson(workspaceUI,member,SimpleGeojsonComponent.generator,componentJson);
+    return haxapp.app.BasicControlComponent.createBaseComponentFromJson(workspaceUI,member,SimpleGeojsonComponent.generator,componentJson);
 }
 
 //======================================
