@@ -1,3 +1,3 @@
-# hax-deploy
+#apogee-deploy
 
-This repository is used to push the hax web site to heroku.
+This repository is used to construct the properly versioned apogee web site.
