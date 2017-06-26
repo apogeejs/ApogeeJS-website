@@ -2529,7 +2529,7 @@ apogee.Workspace = function(optionalJson,actionResponseForJson,ownerForVirtualWo
     this.owner = ownerForVirtualWorkspace;
     
     if(!optionalJson) {
-        this.rootFolder = new apogee.Folder(apogee.Parent.ROOT_NAME,this);
+        this.rootFolder = new apogee.Folder(apogee.Workspace.ROOT_FOLDER_NAME,this);
     }
     else {
         this.loadFromJson(optionalJson,actionResponseForJson);
@@ -2541,6 +2541,8 @@ apogee.base.mixin(apogee.Workspace,apogee.EventManager);
 apogee.base.mixin(apogee.Workspace,apogee.ContextHolder);
 apogee.base.mixin(apogee.Workspace,apogee.Owner);
 apogee.base.mixin(apogee.Workspace,apogee.RootHolder);
+
+apogee.Workspace.ROOT_FOLDER_NAME = "Workspace";
 
 /** this method gets the root package for the workspace. */
 apogee.Workspace.prototype.getRoot = function() {
@@ -2613,7 +2615,7 @@ apogee.Workspace.prototype.getPossesionNameBase = function() {
 /** This method looks up a member by its full name. */
 apogee.Workspace.prototype.getMemberByPathArray = function(path,startElement) {
     if(startElement === undefined) startElement = 0;
-    if(path[startElement] === apogee.Parent.ROOT_NAME) return this.rootFolder;
+    if(path.length === 0) return this.rootFolder;
     return this.rootFolder.lookupChildFromPathArray(path,startElement);
 }
 
@@ -3241,7 +3243,7 @@ apogee.FolderFunction = function(name,owner,initialData,createEmptyInternalFolde
     
     //recreate the root folder if info is specified
     if(createEmptyInternalFolder) {
-        var internalFolder = new apogee.Folder(apogee.Parent.ROOT_NAME,this);
+        var internalFolder = new apogee.Folder(apogee.FolderFunction.INTERNAL_FOLDER_NAME,this);
         this.setRoot(internalFolder);
     }
 }
@@ -3253,6 +3255,8 @@ apogee.base.mixin(apogee.FolderFunction,apogee.Dependent);
 apogee.base.mixin(apogee.FolderFunction,apogee.ContextHolder);
 apogee.base.mixin(apogee.FolderFunction,apogee.Owner);
 apogee.base.mixin(apogee.FolderFunction,apogee.RootHolder);
+
+apogee.FolderFunction.INTERNAL_FOLDER_NAME = "root";
 
 /** This gets the internal forlder for the folderFunction. */
 apogee.FolderFunction.prototype.getInternalFolder = function() {
@@ -3466,7 +3470,7 @@ apogee.FolderFunction.prototype.getPossesionNameBase = function() {
 /** This method looks up a member by its full name. */
 apogee.FolderFunction.prototype.getMemberByPathArray = function(path,startElement) {
     if(startElement === undefined) startElement = 0;
-    if(path[startElement] === apogee.Parent.ROOT_NAME) return this.internalFolder;
+    if(path[startElement] === apogee.FolderFunction.INTERNAL_FOLDER_NAME) return this.internalFolder;
     return this.internalFolder.lookupChildFromPathArray(path,startElement);
 }
 
