@@ -5,36 +5,36 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <script src="https://cdn.rawgit.com/jquery/esprima/2.7.2/esprima.js"></script>
         
-		<script type="text/javascript" src="../../hax.js"></script>
+		<script type="text/javascript" src="../../apogee.js"></script>
         <script type="text/javascript" src="../../core/core.js"></script>
-		<script type="text/javascript" src="../../hax/lib/EventManager.js"></script>
-        <script type="text/javascript" src="../../hax/lib/ContextManager.js"></script>
-        <script type="text/javascript" src="../../hax/lib/codeCompiler.js"></script>
-        <script type="text/javascript" src="../../hax/lib/codeAnalysis.js"></script>
-		<script type="text/javascript" src="../../hax/lib/codeDependencies.js"></script>
-		<script type="text/javascript" src="../../hax/lib/workspaceCalculation.js"></script>
-        <script type="text/javascript" src="../../hax/lib/util.js"></script>
-        <script type="text/javascript" src="../../hax/datacomponents/Child.js"></script>
-        <script type="text/javascript" src="../../hax/datacomponents/ContextHolder.js"></script>
-        <script type="text/javascript" src="../../hax/datacomponents/DataHolder.js"></script>
-        <script type="text/javascript" src="../../hax/datacomponents/Dependent.js"></script>
-        <script type="text/javascript" src="../../hax/datacomponents/Codeable.js"></script>
-        <script type="text/javascript" src="../../hax/datacomponents/Owner.js"></script>
-        <script type="text/javascript" src="../../hax/datacomponents/Parent.js"></script>
-        <script type="text/javascript" src="../../hax/datacomponents/RootHolder.js"></script>
-        <script type="text/javascript" src="../../hax/data/Workspace.js"></script>
-        <script type="text/javascript" src="../../hax/data/JsonTable.js"></script>
-        <script type="text/javascript" src="../../hax/data/FunctionTable.js"></script>
-        <script type="text/javascript" src="../../hax/data/Control.js"></script>
-        <script type="text/javascript" src="../../hax/data/Folder.js"></script>
-        <script type="text/javascript" src="../../hax/data/FolderFunction.js"></script>
-        <script type="text/javascript" src="../../hax/actions/ActionResponse.js"></script>
-        <script type="text/javascript" src="../../hax/actions/ActionError.js"></script>
-        <script type="text/javascript" src="../../hax/actions/createmember.js"></script>
-        <script type="text/javascript" src="../../hax/actions/updatemember.js"></script>
-        <script type="text/javascript" src="../../hax/actions/updatefolderfunction.js"></script>
-		<script type="text/javascript" src="../../hax/actions/movemember.js"></script>
-        <script type="text/javascript" src="../../hax/actions/deletemember.js"></script>
+		<script type="text/javascript" src="../../apogee/lib/EventManager.js"></script>
+        <script type="text/javascript" src="../../apogee/lib/ContextManager.js"></script>
+        <script type="text/javascript" src="../../apogee/lib/codeCompiler.js"></script>
+        <script type="text/javascript" src="../../apogee/lib/codeAnalysis.js"></script>
+		<script type="text/javascript" src="../../apogee/lib/codeDependencies.js"></script>
+		<script type="text/javascript" src="../../apogee/lib/workspaceCalculation.js"></script>
+        <script type="text/javascript" src="../../apogee/lib/util.js"></script>
+        <script type="text/javascript" src="../../apogee/datacomponents/Child.js"></script>
+        <script type="text/javascript" src="../../apogee/datacomponents/ContextHolder.js"></script>
+        <script type="text/javascript" src="../../apogee/datacomponents/DataHolder.js"></script>
+        <script type="text/javascript" src="../../apogee/datacomponents/Dependent.js"></script>
+        <script type="text/javascript" src="../../apogee/datacomponents/Codeable.js"></script>
+        <script type="text/javascript" src="../../apogee/datacomponents/Owner.js"></script>
+        <script type="text/javascript" src="../../apogee/datacomponents/Parent.js"></script>
+        <script type="text/javascript" src="../../apogee/datacomponents/RootHolder.js"></script>
+        <script type="text/javascript" src="../../apogee/data/Workspace.js"></script>
+        <script type="text/javascript" src="../../apogee/data/JsonTable.js"></script>
+        <script type="text/javascript" src="../../apogee/data/FunctionTable.js"></script>
+        <script type="text/javascript" src="../../apogee/data/Control.js"></script>
+        <script type="text/javascript" src="../../apogee/data/Folder.js"></script>
+        <script type="text/javascript" src="../../apogee/data/FolderFunction.js"></script>
+        <script type="text/javascript" src="../../apogee/actions/ActionResponse.js"></script>
+        <script type="text/javascript" src="../../apogee/actions/ActionError.js"></script>
+        <script type="text/javascript" src="../../apogee/actions/createmember.js"></script>
+        <script type="text/javascript" src="../../apogee/actions/updatemember.js"></script>
+        <script type="text/javascript" src="../../apogee/actions/updatefolderfunction.js"></script>
+		<script type="text/javascript" src="../../apogee/actions/movemember.js"></script>
+        <script type="text/javascript" src="../../apogee/actions/deletemember.js"></script>
 
 		<script>
             var app = null;
@@ -44,12 +44,12 @@
 				
 				//open the model
 				var headlessWorkspaceJson = inputObject.workspaceJson.workspace;
-                var workspace = new hax.Workspace(headlessWorkspaceJson);
+                var workspace = new apogee.Workspace(headlessWorkspaceJson);
 				var rootFolder = workspace.getRoot();
 				
 				//set the input
 				var inputTable = rootFolder.lookupChild(inputObject.inputTable);
-				hax.updatemember.updateData(inputTable,inputObject.inputJson);
+				apogee.updatemember.updateData(inputTable,inputObject.inputJson);
 				
 				//get the output
 				var outputTable = rootFolder.lookupChild(inputObject.outputTable);
@@ -95,7 +95,7 @@
 	
 	</head>
 	<body>
-		<h1>Web Server/Headless Mode</h1>
+		<h1>Web Server/Headless Mode - JS LOAD NOT UP TO DATE!</h1>
 		<div class="stepDiv">
 			<p>Insert the workspace json and define the input and output fields for the endpoint.</p>
 			Workspace JSON:<br>

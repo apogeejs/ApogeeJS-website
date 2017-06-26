@@ -1,7 +1,3 @@
-/** This is a sample component, using google chart. It requires
- * the google chart library to run.  
- * "https://www.gstatic.com/charts/loader.js" */
-
 (function() {
     
 //=================================
@@ -23,80 +19,100 @@ function onLibLoad() {
     }
 }
 
-//=================================
-// Google Chart Resource
-//=================================
+//===================================
+// Google Chart Component
+//===================================
 
-/** Constructor */
-GoogleChartResource = function() {
-	this.window = null;
-    this.chart = null;
+/** This is a simple google chart component. */
+apogeeapp.app.GoogleChartComponent = function(workspaceUI,control,generator,componentJson) {
+    //extend edit component
+    apogeeapp.app.BasicControlComponent.call(this,workspaceUI,control,generator,componentJson);
     
-    this.width = 500;
-    this.height = 500;
+    //if not yet done, load the google chart library
+    if(!googleLoadCalled) {
+        googleLoadCalled = true;
+        google.charts.load('current', {packages: ['corechart']});
+        google.charts.setOnLoadCallback(onLibLoad);
+    }
+};
+
+apogeeapp.app.GoogleChartComponent.prototype = Object.create(apogeeapp.app.BasicControlComponent.prototype);
+apogeeapp.app.GoogleChartComponent.prototype.constructor = apogeeapp.app.GoogleChartComponent;
+
+/** Implement the method to get the data display. JsDataDisplay is an 
+ * easily configurable data display. */
+apogeeapp.app.GoogleChartComponent.prototype.getDataDisplay = function(viewMode) {
+    return new apogeeapp.app.GoogleChartDisplay(viewMode);
+}
+
+/** TO use JsDataDisplay, implement a class with the following methods, all optional:
+ * init(outputElement,outputMode);
+ * setData(data,outputElement,outputMode);
+ * requestHide(outputElement,outputMode);
+ * onHide(outputElement,outputMode);
+ * destroy(outputElement,outputMode);
+ */
+apogeeapp.app.GoogleChartDisplay = function(viewMode) {
+    //extend edit component
+    apogeeapp.app.JsDataDisplay.call(this,viewMode);
     
-    this.libLoaded = false;
-    this.dataWaiting = false;
-    
-    // Load the Visualization API if needed - we can only load once
     if(!google.visualization) {
         //register this instance
         addInstance(this);
-    
-        if(!googleLoadCalled) {
-            googleLoadCalled = true;
-            google.charts.load('current', {packages: ['corechart']});
-            google.charts.setOnLoadCallback(onLibLoad);
-        }
     }
     else {
         this.libLoaded = true;
     }
 }
 
-/** setFrame - required method for resource processor used in Basic Resource Control. */
-GoogleChartResource.prototype.setComponent = function(component) {
-    this.component = component;
-    this.component.memberUpdated();
-}
+apogeeapp.app.GoogleChartDisplay.prototype = Object.create(apogeeapp.app.JsDataDisplay.prototype);
+apogeeapp.app.GoogleChartDisplay.prototype.constructor = apogeeapp.app.GoogleChartDisplay;
 
-/** setFrame - required method for resource processor used in Basic Resource Control. */
-GoogleChartResource.prototype.setChartSize = function(width,height) {
-    this.width = width;
-    this.height = height;
-}
 
-/** This is the method users will call to initialize the chart. */
-GoogleChartResource.prototype.setData = function(data,chartOptions) {
+apogeeapp.app.GoogleChartDisplay.prototype.showData = function(data) {
     this.data = data;
-    this.chartOptions = chartOptions;
-    this.dataWaiting = true;
-}
-
-/** This is the method users will call to initialize the chart. */
-GoogleChartResource.prototype.onLibLoaded = function() {
-    this.libLoaded = true;
-    this.component.memberUpdated();
-}
-
-/** This is the method users will call to initialize the chart. */
-GoogleChartResource.prototype.show = function() {
-    if((this.libLoaded)&&(this.component)) {
-        //create chart if needed
-        if(!this.chart) {
-            this.chart = new google.visualization.LineChart(this.component.getOutputElement());
-        }
-        
-        //plot the data
-        if(this.dataWaiting) {
-            var chartData = this.createDataTable(this.data);
-            this.chart.draw(chartData, this.chartOptions);
-        }
+    this.dataLoaded = true;
+    
+    if(this.libLoaded) {
+        this.displayData();
     }
 }
 
+apogeeapp.app.GoogleChartDisplay.prototype.onHide = function() {
+    console.log("NewButtonControl.onHide");
+}
+
+apogeeapp.app.GoogleChartDisplay.prototype.destroy = function() {
+    console.log("NewButtonControl.destroyed");
+}
+
+apogeeapp.app.GoogleChartDisplay.prototype.onLibLoaded = function() {
+    this.libLoaded = true;
+    
+    if(this.dataLoaded) {
+        this.displayData();
+    }
+}
+
+apogeeapp.app.GoogleChartDisplay.prototype.displayData = function() {
+    if(!this.data) return;
+    
+    if(!this.chart) {
+        this.chart = new google.visualization.LineChart(this.getElement());
+    }
+    
+    var chartData = this.data.chartData;
+    var chartOptions = this.data.chartOptions;
+    if((!chartData)||(!chartOptions)) {
+        return;
+    }
+
+    var dataTable = this.createDataTable(chartData);
+    this.chart.draw(dataTable, chartOptions);
+}
+
 /** This is constructs the data table from the given data. */
-GoogleChartResource.prototype.createDataTable = function(data) {
+apogeeapp.app.GoogleChartDisplay.prototype.createDataTable = function(data) {
     var dataTable = new google.visualization.DataTable();
     for(var i = 0; i < data.columns.length; i++) {
         var columnInfo = data.columns[i];
@@ -107,40 +123,19 @@ GoogleChartResource.prototype.createDataTable = function(data) {
     return dataTable;
 }
 
-//======================================
-// Static methods
-//======================================
+//-----------------
+//create a component generator
+//-----------------
+apogeeapp.app.GoogleChartComponent.generator = apogeeapp.app.BasicControlComponent.createGenerator(
+        "GoogleChartComponent",
+        "apogeeapp.app.GoogleChartComponent",
+        apogeeapp.app.GoogleChartComponent);
 
-var GoogleChartComponent = {};
-
-/** This method creates the control. */
-GoogleChartComponent.createComponent = function(workspaceUI,data,componentOptions) {
-	var resource = new GoogleChartResource();
-	return haxapp.app.BasicControlComponent.createBaseComponent(workspaceUI,data,resource,GoogleChartComponent.generator,componentOptions);
-}
-
-GoogleChartComponent.createComponentFromJson = function(workspaceUI,member,componentJson) {
-	var resource = new GoogleChartResource();
-	member.updateResource(resource);
-    return haxapp.app.BasicControlComponent.createBaseComponentFromJson(workspaceUI,member,GoogleChartComponent.generator,componentJson);
-}
-
-//======================================
-// This is the control generator, to register the control
-//======================================
-
-GoogleChartComponent.generator = {};
-GoogleChartComponent.generator.displayName = "Google Chart Control";
-GoogleChartComponent.generator.uniqueName = "hax.example.GoogleChartComponent";
-GoogleChartComponent.generator.createComponent = GoogleChartComponent.createComponent;
-GoogleChartComponent.generator.createComponentFromJson = GoogleChartComponent.createComponentFromJson;
-GoogleChartComponent.generator.DEFAULT_WIDTH = 500;
-GoogleChartComponent.generator.DEFAULT_HEIGHT = 500;
-
-
+//-----------------
 //auto registration
+//-----------------
 if(registerComponent) {
-    registerComponent(GoogleChartComponent.generator);
+    registerComponent(apogeeapp.app.GoogleChartComponent.generator);
 }
 
 }
