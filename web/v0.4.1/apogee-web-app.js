@@ -1,4 +1,4 @@
-/* Apogee Web App Version 0.4.0 */
+/* Apogee Web App Version 0.4.1 */
 //main apogeeapp file
 var apogeeapp = {};
 
@@ -837,7 +837,7 @@ apogeeapp.ui.WindowFrame.prototype.minimizeContent = function() {
     //set the window state
     this.windowState = apogeeapp.ui.WINDOW_STATE_MINIMIZED;
     this.updateCoordinates();
-    this.setMinMaxButtons
+    this.setMinMaxButtons();
     
     //dispatch resize event
     if(!wasMinimized) this.dispatchEvent(apogeeapp.ui.WindowFrame.WINDOW_MINIMIZED,this);
@@ -1465,6 +1465,7 @@ apogeeapp.ui.Menu.show = function(menuBody) {
 		apogeeapp.ui.Menu.hideActiveMenu();
 	}
 	var parentElement = menuBody.getParentElement();
+    menuBody.prepareShow();
     var menuElement = menuBody.getMenuElement();
     if((parentElement)&&(menuElement)) {
         parentElement.appendChild(menuElement);
@@ -1479,18 +1480,20 @@ apogeeapp.ui.Menu.show = function(menuBody) {
 
 apogeeapp.ui.Menu.hideActiveMenu = function() {
 	if(apogeeapp.ui.Menu.activeMenu) {
+        var activeMenu = apogeeapp.ui.Menu.activeMenu;
         //set the header to normal (not active)
-        var menuHeader = apogeeapp.ui.Menu.activeMenu.getMenuHeader();
+        var menuHeader = activeMenu.getMenuHeader();
         if(menuHeader) {
             menuHeader.className = "visiui-menu-heading";
         }
         
-        var parentElement = apogeeapp.ui.Menu.activeMenu.getParentElement();
-        var menuElement = apogeeapp.ui.Menu.activeMenu.getMenuElement();
+        var parentElement = activeMenu.getParentElement();
+        var menuElement = activeMenu.getMenuElement();
         if((parentElement)&&(menuElement)) {
             parentElement.removeChild(menuElement);
             apogeeapp.ui.Menu.activeMenu = null;
-        }	
+        }
+        activeMenu.menuHidden();
 	}
 }
 
@@ -1534,6 +1537,16 @@ apogeeapp.ui.MenuHeader.prototype.getElement = function() {
     return this.domElement;
 }
 
+/** this returns the dom element for the menu heading. */
+apogeeapp.ui.MenuHeader.prototype.setChildLocation = function(childLocation) {
+    this.childLocation = childLocation;
+}
+
+/** this returns the dom element for the menu heading. */
+apogeeapp.ui.MenuHeader.prototype.getChildLocation = function() {
+    return this.childLocation;
+}
+
 /** this returns the dom element for the menu object. */
 apogeeapp.ui.MenuHeader.prototype.getMenuBody = function() {
     return this.menuBody;
@@ -1564,6 +1577,11 @@ apogeeapp.ui.MenuHeader.prototype.removeMenuItem = function(title) {
 	this.menuBody.removeMenuItem(title);
 }
 
+/** This sets a callback to create the menu when the menu is opened. This is
+ * for static menus where we do not want to populate it ahead of time. */
+apogeeapp.ui.MenuHeader.prototype.setAsOnTheFlyMenu = function(getMenuItemsCallback) {
+	this.menuBody.setAsOnTheFlyMenu(getMenuItemsCallback);
+}
 //================================
 // Init
 //================================
@@ -1602,13 +1620,6 @@ apogeeapp.ui.MenuBody = function() {
     this.menuHeader = null;
 }
 
-/** This method replaces on spaces with &nbsp; spaces. It is intedned to prevent
- * wrapping in html. */
-apogeeapp.ui.MenuBody.convertSpacesForHtml = function(text) {
-    return text.replace(/ /g,"&nbsp;");
-}
-
-
 /** this returns the dom element for the menu object. */
 apogeeapp.ui.MenuBody.prototype.getMenuElement = function() {
     return this.menuDiv;
@@ -1629,13 +1640,26 @@ apogeeapp.ui.MenuBody.prototype.getIsContext = function() {
     return (this.menuHeader == null);
 }
 
+/** This is called before the menu body is shown */
+apogeeapp.ui.MenuBody.prototype.prepareShow = function() {
+    if(this.isOnTheFlyMenu) {
+        this.constructItemsForShow();
+    }
+}
+
+/** This is called after the menu body is hidden. */
+apogeeapp.ui.MenuBody.prototype.menuHidden = function() {
+    if(this.isOnTheFlyMenu) {
+        this.destroyItemsForHides();
+    }
+}
+
 /** This method is used to attach the menu to the menu head, in a static menu. */
 apogeeapp.ui.MenuBody.prototype.attachToMenuHeader = function(menuHeader) {
     //attach menu to heading
     this.parentElement = menuHeader.getElement();
     this.menuDiv.style.left = "0%";
     this.menuDiv.style.top = "100%";
-    
     this.menuHeader = menuHeader;
 }
 
@@ -1668,6 +1692,13 @@ parentElement.appendChild(this.menuDiv);
     }
 }
 
+/** This sets a callback to create the menu when the menu is opened. This is
+ * for static menus where we do not want to populate it ahead of time. */
+apogeeapp.ui.MenuBody.prototype.setAsOnTheFlyMenu = function(menuItemsCallback) {
+	this.isOnTheFlyMenu = true;
+    this.menuItemsCallback = menuItemsCallback;
+}
+
 /** this adds a menu item that dispatchs the given event when clicked. */
 apogeeapp.ui.MenuBody.prototype.addEventMenuItem = function(title, eventName, eventData, eventManager) {
     var itemInfo = {};
@@ -1689,27 +1720,36 @@ apogeeapp.ui.MenuBody.prototype.addCallbackMenuItem = function(title, callback) 
 /** this adds a menu item that dispatchs the given event when clicked. */
 apogeeapp.ui.MenuBody.prototype.addMenuItem = function(itemInfo) {
     itemInfo.element = apogeeapp.ui.createElementWithClass("div","visiui-menu-item");
+    itemInfo.element.innerHTML = itemInfo.title;
     
-    var title = apogeeapp.ui.MenuBody.convertSpacesForHtml(itemInfo.title);
-    itemInfo.element.innerHTML = title;
-	
-    itemInfo.element.onmousedown = function(event) {
-		event.stopPropagation();
+    if(itemInfo.childMenuItems) {
+        //create a parent menu item
+        var childMenuBody = this.createChildMenuBody(itemInfo.childMenuItems);
+        var childMenuDiv = childMenuBody.getMenuElement();
+        childMenuDiv.style.left = "100%";
+        childMenuDiv.style.top = "0%";
+        itemInfo.element.appendChild(childMenuDiv);
     }
-	itemInfo.element.onmouseup = function(event) {
-		//close menu
-		apogeeapp.ui.Menu.hideActiveMenu();
-        
-        //do menu action
-        if(itemInfo.eventName) {
-            //dispatch event
-            itemInfo.eventManager.dispatchEvent(itemInfo.eventName,itemInfo.eventData);
+    else {
+        //create a norman (clickable) menu item
+        itemInfo.element.onmousedown = function(event) {
+            event.stopPropagation();
         }
-        else if(itemInfo.callback) {
-            //use the callback
-            itemInfo.callback();
+        itemInfo.element.onclick = function(event) {
+            //close menu
+            apogeeapp.ui.Menu.hideActiveMenu();
+
+            //do menu action
+            if(itemInfo.eventName) {
+                //dispatch event
+                itemInfo.eventManager.dispatchEvent(itemInfo.eventName,itemInfo.eventData);
+            }
+            else if(itemInfo.callback) {
+                //use the callback
+                itemInfo.callback();
+            }
+            event.stopPropagation();
         }
-        event.stopPropagation();
     }
 	
     this.menuDiv.appendChild(itemInfo.element);
@@ -1733,14 +1773,34 @@ apogeeapp.ui.MenuBody.prototype.removeMenuItem = function(title) {
 }
 
 //================================
-// Init
+// Internal
 //================================
 
 /** This method creates the menu body that is shown below the header. */
 apogeeapp.ui.MenuBody.prototype.createMenuElement = function() {
     this.menuDiv = apogeeapp.ui.createElementWithClass("div","visiui-menu-body");
 }
-;
+
+apogeeapp.ui.MenuBody.prototype.constructItemsForShow = function () {
+    if(this.menuItemsCallback) {
+        var menuItems = this.menuItemsCallback();
+        this.setMenuItems(menuItems);
+    }
+}
+
+/** This is called after the menu body is hidden. */
+apogeeapp.ui.MenuBody.prototype.destroyItemsForHides = function() {
+    if(this.menuDiv) {
+        apogeeapp.ui.removeAllChildren(this.menuDiv);
+    }
+    this.menuItems = {};
+}
+
+apogeeapp.ui.MenuBody.prototype.createChildMenuBody = function(menuItems) {
+    var childMenuBody = new apogeeapp.ui.MenuBody();
+    childMenuBody.setMenuItems(menuItems);
+    return childMenuBody;
+};
 apogeeapp.jsonedit = {};
 
 var OBJECT_CONSTRUCTOR = {}.constructor;
@@ -3667,11 +3727,14 @@ apogeeapp.ui.treecontrol.TreeControl.prototype.clearRootEntry = function() {
 
 if(!apogeeapp.ui.treecontrol) apogeeapp.ui.treecontrol = {};
 
-apogeeapp.ui.treecontrol.TreeEntry = function(labelText,iconSrc,dblClickCallback,contextMenuCallback,isRoot) {
+apogeeapp.ui.treecontrol.TreeEntry = function(labelText,iconSrc,dblClickCallback,menuItemCallback,isRoot) {
     
     this.contractUrl = apogeeapp.ui.getResourcePath("/contractPlus2.png");
     this.expandUrl = apogeeapp.ui.getResourcePath("/expandPlus2.png");
     this.noControlUrl = apogeeapp.ui.getResourcePath("/nothingPlus2.png");
+    this.emptyControlUrl = apogeeapp.ui.getResourcePath("/emptyPlus2.png");
+    
+    this.isRoot = isRoot;
     
     var baseCssClass;
     if(isRoot) {
@@ -3683,26 +3746,45 @@ apogeeapp.ui.treecontrol.TreeEntry = function(labelText,iconSrc,dblClickCallback
     
     this.element = apogeeapp.ui.createElementWithClass("li", baseCssClass);
     this.control = apogeeapp.ui.createElementWithClass("img", "visiui-tc-control",this.element);
-    this.icon = apogeeapp.ui.createElementWithClass("img", "visiui-tc-icon",this.element);
+
+    //icon/menu
+    if(iconSrc) {
+        if(menuItemCallback) {
+            //icon as menu
+            this.menu = apogeeapp.ui.Menu.createMenuFromImage(iconSrc);
+            this.menu.setAsOnTheFlyMenu(menuItemCallback);
+            this.element.appendChild(this.menu.getElement());
+        }
+        else {
+            //plain icon
+            this.icon = apogeeapp.ui.createElementWithClass("img", "visiui-tc-icon",this.element);
+            this.icon.src = iconSrc; 
+        }
+    }
+    
+    //label
     this.label = apogeeapp.ui.createElementWithClass("div", "visiui-tc-label",this.element);
-    this.childList = null;
-    this.childMap = {};
-    
-    this.state = apogeeapp.ui.treecontrol.NO_CONTROL;
-    
     if(labelText) {
         this.setLabel(labelText);
     }
     
-    if(iconSrc) {
-       this.icon.src = iconSrc; 
+    this.childList = null;
+    this.childMap = {};
+    
+    this.setState(apogeeapp.ui.treecontrol.NO_CONTROL);
+    
+    //context menu and double click
+    var contextMenuCallback = function(event) {
+        var contextMenu = new apogeeapp.ui.MenuBody();
+        var menuItems = menuItemCallback();
+        contextMenu.setMenuItems(menuItems);
+        apogeeapp.ui.Menu.showContextMenu(contextMenu,event);
     }
-    
-   this.setState(apogeeapp.ui.treecontrol.NO_CONTROL);
-    
     this.label.oncontextmenu = contextMenuCallback;
+    
+    //double click action
     if(dblClickCallback) {
-        this.label.ondblclick = dblClickCallback
+        this.label.ondblclick = dblClickCallback;
     }
 }
 
@@ -3751,7 +3833,12 @@ apogeeapp.ui.treecontrol.TreeEntry.prototype.removeChild = function(identifier) 
 apogeeapp.ui.treecontrol.TreeEntry.prototype.setState = function(state) {
     this.state = state;
     if(this.state == apogeeapp.ui.treecontrol.NO_CONTROL) {
-        this.control.src = this.noControlUrl;
+        if(this.isRoot) {
+            this.control.src = this.emptyControlUrl;
+        }
+        else {
+            this.control.src = this.noControlUrl;
+        }
     }
     else if(this.state == apogeeapp.ui.treecontrol.EXPANDED) {
         this.control.src = this.contractUrl;
@@ -3816,14 +3903,10 @@ apogeeapp.app.Apogee = function(containerId) {
 	//create the UI
 	this.createUI(containerId);
     
-    //open a workspace - from url or default
+    //open a workspace if there is a url present
     var workspaceUrl = apogee.util.readQueryField("url",document.URL);
     if(workspaceUrl) {
         apogeeapp.app.openworkspace.openWorkspaceFromUrl(this,workspaceUrl);
-    }
-    else {
-        //create a default workspace 
-        apogeeapp.app.createworkspace.createWorkspace(this);
     }
 }
 	
@@ -4053,7 +4136,7 @@ apogeeapp.app.Apogee.prototype.createMenuBar = function() {
     menus[name] = menu;
     
     //add create child elements
-    this.populateAddChildMenu(menu);
+    menu.setMenuItems(this.getAddChildMenuItems());
     
     //libraries menu
     name = "Libraries";
@@ -4090,48 +4173,28 @@ apogeeapp.app.Apogee.prototype.createMenuBar = function() {
 ///** This method should be implemented if custom menus or menu items are desired. */
 //apogeeapp.app.Apogee.prototype.addToMenuBar(menuBar,menus);
 
-apogeeapp.app.Apogee.prototype.populateAddChildMenu = function(menu,optionalInitialValues,optionalComponentOptions) {
+apogeeapp.app.Apogee.prototype.getAddChildMenuItems = function(optionalInitialValues,optionalComponentOptions) {
+    
+    var menuItemList = [];
+    var menuItem;
     
     for(var i = 0; i < this.standardComponents.length; i++) {
         var key = this.standardComponents[i];
         var generator = this.componentGenerators[key];
-        var title = "Add " + generator.displayName;
-        var callback = apogeeapp.app.addcomponent.getAddComponentCallback(this,generator,optionalInitialValues,optionalComponentOptions);
-        menu.addCallbackMenuItem(title,callback);
+        
+        menuItem = {};
+        menuItem.title = "Add " + generator.displayName;
+        menuItem.callback = apogeeapp.app.addcomponent.getAddComponentCallback(this,generator,optionalInitialValues,optionalComponentOptions);
+        menuItemList.push(menuItem);
     }
 
     //add the additional component item
-    var componentCallback = apogeeapp.app.addcomponent.getAddAdditionalComponentCallback(this,optionalInitialValues,optionalComponentOptions);
-    menu.addCallbackMenuItem("Other Components...",componentCallback);
-}
+    menuItem = {};
+    menuItem.title = "Other Components...";
+    menuItem.callback = apogeeapp.app.addcomponent.getAddAdditionalComponentCallback(this,optionalInitialValues,optionalComponentOptions);
+    menuItemList.push(menuItem);
 
-/** This loads the context menu for the key. It should be update if
- *the key index changes. */
-apogeeapp.app.Apogee.prototype.setFolderContextMenu = function(contentElement,folder) {
-    
-    var app = this;
-
-    var initialValues = {};
-    initialValues.parentName = folder.getFullName();
-    
-    contentElement.oncontextmenu = function(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        
-        //position the window if we can
-        if(event.offsetX) {
-            var componentOptions = {};
-            var coordInfo = {};
-            coordInfo.x = event.offsetX;
-            coordInfo.y = event.offsetY;
-            componentOptions.coordInfo = coordInfo;
-        }
-        
-        var contextMenu = new apogeeapp.ui.MenuBody();
-        app.populateAddChildMenu(contextMenu,initialValues,componentOptions);
-        
-        apogeeapp.ui.Menu.showContextMenu(contextMenu,event);
-    }
+    return menuItemList;
 }
 
 ;
@@ -4862,6 +4925,9 @@ apogeeapp.app.Component = function(workspaceUI,object,generator,options) {
     this.windowDisplay = null;
     this.windowDisplayStateJson = this.options.windowState;
     
+    this.bannerState = apogeeapp.app.WindowHeaderManager.BANNER_TYPE_NONE;
+    this.bannerMessage = "";
+    
     //inheriting objects can pass functions here to be called on cleanup, save, etc
     this.saveActions = [];
     this.cleanupActions = [];
@@ -4885,6 +4951,8 @@ apogeeapp.app.Component.prototype.addCleanupAction = function(cleanupFunction) {
 }
 
 apogeeapp.app.Component.DEFAULT_ICON_RES_PATH = "/genericIcon.png";
+
+apogeeapp.app.Component.MENU_ITEM_OPEN = 0x01;
 
 
 //==============================
@@ -4923,7 +4991,15 @@ apogeeapp.app.Component.prototype.getTreeEntry = function() {
 }
 
 //implement
-//apogeeapp.app.Component.prototype.createWindowDisplay = function();
+///** This creates an instance of the window display. */
+//apogeeapp.app.Component.prototype.instantiateWindowDisplay = function();
+
+apogeeapp.app.Component.prototype.createWindowDisplay = function() {
+    var windowDisplay = this.instantiateWindowDisplay();
+    windowDisplay.setBannerState(this.bannerState,this.bannerMessage);
+    this.windowDisplay = windowDisplay;
+    return windowDisplay;
+}
 
 apogeeapp.app.Component.prototype.closeWindowDisplay = function() {
     if(this.windowDisplay) {
@@ -4939,18 +5015,61 @@ apogeeapp.app.Component.prototype.getWindowDisplay = function() {
     return this.windowDisplay;
 }
 
+apogeeapp.app.Component.prototype.getMenuItems = function(optionalMenuItemList) {
+    //menu items
+    var menuItemList = optionalMenuItemList ? optionalMenuItemList : [];
+
+    //add the standard entries
+    var itemInfo = {};
+    itemInfo.title = "Edit Properties";
+    itemInfo.callback = apogeeapp.app.updatecomponent.getUpdateComponentCallback(this);
+    menuItemList.push(itemInfo);
+
+    var itemInfo = {};
+    itemInfo.title = "Delete";
+    itemInfo.callback = this.createDeleteCallback(itemInfo.title);
+    menuItemList.push(itemInfo);
+    
+    return menuItemList;
+}
+
+apogeeapp.app.Component.prototype.getOpenMenuItem = function() {
+    var openCallback = this.createOpenCallback();
+    if(openCallback) {
+        var itemInfo = {};
+        itemInfo.title = "Open";
+        itemInfo.callback = openCallback;
+        return itemInfo;
+    }
+    else {
+        return null;
+    }
+}
+
 
 //Implement in extending class:
 ///** This indicates if the component has a tab display. */
 //apogeeapp.app.Component.prototype.hasTabDisplay = function();
 
 //Implement in extending class:
-///** This opens the tab display for the component. */
-//apogeeapp.app.Component.prototype.openTabDisplay = function();
+///** This creates the tab display for the component. */
+//apogeeapp.app.Component.prototype.instantiateTabDisplay = function();
 
-//Implement in extending class:
-///** This closes the tab display for the component. */
-//apogeeapp.app.Component.prototype.closeTabDisplay = function();
+apogeeapp.app.Component.prototype.openTabDisplay = function() {
+    if(!this.tabDisplay) {
+        this.tabDisplay = this.instantiateTabDisplay();
+        tabDisplay.setBannerState(this.bannerState,this.bannerMessage);
+    }
+    this.workspaceUI.setActiveTab(this.object.getId());
+}
+
+/** This closes the tab display for the component. */
+apogeeapp.app.Component.prototype.closeTabDisplay = function() {
+    if(this.tabDisplay) {
+        this.tabDisplay.closeTab();
+        this.tabDisplay = null;
+    }
+}
 
 /** This serializes the component. */
 apogeeapp.app.Component.prototype.toJson = function() {
@@ -5038,8 +5157,6 @@ apogeeapp.app.Component.prototype.memberUpdated = function() {
     }
     
     //get the banner info
-    var bannerState;
-    var bannerMessage;
     var object = this.getObject();
     if(object.hasError()) {
         var errorMsg = "";
@@ -5048,29 +5165,29 @@ apogeeapp.app.Component.prototype.memberUpdated = function() {
             errorMsg += actionErrors[i].msg + "\n";
         }
         
-        bannerState = apogeeapp.app.WindowHeaderManager.BANNER_TYPE_ERROR;
-        bannerMessage = errorMsg;
+        this.bannerState = apogeeapp.app.WindowHeaderManager.BANNER_TYPE_ERROR;
+        this.bannerMessage = errorMsg;
     }
     else if(object.getResultPending()) {
-        bannerState = apogeeapp.app.WindowHeaderManager.BANNER_TYPE_PENDING;
-        bannerMessage = apogeeapp.app.WindowHeaderManager.PENDING_MESSAGE;
+        this.bannerState = apogeeapp.app.WindowHeaderManager.BANNER_TYPE_PENDING;
+        this.bannerMessage = apogeeapp.app.WindowHeaderManager.PENDING_MESSAGE;
         
     }
     else {   
-        bannerState = apogeeapp.app.WindowHeaderManager.BANNER_TYPE_NONE;
-        bannerMessage = null;
+        this.bannerState = apogeeapp.app.WindowHeaderManager.BANNER_TYPE_NONE;
+        this.bannerMessage = null;
     }
     
     //update for new data
     this.treeDisplay.updateData();
-    this.treeDisplay.setBannerState(bannerState,bannerMessage);
+    this.treeDisplay.setBannerState(this.bannerState,this.bannerMessage);
     if(this.windowDisplay != null) {
         this.windowDisplay.updateData();
-        this.windowDisplay.setBannerState(bannerState,bannerMessage);
+        this.windowDisplay.setBannerState(this.bannerState,this.bannerMessage);
     }
     if(this.tabDisplay != null) {
         this.tabDisplay.updateData();
-        this.tabDisplay.setBannerState(bannerState,bannerMessage);
+        this.tabDisplay.setBannerState(this.bannerState,this.bannerMessage);
     }
 }
 
@@ -5105,6 +5222,37 @@ apogeeapp.app.Component.prototype.getPropertyValues = function() {
 //=============================
 // Action UI Entry Points
 //=============================
+
+/** This method creates a callback for deleting the component. 
+ *  @private */
+apogeeapp.app.Component.prototype.createOpenCallback = function() {
+    var instance = this;
+    var openCallback;
+    
+    if(this.hasTabDisplay()) {
+        openCallback = function() {
+            instance.openTabDisplay();
+        }
+    }
+    else {
+        var parent = this.object.getParent();
+        if(parent) {
+            var parentComponent = this.workspaceUI.getComponent(parent);
+            if((parentComponent)&&(parentComponent.hasTabDisplay())) {
+                //remove the tree from the parent
+                openCallback = function() {
+                    //open the parent
+                    parentComponent.openTabDisplay();
+                    
+                    //bring thsi child to the front
+                    parentComponent.showChildComponent(instance);
+                }
+            }
+        }
+    }
+    
+    return openCallback;
+}
 
 /** This method creates a callback for deleting the component. 
  *  @private */
@@ -5155,11 +5303,8 @@ apogeeapp.app.ParentComponent = function(workspaceUI,object,generator,options) {
 apogeeapp.app.ParentComponent.prototype = Object.create(apogeeapp.app.Component.prototype);
 apogeeapp.app.ParentComponent.prototype.constructor = apogeeapp.app.ParentComponent;
 
-apogeeapp.app.ParentComponent.prototype.createWindowDisplay = function() {
-    if(this.windowDisplay == null) {
-        this.windowDisplay = new apogeeapp.app.ParentWindowComponentDisplay(this,this.windowDisplayStateJson);
-    }
-    return this.windowDisplay;
+apogeeapp.app.ParentComponent.prototype.instantiateWindowDisplay = function() {
+    return new apogeeapp.app.ParentWindowComponentDisplay(this,this.windowDisplayStateJson);
 }
 
 //----------------------
@@ -5170,28 +5315,44 @@ apogeeapp.app.ParentComponent.prototype.createWindowDisplay = function() {
 apogeeapp.app.ParentComponent.prototype.getContentIsShowing = function() {
     return this.getWindow().getContentIsShowing();
 }
-
-
-//Implement in extending classes
-///** This returned the parent member object associated with this component. */
-//apogeeapp.app.ParentComponent.prototype.getParentMember = function();
     
 apogeeapp.app.ParentComponent.prototype.hasTabDisplay = function() {    
     return true;
 }
 
-apogeeapp.app.ParentComponent.prototype.openTabDisplay = function() {
-    if(!this.tabDisplay) {
-        this.tabDisplay = new apogeeapp.app.TabComponentDisplay(this);
-    }
-    this.workspaceUI.setActiveTab(this.getObject().getId());
+apogeeapp.app.ParentComponent.prototype.instantiateTabDisplay = function() {
+    this.tabDisplay = new apogeeapp.app.TabComponentDisplay(this);   
+    return this.tabDisplay;
 }
 
-apogeeapp.app.ParentComponent.prototype.closeTabDisplay = function() {
+/** This brings the child component to the front and takes any other actions
+ * to show the child in the open parent. */
+apogeeapp.app.ParentComponent.prototype.showChildComponent = function(childComponent) {
+    if(childComponent.getObject().getParent() != this.getObject()) return;
+    
     if(this.tabDisplay) {
-        this.tabDisplay.closeTab();
-        this.tabDisplay = null;
+        this.tabDisplay.showChildComponent(childComponent);
     }
+}
+
+apogeeapp.app.ParentComponent.prototype.getMenuItems = function(optionalMenuItemList) {
+    var menuItemList = optionalMenuItemList ? optionalMenuItemList : [];
+    
+    //initialize the "add components" menu
+    var itemInfo = {};
+    
+    var app = this.getWorkspaceUI().getApp();
+    var initialValues = {};
+    initialValues.parentName = this.object.getFullName();
+    
+    itemInfo.title = "Add Component...";
+    itemInfo.childMenuItems = app.getAddChildMenuItems(initialValues);
+    menuItemList.push(itemInfo);
+
+    //call base class
+    var menuItemList = apogeeapp.app.Component.prototype.getMenuItems.call(this,menuItemList);
+			
+    return menuItemList;
 }
 
 ////in memberUPdated
@@ -5212,10 +5373,6 @@ apogeeapp.app.ParentComponent.prototype.closeTabDisplay = function() {
 
 /** This flags indicates the component is a parent component. */
 apogeeapp.app.ParentComponent.prototype.isParentComponent = true;
-
-///** This shoudl be implemented by the inheritieing class to give the member
-// * object associated with this component. */
-//apogeeapp.app.ParentComponent.getParentMember = function();
 
 /** This function adds a fhile componeent to the displays for this parent component. */
 apogeeapp.app.ParentComponent.prototype.removeChildComponent = function(childComponent) {
@@ -5257,14 +5414,25 @@ apogeeapp.app.EditComponent = function(workspaceUI,object,generator,options) {
 apogeeapp.app.EditComponent.prototype = Object.create(apogeeapp.app.Component.prototype);
 apogeeapp.app.EditComponent.prototype.constructor = apogeeapp.app.EditComponent;
 
-apogeeapp.app.EditComponent.prototype.createWindowDisplay = function() {
-    if(this.windowDisplay == null) {
-        this.windowDisplay = new apogeeapp.app.EditWindowComponentDisplay(this,this.windowDisplayStateJson);
+apogeeapp.app.EditComponent.prototype.instantiateWindowDisplay = function() {
+    var windowDisplay
+    
+    //here we allow for an existing window display so we can set an alternate window display 
+    if(this.alternateWindowDisplay) {
+        windowDisplay = this.alternateWindowDisplay;
+        windowDisplay.setStateJson(this.windowDisplayStateJson);
     }
-    else if(this.windowStateJson) {
-        this.windowDisplay.setStateJson(this.windowStateJson);
+    else {
+        windowDisplay = new apogeeapp.app.EditWindowComponentDisplay(this,this.windowDisplayStateJson);
     }
-    return this.windowDisplay;
+
+    return windowDisplay;
+}
+
+/** This is used when an alternate UI is used for the workspace. This replaces the window display 
+ *  used in the standard UI. */
+apogeeapp.app.EditComponent.prototype.setAlternateWindowDisplay = function(windowDisplay) {
+    this.alternateWindowDisplay = windowDisplay;
 }
 
 //===============================
@@ -5276,16 +5444,45 @@ apogeeapp.app.EditComponent.prototype.createWindowDisplay = function() {
 // * @protected */
 //apogeeapp.app.EditComponent.prototype.getTableEditSettings = function();
 
-apogeeapp.app.Component.prototype.hasTabDisplay = function() {    
+apogeeapp.app.EditComponent.prototype.hasTabDisplay = function() {    
     return false;
 }
 
-apogeeapp.app.Component.prototype.openTabDisplay = function() {
-    //noop
+apogeeapp.app.EditComponent.prototype.instantiateTabDisplay = function() {
+    return null;
 }
 
-apogeeapp.app.Component.prototype.closeTabDisplay = function() {
-    //noop
+apogeeapp.app.EditComponent.prototype.getMenuItems = function(optionalMenuItemList) {
+    var menuItemList = optionalMenuItemList ? optionalMenuItemList : [];
+    
+    //initialize the "clear function" menu entry, used only when there is code
+     if((this.object.isCodeable)&&(this.object.hasCode())) {
+         var settings = this.getTableEditSettings();
+        if(settings.clearFunctionMenuText !== undefined) {
+            var itemInfo = {};
+            itemInfo.title = settings.clearFunctionMenuText;
+            itemInfo.callback = this.getClearFunctionCallback(settings.emptyDataValue);
+            menuItemList.push(itemInfo);
+        }   
+    }
+    
+    //call base class
+    var menuItemList = apogeeapp.app.Component.prototype.getMenuItems.call(this,optionalMenuItemList);
+			
+    return menuItemList;
+}
+
+apogeeapp.app.EditComponent.prototype.getClearFunctionCallback = function(emptyDataValue) {
+    var actionData = {};
+    actionData.member = this.object;
+    actionData.data = emptyDataValue;
+    actionData.action = apogee.updatemember.UPDATE_DATA_ACTION_NAME
+    return function() {
+        var actionResponse = apogee.action.doAction(actionData); 
+        if(!actionResponse.getSuccess()) {
+            alert(actionResponse.getErrorMsg());
+        }
+    }
 }
 
 
@@ -5333,31 +5530,23 @@ apogeeapp.app.TreeComponentDisplay.prototype._createTreeEntry = function() {
     
     var instance = this;
     
-    var openCallback = null;
-    if(instance.component.hasTabDisplay()) {
-        var openCallback = function() {
-            instance.component.openTabDisplay();
-        } 
+    //menu item callback
+    var menuItemCallback = function() {
+        var menuItemList = [];
+        var openMenuItem = instance.component.getOpenMenuItem();
+        if(openMenuItem) {
+            menuItemList.push(openMenuItem);
+        }
+        return instance.component.getMenuItems(menuItemList);
     }
     
-    var contextMenuCallback = function(event) {
-        var contextMenu = new apogeeapp.ui.MenuBody();
-        
-        var callback;
-        
-        callback = apogeeapp.app.updatecomponent.getUpdateComponentCallback(instance);
-        contextMenu.addCallbackMenuItem("Edit Properties",callback);
-        
-        callback = instance.createDeleteCallback("Delete");
-        contextMenu.addCallbackMenuItem("Delete",callback);
-        
-        apogeeapp.ui.Menu.showContextMenu(contextMenu,event);
-    }
+    //double click callback
+    var openCallback = this.component.createOpenCallback();
     
     var labelText = this.object.getName();
     var iconUrl = this.component.getIconUrl();
     var isRoot = ((this.object.isParent)&&(this.object.isRoot()));
-    return new apogeeapp.ui.treecontrol.TreeEntry(labelText, iconUrl, openCallback, contextMenuCallback,isRoot);
+    return new apogeeapp.ui.treecontrol.TreeEntry(labelText, iconUrl, openCallback, menuItemCallback,isRoot);
 }
 ;
 /** This component represents a json table object. */
@@ -5417,6 +5606,16 @@ apogeeapp.app.TabComponentDisplay.prototype.addChildComponent = function(childCo
     childWindow.setWindowState(state);
 }
 
+/** This method is used to bring the child component to the front. */
+apogeeapp.app.TabComponentDisplay.prototype.showChildComponent = function(childComponent) {
+    var windowComponentDisplay = childComponent.getWindowDisplay();
+    if(windowComponentDisplay) {
+        var childWindow = windowComponentDisplay.getWindowEntry();
+        if(childWindow) {
+            this.parentContainer.bringToFront(childWindow);
+        }
+    }
+}
 //===============================
 // Private Functions
 //===============================
@@ -5441,25 +5640,7 @@ apogeeapp.app.TabComponentDisplay.prototype._loadTabEntry = function() {
     // set menu
     //------------------
     var menu = this.tab.createMenu(this.component.getIconUrl());
-    
-    //menu items
-    var menuItemInfoList = [];
-    
-    //add the standard entries
-    var itemInfo = {};
-    itemInfo.title = "Edit Properties";
-    itemInfo.callback = apogeeapp.app.updatecomponent.getUpdateComponentCallback(this.component);
-    menuItemInfoList.push(itemInfo);
-    
-    //only allow delete if the object has a parent (not if it has a non-parent owner, or is a root object)
-    if(this.object.getParent()) {
-        var itemInfo = {};
-        itemInfo.title = "Delete";
-        itemInfo.callback = this.component.createDeleteCallback(itemInfo.title);
-        menuItemInfoList.push(itemInfo);
-    }
-    
-    //set the menu items
+    var menuItemInfoList = this.component.getMenuItems();
     menu.setMenuItems(menuItemInfoList);
     
     //-----------------
@@ -5493,18 +5674,50 @@ apogeeapp.app.TabComponentDisplay.prototype._createDisplayContent = function() {
     this.contentElement = apogeeapp.ui.createElement("div",null,apogeeapp.app.TabComponentDisplay.PARENT_CONTAINER_STYLE);
     this.parentContainer = new apogeeapp.ui.ParentContainer(this.contentElement);
 
+    //we ony use this context menu and child map for parents
+    //modify if we use this elsewhere
+    if(!this.object.isParent) return;
+    
+    //add content menu
+    this.setAddChildrenContextMenu();
+
+    //show all children
     var workspaceUI = this.component.getWorkspaceUI();
-
-    //add context menu to create childrent
-    var parentMember = this.component.getParentMember();
-    var app = workspaceUI.getApp();
-    app.setFolderContextMenu(this.contentElement,parentMember);
-
-    var children = parentMember.getChildMap();
+    var children = this.object.getChildMap();
     for(var childName in children) {
         var child = children[childName];
         var childComponent = workspaceUI.getComponent(child);
         this.addChildComponent(childComponent);
+    }
+}
+
+/** This loads the context menu for the key. It should be update if
+ *the key index changes. */
+apogeeapp.app.TabComponentDisplay.prototype.setAddChildrenContextMenu = function() {
+    
+    var workspaceUI = this.component.getWorkspaceUI();
+    var app = workspaceUI.getApp();
+
+    var initialValues = {};
+    initialValues.parentName = this.object.getFullName();
+    
+    this.contentElement.oncontextmenu = function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        //position the window if we can
+        if(event.offsetX) {
+            var componentOptions = {};
+            var coordInfo = {};
+            coordInfo.x = event.offsetX;
+            coordInfo.y = event.offsetY;
+            componentOptions.coordInfo = coordInfo;
+        }
+        
+        var contextMenu = new apogeeapp.ui.MenuBody();
+        contextMenu.setMenuItems(app.getAddChildMenuItems(initialValues,componentOptions));
+        
+        apogeeapp.ui.Menu.showContextMenu(contextMenu,event);
     }
 }
 
@@ -5630,33 +5843,14 @@ apogeeapp.app.ParentWindowComponentDisplay.prototype._loadWindowFrameEntry = fun
     this.windowFrame.setTitle(this.object.getDisplayName());
     
     // set menu
-    this._populateMenu();
-}
-
-
-//------------------------------------
-// Menu Functions
-//------------------------------------
-
-apogeeapp.app.ParentWindowComponentDisplay.prototype._populateMenu = function() {
     var menu = this.windowFrame.createMenu(this.component.getIconUrl());
-
-    //menu items
-    var menuItemInfoList = [];
-
-    //add the standard entries
-    var itemInfo = {};
-    itemInfo.title = "Edit Properties";
-    itemInfo.callback = apogeeapp.app.updatecomponent.getUpdateComponentCallback(this.component);
-    menuItemInfoList.push(itemInfo);
-
-    var itemInfo = {};
-    itemInfo.title = "Delete";
-    itemInfo.callback = this.component.createDeleteCallback(itemInfo.title);
-    menuItemInfoList.push(itemInfo);
-
-    //set the menu items
-    menu.setMenuItems(menuItemInfoList);
+    var menuItemList = [];
+    var openMenuItem = this.component.getOpenMenuItem();
+    if(openMenuItem) {
+        menuItemList.push(openMenuItem);
+    }
+    var menuItemList = this.component.getMenuItems(menuItemList);
+    menu.setMenuItems(menuItemList);
 }
 
 //-----------------------------------
@@ -5727,6 +5921,10 @@ apogeeapp.app.EditWindowComponentDisplay.prototype.getComponent = function() {
     return this.component;
 }
 
+apogeeapp.app.EditWindowComponentDisplay.prototype.getMember = function() {
+    return this.object;
+}
+
 apogeeapp.app.EditWindowComponentDisplay.prototype.deleteDisplay = function() {
     //window will get deleted! New parent will get new windows, as is appropriate
     if(this.windowFrame) {
@@ -5749,9 +5947,6 @@ apogeeapp.app.EditWindowComponentDisplay.prototype.updateData = function() {
     if(this.windowFrame) {
         //update the title
         this.windowFrame.setTitle(this.object.getDisplayName());
-        
-        //update the menu
-        this._updateClearFunctionMenuItem();
         
         //update the content
         this.viewModeElement.memberUpdated();
@@ -5833,7 +6028,12 @@ apogeeapp.app.EditWindowComponentDisplay.prototype._loadWindowFrameEntry = funct
     this.windowFrame.setTitle(this.object.getDisplayName());
     
     // set menu
-    this._populateMenu();
+    var menu = this.windowFrame.createMenu(this.component.getIconUrl());
+    var component = this.component;
+    var menuItemCallback = function() {
+        return component.getMenuItems();
+    }
+    menu.setAsOnTheFlyMenu(menuItemCallback);
     
     //create the view selection ui
     this._createSelectTool();
@@ -5951,81 +6151,6 @@ apogeeapp.app.EditWindowComponentDisplay.prototype._updateViewContent = function
     }
 }
 
-//------------------------------------
-// Menu Functions
-//------------------------------------
-
-apogeeapp.app.EditWindowComponentDisplay.prototype._populateMenu = function() {
-    var menu = this.windowFrame.createMenu(this.component.getIconUrl());
-
-    //menu items
-    var menuItemInfoList = [];
-
-    //add the standard entries
-    var itemInfo = {};
-    itemInfo.title = "Edit Properties";
-    itemInfo.callback = apogeeapp.app.updatecomponent.getUpdateComponentCallback(this.component);
-    menuItemInfoList.push(itemInfo);
-
-    var itemInfo = {};
-    itemInfo.title = "Delete";
-    itemInfo.callback = this.component.createDeleteCallback(itemInfo.title);
-    menuItemInfoList.push(itemInfo);
-
-    //set the menu items
-    menu.setMenuItems(menuItemInfoList);
-    
-    //initialize the "clear function" menu entry, used only when there is code
-    var settings = this.component.getTableEditSettings();
-    this.doClearFunction = (settings.clearFunctionMenuText !== undefined);
-	this.clearFunctionMenuText = settings.clearFunctionMenuText;
-    this.clearFunctionDataValue = settings.emptyDataValue;
-	this.clearFunctionActive = false;
-	this.clearFunctionCallback = null;
-    
-    this._updateClearFunctionMenuItem();
-    
-}
-
-apogeeapp.app.EditWindowComponentDisplay.prototype._updateClearFunctionMenuItem = function() {
-    //add the clear function menu item if needed
-	if(this.doClearFunction) {
-		if(this.object.hasCode()) {
-			if(!this.clearFunctionActive) {
-				var menu = this.windowFrame.getMenu();
-				
-				if(!this.clearFunctionCallback) {
-					this.clearFunctionCallback = this._getClearFunctionCallback();
-				}
-				
-				menu.addCallbackMenuItem(this.clearFunctionMenuText,this.clearFunctionCallback);
-				this.clearFunctionActive = true;
-			}
-		}
-		else {
-			if(this.clearFunctionActive) {
-				var menu = this.windowFrame.getMenu();
-				menu.removeMenuItem(this.clearFunctionMenuText);
-				this.clearFunctionActive = false;
-			}
-		}
-	}
-}
-
-apogeeapp.app.EditWindowComponentDisplay.prototype._getClearFunctionCallback = function() {
-    var actionData = {};
-    actionData.member = this.object;
-    actionData.data = this.clearFunctionDataValue;
-    actionData.action = apogee.updatemember.UPDATE_DATA_ACTION_NAME
-    var workspace = this.object.getWorkspace();
-    return function() {
-        var actionResponse = apogee.action.doAction(actionData); 
-        if(!actionResponse.getSuccess()) {
-            alert(actionResponse.getErrorMsg());
-        }
-    }
-}
-
 //----------------------------
 // Edit UI - save and cancel buttons for edit mode
 //----------------------------
@@ -6110,14 +6235,6 @@ apogeeapp.app.FolderComponent = function(workspaceUI,folder,componentJson) {
 apogeeapp.app.FolderComponent.prototype = Object.create(apogeeapp.app.ParentComponent.prototype);
 apogeeapp.app.FolderComponent.prototype.constructor = apogeeapp.app.FolderComponent;
 
-//----------------------
-// ParentContainer Methods
-//----------------------
-
-/** This returned the parent member object associated with this component. */
-apogeeapp.app.FolderComponent.prototype.getParentMember = function() {
-    return this.getObject();
-}
 
 //======================================
 // Callbacks
@@ -6621,11 +6738,17 @@ apogeeapp.app.FunctionComponent.createComponent = function(workspaceUI,data,comp
     json.owner = data.parent;
     json.workspace = data.parent.getWorkspace();
     json.name = data.name;
+    
+    var argList;
     if(data.argListString) {
-        var argList = apogee.FunctionTable.parseStringArray(data.argListString);
-        json.updateData = {};
-        json.updateData.argList = argList;
+        argList = apogee.FunctionTable.parseStringArray(data.argListString);  
     }
+    else {
+        argList = [];
+    }
+    json.updateData = {};
+    json.updateData.argList = argList;
+    
     json.type = apogee.FunctionTable.generator.type;
     var actionResponse = apogee.action.doAction(json);
     
@@ -6682,15 +6805,6 @@ apogeeapp.app.FolderFunctionComponent = function(workspaceUI,folderFunction,comp
 
 apogeeapp.app.FolderFunctionComponent.prototype = Object.create(apogeeapp.app.ParentComponent.prototype);
 apogeeapp.app.FolderFunctionComponent.prototype.constructor = apogeeapp.app.FolderFunctionComponent;
-
-//----------------------
-// ParentContainer Methods
-//----------------------
-
-/** This returned the parent member object associated with this component. */
-apogeeapp.app.FolderFunctionComponent.prototype.getParentMember = function() {
-    return this.getObject().getInternalFolder();
-}
 
 //======================================
 // Callbacks
@@ -7164,7 +7278,12 @@ apogeeapp.app.CustomControlComponent.prototype.createResource = function() {
 // Action
 //=============================
 
-apogeeapp.app.CustomControlComponent.prototype.update = function(uiCodeFields) {   
+apogeeapp.app.CustomControlComponent.prototype.update = function(uiCodeFields) { 
+    
+    //make sure we get rid of the old display
+    if(this.outputMode) {
+        this.outputMode.triggerReload();
+    }
     
     this.uiCodeFields = uiCodeFields;
     
@@ -7218,7 +7337,7 @@ apogeeapp.app.CustomControlComponent.GENERATOR_FUNCTION_FORMAT_TEXT = [
  * @private
  */
 apogeeapp.app.CustomControlComponent.GENERATOR_INTERNAL_FORMATS = {
-    "constructorAddition":"resource.constructorAddition = function(mode) {\n{0}\n};",
+    "constructorAddition":"resource.constructorAddition = function(mode) {\n__customControlDebugHook();\n{0}\n};",
     "init":"resource.init = function(element,mode) {\n{0}\n};",
     "setData":"resource.setData = function(data,element,mode) {\n{0}\n};",
     "onHide":"resource.onHide = function(element,mode) {\n{0}\n};",
@@ -8166,8 +8285,7 @@ apogeeapp.app.updatelinks.getUpdateLinksCallback = function(app) {
 apogeeapp.app.ViewMode = function(componentDisplay, doKeepAlive) {
     this.componentDisplay = componentDisplay;
     this.doKeepAlive = doKeepAlive;
-    this.component = componentDisplay.getComponent();
-    this.member = this.component.getObject();
+    this.member = componentDisplay.getMember();
     
     this.dataDisplay = null;
     
@@ -8182,6 +8300,10 @@ apogeeapp.app.ViewMode.CLOSE_OK = 0;
 //------------------------------
 // Accessed by the Component Display
 //------------------------------
+
+apogeeapp.app.ViewMode.prototype.getMember = function() {
+    return this.member;
+}
 
 /** If doKeepAlive is set to true, the output mode is not destroyed when it is 
  * hidden. Otherwise it is destroyed when it is hidden and recreated nect time it
@@ -8304,13 +8426,7 @@ apogeeapp.app.ViewMode.prototype.endEditMode = function() {
 //apogeeapp.app.ViewMode.prototype.getIsDataEditable = function();
 
 ;
-/** Editor that uses the Ace text editor.
- * 
- * @param {type} componentDisplay - the apogee componentDisplay
- * @param {type} aceMode - the display format, such as "ace/mode/json"
- * @param {type} onSave - takes a text json representation for saving. returns true if the edit should end.
- * @param {type} onCancel - returns true if the edit should end
- */
+/** Editor that uses the basic text editor */
 apogeeapp.app.TextAreaEditor = function(viewMode) {
     
     this.outsideDiv = apogeeapp.ui.createElement("div",null,{
@@ -8498,10 +8614,8 @@ apogeeapp.app.TextAreaMode.prototype.onSave = function(text) {
 ;
 /** Editor that uses the Ace text editor.
  * 
- * @param {type} componentDisplay - the apogee componentDisplay
+ * @param {type} viewMode - the apogee view mode
  * @param {type} aceMode - the display format, such as "ace/mode/json"
- * @param {type} onSave - takes a text json representation for saving. returns true if the edit should end.
- * @param {type} onCancel - returns true if the edit should end
  */
 apogeeapp.app.AceTextEditor = function(viewMode,aceMode) {
     
@@ -8981,6 +9095,7 @@ apogeeapp.app.HtmlJsDataDisplay = function(html,resource,outputMode) {
     
     if(resource.constructorAddition) {
         try {
+            //custom code
             resource.constructorAddition.call(this,outputMode);
         }
         catch(error) {
@@ -9255,12 +9370,7 @@ apogeeapp.app.FormDataMode.prototype.onSave = function(data) {
 }
 
 ;
-/** Editor that uses the Ace text editor.
- * 
- * @param {type} componentDisplay - the apogee componentDisplay
- * @param {type} onSave - takes a text json representation for saving. returns true if the edit should end.
- * @param {type} onCancel - returns true if the edit should end
- */
+/** This is a grid editor using hands on table*/
 apogeeapp.app.HandsonGridEditor = function(viewMode) {
    
 	this.outsideDiv = apogeeapp.ui.createElement("div",null,{
@@ -9477,6 +9587,11 @@ apogeeapp.app.ControlOutputMode.prototype.getDisplayData = function() {
 
 apogeeapp.app.ControlOutputMode.prototype.getFullName = function() {
 	return this.member.getFullName();
+}
+
+/** This method returns an action messenger object for doing data updates in other tables. */ 
+apogeeapp.app.ControlOutputMode.prototype.getMessenger = function() {
+    return new apogee.action.Messenger(this.member);
 }
 
 //this is not applicable, for now at least

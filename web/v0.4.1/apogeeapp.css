@@ -343,10 +343,16 @@ input[type=text] focus {
     cursor:default;
     font-weight:normal;
     padding:2px;
+    white-space: nowrap;
+    display: block;
+    position: relative;
+    overflow: hidden;
 }
 .visiui-menu-item:hover {
     background-color:lightgray;
     padding:2px;
+    
+    overflow: visible;
 }
 
 .visiui-menu-heading {
@@ -355,19 +361,20 @@ input[type=text] focus {
     position:relative;
     cursor: default;
 	overflow:visible;
+    white-space: nowrap;
 
     /* configurable */
     padding:2px;
     margin:0px;
 }
 .visiui-menu-text:hover {
-    background-color:lightgray;
+    background-color:rgb(211,211,164);
 }
 .visiui-menu-image:hover {
-    background-color:lightyellow;
+    background-color:rgb(211,211,164);
 }
-.visiui-menu-heading_active {
-    background-color:lightgray;
+.visiui-menu-heading:active {
+    background-color:rgb(211,211,164);
 }
 /* Split Pane */
 .visiui-sp-parent {
@@ -441,6 +448,7 @@ input[type=text] focus {
     height:100%;
     top:0px;
     left:0px;
+    background-color: rgb(234,234,246);
 }
 .visiui-tf-tab-container {
     /*fixed*/
@@ -561,14 +569,12 @@ input[type=text] focus {
     
     margin: 0;
     padding: 0px;
-    line-height: 20px;
 }
 .visiui-tc-child {
     white-space: nowrap;
     
     margin: 0;
     padding: 0px;
-    line-height: 20px;
     border-left:1px solid rgb(190,190,190);
 }
 .visiui-tc-child:last-child {

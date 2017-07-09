@@ -1,4 +1,4 @@
-/* Apogee Web Customization Version 0.4.0 - Cut-n-Paste file open/close */
+/* Apogee Web Customization Version 0.4.1 - Cut-n-Paste file open/close */
 
 /** This method shows a save folder dialog. I simply displays the text of
  * the workspace json for the user to copy and save elsewhere. */

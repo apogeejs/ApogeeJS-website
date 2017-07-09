@@ -1,4 +1,4 @@
-/* Apogee Web Lib Version 0.4.0 */
+/* Apogee Web Lib Version 0.4.1 */
 
 var __globals__ = window;
 
@@ -6,28 +6,6 @@ var __globals__ = window;
 ;
 /** Main project name space */
 apogee = {};
-
-;
-
-/** These functions assist in using adebugger. */
-
-/** The function generated below is called each time the user code is run.
- * This code is broken out to make debugginr easier.
- * The method below "initFunction" itself is not particularly helpful for debugging.
- * It does lazy context initialization the first time this user code is called. 
- */
-apogee.memberDebugHook = function(member) {
-    
-     return function() {
-        //insert breakpoint below
-        //return of this function enters the user code for this member.
-        //
-        //for conditional breakpoints, use the function member.getName()
-        //to get the member name.        
-        return member.testFunction();
-    };
-}
-
 
 ;
 /** This namespace contains some basic functions for the application. */
@@ -42,6 +20,7 @@ apogee.base.mixin = function(destObject,mixinObject) {
 
 /** This method creates an integer has value for a string. */
 apogee.base.isPromise = function(object) {
+    if(object === null) return false;
     return (typeof object === "object")&&(object.constructor === Promise);
 }
 
@@ -364,8 +343,8 @@ apogee.EventManager.callHandler = function(handlerName, handlerData) {
 /** This class manages context for the user code. This is used to associate names
  *from the user code with objects from the workspace. The argument passed here is
  *the object assoicatd with the context manager. */
-apogee.ContextManager = function(member) {
-    this.member = member;
+apogee.ContextManager = function(contextHolder) {
+    this.contextHolder = contextHolder;
     this.contextList = [];
 }
 
@@ -404,8 +383,8 @@ apogee.ContextManager.prototype.hierarchicalLookup = function(lookupFunctionName
     if(result !== undefined) {
         return result;
     }
-    else if((this.member)&&(this.member.getOwner)) {
-        var owner = this.member.getOwner();
+    else if((this.contextHolder)&&(this.contextHolder.getOwner)) {
+        var owner = this.contextHolder.getOwner();
         if(owner) {
             var ownerContextManager = owner.getContextManager();
             return ownerContextManager.hierarchicalLookup(lookupFunctionName,lookupKey);
@@ -460,7 +439,10 @@ apogee.codeCompiler = {};
 
 /** @private */
 apogee.codeCompiler.APOGEE_FORBIDDEN_NAMES = {
-    "root": true
+    "apogeeMessenger": true,
+    "__initFunction": true,
+    "__memberFunction": true,
+    "__memberFunctionDebugHook": true
 }
 
 /** @private */
@@ -475,7 +457,11 @@ apogee.codeCompiler.validateTableName = function(name) {
     if(apogee.codeAnalysis.KEYWORDS[name]) {
         nameResult.errorMessage = "Illegal name: " + name + " - Javascript reserved keyword";
         nameResult.valid = false;
-    }    
+    }  
+    else if(apogee.codeAnalysis.EXCLUSION_NAMES[name]) {
+        nameResult.errorMessage = "Illegal name: " + name + " - Javascript variable or value name";
+        nameResult.valid = false;
+    }
     else if(apogee.codeCompiler.APOGEE_FORBIDDEN_NAMES[name]) {
         nameResult.errorMessage = "Illegal name: " + name + " - Apogee reserved keyword";
         nameResult.valid = false;
@@ -553,7 +539,7 @@ apogee.codeCompiler.createCombinedFunctionBody = function(argList,
 apogee.codeCompiler.createGeneratorFunction = function(varInfo, combinedFunctionBody) {
     
     var contextDeclarationText = "";
-    var contextSetterBody = "";
+    var initializerBody = "";
     
     //set the context - here we only defined the variables that are actually used.
 	for(var baseName in varInfo) {        
@@ -566,18 +552,18 @@ apogee.codeCompiler.createGeneratorFunction = function(varInfo, combinedFunction
         contextDeclarationText += "var " + baseName + ";\n";
         
         //add to the context setter
-        contextSetterBody += baseName + ' = contextManager.getBaseData("' + baseName + '");\n';
+        initializerBody += baseName + ' = contextManager.getBaseData("' + baseName + '");\n';
     }
     
     //create the generator for the object function
     var generatorBody = apogee.util.formatString(
         apogee.codeCompiler.GENERATOR_FUNCTION_FORMAT_TEXT,
 		contextDeclarationText,
-        contextSetterBody,
+        initializerBody,
         combinedFunctionBody
     );
         
-    var generatorFunction = new Function("__testFunction",generatorBody);
+    var generatorFunction = new Function("__initFunction","apogeeMessenger",generatorBody);
     return generatorFunction;    
 }
 
@@ -601,7 +587,8 @@ apogee.codeCompiler.MEMBER_FUNCTION_FORMAT_TEXT = [
 "//member function----------------",
 "function __memberFunction({1}) {",
 "//overhead code",
-"if(!__testFunction()) return undefined;",
+"if(!__initFunction()) return undefined;",
+"__memberFunctionDebugHook();",
 "",
 "//user code",
 "{2}",
@@ -612,7 +599,7 @@ apogee.codeCompiler.MEMBER_FUNCTION_FORMAT_TEXT = [
 /** This line is added when getting the dependencies to account for some local 
  * variables in the member function.
  * @private */
-apogee.codeCompiler.MEMBER_LOCALS_TEXT = "var __testFunction, __memberFunction; " 
+apogee.codeCompiler.MEMBER_LOCALS_TEXT = "var __initFunction, apogeeMessenger, __memberFunction, __memberFunctionDebugHook;";
    
 /** This is the format string to create the code body for the object function
  * Input indices:
@@ -626,14 +613,14 @@ apogee.codeCompiler.GENERATOR_FUNCTION_FORMAT_TEXT = [
 "//declare context variables",
 "{0}",
 "//context setter",
-"function __setContext(contextManager) {",
+"function __initializer(contextManager) {",
 "{1}};",
 "",
 "//user code",
 "{2}",
 "return {",
 "'memberFunction': __memberFunction,",
-"'contextSetter': __setContext",
+"'initializer': __initializer",
 "};"
    ].join("\n");
 
@@ -832,8 +819,27 @@ apogee.codeAnalysis.KEYWORDS = {
 	"volatile": true,
 	"while": true,
 	"with": true,
-	"yield": true
+	"yield": true,
 };
+
+/** These are variable names we will not call out in setting the context.
+ * NOTE - it is OK if we do not exclude a global variable. It will still work. */
+apogee.codeAnalysis.EXCLUSION_NAMES = {
+    "undefined": true,
+    "Infinity": true,
+    "NaN": true,
+    
+    "String": true,
+    "Number": true,
+    "Math": true,
+    "Date": true,
+    "Array": true,
+    "Boolean": true,
+    "Error": true,
+    "RegExp": true,
+    
+    "console": true
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /** This method returns the error list for this formula. It is only valid
@@ -1082,6 +1088,11 @@ apogee.codeAnalysis.processVariable = function(processInfo,node,isModified,isDec
     if(!namePath) return;
     
     var baseName = namePath[0];
+    
+    //check if it is an excluded name - such as a variable name used by javascript
+    if(apogee.codeAnalysis.EXCLUSION_NAMES[baseName]) {
+        return;
+    }
     
     //add to the name table
     var nameEntry = processInfo.nameTable[baseName];
@@ -2046,7 +2057,7 @@ apogee.Codeable.init = function(argList) {
     this.description = "";
     this.varInfo = null;
     this.dependencyInfo = null;
-    this.contextSetter = null;
+    this.memberFunctionInitializer = null;
     this.memberFunction = null;
     this.codeErrors = [];
     
@@ -2062,6 +2073,8 @@ apogee.Codeable.init = function(argList) {
 /** This property tells if this object is a codeable.
  * This property should not be implemented on non-codeables. */
 apogee.Codeable.isCodeable = true
+
+apogee.Codeable.MEMBER_FUNCTION_PENDING = "pending";
 
 /** This method returns the argument list.  */
 apogee.Codeable.getArgList = function() {
@@ -2102,12 +2115,18 @@ apogee.Codeable.setCodeInfo = function(codeInfo) {
     if((!codeInfo.errors)||(codeInfo.errors.length === 0)) {
         //set the code  by exectuing generator
         try {
-            //here we generate the init function we need, which also serves as a debug hook
-            var testFunction = apogee.memberDebugHook(this);
+            //get the inputs to the generator
+            var instance = this;
+            var initFunction = function() {
+                return instance.memberFunctionInitialize();
+            }
+            var messenger = new apogee.action.Messenger(this);
             
-            var generatedFunctions = codeInfo.generatorFunction(testFunction);
+            //get the generated fucntion
+            var generatedFunctions = codeInfo.generatorFunction(initFunction,messenger);
             this.memberFunction = generatedFunctions.memberFunction;
-            this.contextSetter = generatedFunctions.contextSetter;            
+            this.memberFunctionInitializer = generatedFunctions.initializer;            
+            
             this.codeErrors = [];
         }
         catch(ex) {
@@ -2122,7 +2141,7 @@ apogee.Codeable.setCodeInfo = function(codeInfo) {
     if(this.codeErrors.length > 0) {
         //code not valid
         this.memberFunction = null;
-        this.contextSetter = null;
+        this.memberFunctionInitializer = null;
     }
     this.codeSet = true;
 }
@@ -2173,7 +2192,7 @@ apogee.Codeable.clearCode = function() {
     this.supplementalCode = "";
     this.varInfo = null;
     this.dependencyInfo = null;
-    this.contextSetter = null;
+    this.memberFunctionInitializer = null;
     this.memberFunction = null;
     this.codeErrors = [];
     
@@ -2212,7 +2231,7 @@ apogee.Codeable.calculate = function() {
         return;
     }
     
-    if((!this.memberFunction)||(!this.contextSetter)) {
+    if((!this.memberFunction)||(!this.memberFunctionInitializer)) {
         var msg = "Function not found for member: " + this.getName();
         var actionError = new apogee.ActionError(msg,"Codeable - Calculate",this);
         this.addError(actionError);
@@ -2224,22 +2243,33 @@ apogee.Codeable.calculate = function() {
         this.processMemberFunction(this.memberFunction);
     }
     catch(error) {
-        //this is an error in the code
-        if(error.stack) {
-            console.error(error.stack);
+        if(error == apogee.Codeable.MEMBER_FUNCTION_PENDING) {
+            //This is not an error. I don't like to throw an error
+            //for an expected condition, but I didn't know how else
+            //to do this. See notes there this is thrown.
+            this.setResultPending(true);
         }
+        //--------------------------------------
+        else {
+            //normal error in member function execution
+        
+            //this is an error in the code
+            if(error.stack) {
+                console.error(error.stack);
+            }
 
-        var errorMsg = (error.message) ? error.message : "Unknown error";
-        var actionError = new apogee.ActionError(errorMsg,"Codeable - Calculate",this);
-        actionError.setParentException(error);
-        this.addError(actionError);
+            var errorMsg = (error.message) ? error.message : "Unknown error";
+            var actionError = new apogee.ActionError(errorMsg,"Codeable - Calculate",this);
+            actionError.setParentException(error);
+            this.addError(actionError);
+        }
     }
     
     this.clearCalcPending();
 }
 
 /** This makes sure user code of object function is ready to execute.  */
-apogee.Codeable.testFunction = function() {
+apogee.Codeable.memberFunctionInitialize = function() {
     
     if(this.functionInitialized) return this.initReturnValue;
     
@@ -2268,7 +2298,7 @@ apogee.Codeable.testFunction = function() {
         }
         
         //set the context
-        this.contextSetter(this.getContextManager());
+        this.memberFunctionInitializer(this.getContextManager());
         
         this.initReturnValue = true;
     }
@@ -2587,8 +2617,8 @@ apogee.Workspace.prototype.queueAction = function(actionInfo) {
 
 apogee.Workspace.prototype.getQueuedAction = function() {
     if(this.actionQueue.length > 0) {
-        var queuedActionInfo = apogee.action.actionQueue[0];
-        apogee.action.actionQueue.splice(0,1)
+        var queuedActionInfo = this.actionQueue[0];
+        this.actionQueue.splice(0,1)
         return queuedActionInfo;
     }
     else {
@@ -2831,7 +2861,7 @@ apogee.JsonTable.prototype.getArgList = function() {
     return [];
 }
 	
-apogee.JsonTable.prototype.processMemberFunction = function(memberFunction) {	
+apogee.JsonTable.prototype.processMemberFunction = function(memberFunction) {
     
     //the data is the output of the function
     var data = memberFunction();
@@ -2929,8 +2959,21 @@ apogee.base.mixin(apogee.FunctionTable,apogee.Codeable);
 //------------------------------
 
 apogee.FunctionTable.prototype.processMemberFunction = function(memberFunction) {	
+    var instance = this;
+    var dataObject = function() {
+        
+        //member function wrapper
+        var returnValue = memberFunction.apply(null,arguments);
+        //pending check - we don't know if a function is pending until we
+        //actually call it. I didn't know how else to capture this in the 
+        //calling code other than use an error. But this is not an error.
+        if(instance.getResultPending()) {
+            throw apogee.Codeable.MEMBER_FUNCTION_PENDING;
+        }
+        return returnValue;
+    }
     //tjhe data is the function
-	this.setData(memberFunction);
+	this.setData(dataObject);
 }
 
 //------------------------------
@@ -3707,7 +3750,7 @@ apogee.action.doAction = function(actionData,optionalContext,optionalActionRespo
         queuedAction.actionData = actionData;
         queuedAction.optionalContext = optionalContext;
         queuedAction.optionalActionResponse = optionalActionResponse;
-        workspace.queueAction(queueAction);
+        workspace.queueAction(queuedAction);
         
         //return an empty (successful) action response
         //we sould have a flag saying the action is pending
@@ -3775,39 +3818,6 @@ apogee.action.callActionFunction = function(actionData,context,processedActions)
     }  
 }
 
-/** This is a convenience method to set a member to a given value when the dataPromise resolves. */
-apogee.action.asynchDataUpdate = function(memberName,context,dataPromise) {
-    
-    var token = apogee.action.getAsynchToken();
-        
-    var actionData = {};
-    actionData.action = "updateDataPending";
-    actionData.memberName = memberName;
-    actionData.token = token;
-    var actionResponse =  apogee.action.doAction(actionData,context);
-    
-    var asynchCallback = function(memberValue) {
-        //set the data for the table, along with triggering updates on dependent tables.
-        var actionData = {};
-        actionData.action = "updateData";
-        actionData.memberName = memberName;
-        actionData.token = token;
-        actionData.data = memberValue;
-        var actionResponse =  apogee.action.doAction(actionData,context);
-    }
-    var asynchErrorCallback = function(errorMsg) {
-        var actionData = {};
-        actionData.action = "updateError";
-        actionData.member = member;
-        actionData.token = token;
-        actionData.errorMsg = errorMsg;
-        var actionResponse =  apogee.action.doAction(actionData,context);
-    }
-
-    //call appropriate action when the promise resolves.
-    dataPromise.then(asynchCallback).catch(asynchErrorCallback);
-}
-
 /** This method returns a random numberic token that is used in asynch updates.
  * It serves two purposes, first to ensure only the _latest_ asyhc update is 
  * done. Secondly it prevents someone arbitrarily using this method 
@@ -3820,6 +3830,112 @@ apogee.action.getAsynchToken = function() {
 /** This token value should be used if a table is pending because it is waiting for
  * an update in another table. */
 apogee.action.DEPENDENT_PENDING_TOKEN = -1;
+
+//--------------------------------
+// Action Convenience Methods
+//--------------------------------
+
+/** This is a convenience method to set a member to a given value. */
+apogee.action.dataUpdate = function(updateMemberName,fromMember,data) {
+    var workspace = fromMember.getWorkspace();
+    var contextManager = fromMember.getContextManager();
+    
+    //set the data for the table, along with triggering updates on dependent tables.
+    var actionData = {};
+    actionData.action = "updateData";
+    actionData.memberName = updateMemberName;
+    actionData.workspace = workspace;
+    actionData.data = data;
+    return apogee.action.doAction(actionData,contextManager);
+}
+
+/** This is a convenience method to set a member to a given value. */
+apogee.action.compoundDataUpdate = function(updateInfo,fromMember) {
+    var workspace = fromMember.getWorkspace();
+    var contextManager = fromMember.getContextManager();
+
+    //create the single compound action
+    var actionData = {};
+    actionData.action = apogee.compoundaction.ACTION_NAME;
+    actionData.actions = apogee.action.updateInfoToActionList(updateInfo,workspace);
+    actionData.workspace = workspace;
+
+    return apogee.action.doAction(actionData,contextManager);
+}
+
+
+/** This is a convenience method to set a member tohave an error message. */
+apogee.action.errorUpdate = function(updateMemberName,fromMember,errorMessage) {
+    var workspace = fromMember.getWorkspace();
+    var contextManager = fromMember.getContextManager();
+        
+    var actionData = {};
+    actionData.action = "updateError";
+    actionData.memberName = updateMemberName;
+    actionData.workspace = workspace;
+    actionData.errorMsg = errorMessage;
+    return apogee.action.doAction(actionData,contextManager);
+}
+
+/** This is a convenience method to set a member to a given value when the dataPromise resolves. */
+apogee.action.asynchDataUpdate = function(updateMemberName,fromMember,dataPromise) {
+    
+    var workspace = fromMember.getWorkspace();
+    var contextManager = fromMember.getContextManager();
+    
+    var token = apogee.action.getAsynchToken();
+        
+    var actionData = {};
+    actionData.action = "updateDataPending";
+    actionData.memberName = updateMemberName;
+    actionData.workspace = workspace;
+    actionData.token = token;
+    var actionResponse =  apogee.action.doAction(actionData,contextManager);
+    
+    var asynchCallback = function(memberValue) {
+        //set the data for the table, along with triggering updates on dependent tables.
+        var actionData = {};
+        actionData.action = "updateData";
+        actionData.memberName = updateMemberName;
+        actionData.workspace = workspace;
+        actionData.token = token;
+        actionData.data = memberValue;
+        var actionResponse =  apogee.action.doAction(actionData,contextManager);
+    }
+    var asynchErrorCallback = function(errorMsg) {
+        var actionData = {};
+        actionData.action = "updateError";
+        actionData.memberName = updateMemberName;
+        actionData.workspace = workspace;
+        actionData.token = token;
+        actionData.errorMsg = errorMsg;
+        var actionResponse =  apogee.action.doAction(actionData,contextManager);
+    }
+
+    //call appropriate action when the promise resolves.
+    dataPromise.then(asynchCallback).catch(asynchErrorCallback);
+}
+
+/** This is a convenience method to set a member to a given value. 
+ * @private */
+apogee.action.updateInfoToActionList = function(updateInfo,workspace) {
+
+    //make the action list
+    var actionList = [];
+    for(var i = 0; i < updateInfo.length; i++) {
+        var updateEntry = updateInfo[i];
+        var subActionData = {};
+        subActionData.action = "updateData";
+        subActionData.memberName = updateEntry.memberName;
+        subActionData.workspace = workspace;
+        subActionData.data = updateEntry.data;
+        actionList.push(subActionData);
+    }
+    
+    return actionList;
+}
+
+
 
 //=======================================
 // Internal Methods
@@ -4265,7 +4381,8 @@ apogee.updatemember.applyData = function(dataHolder,data) {
 apogee.updatemember.loadMemberName = function(actionData,context) { 
     
     if(actionData.memberName) {
-        actionData.member = context.getImpactor(actionData.memberName);
+        var path = actionData.memberName.split(".");
+        actionData.member = context.getImpactor(path);
     }
     if(!actionData.member) {
         throw new Error("Member not found for action: " + actionData.action);
@@ -4531,4 +4648,30 @@ apogee.updatefolderfunction.ACTION_INFO= {
 
 //This line of code registers the action 
 apogee.action.addActionInfo(apogee.updatefolderfunction.ACTION_NAME,apogee.updatefolderfunction.ACTION_INFO);
+
+;
+/** This is a messenger class for sending action messages. */
+apogee.action.Messenger = function(fromMember) {
+
+    /** This is a convenience method to set a member to a given value. */
+    this.dataUpdate = function(updateMemberName,data) {
+        apogee.action.dataUpdate(updateMemberName,fromMember,data);
+    }
+
+    /** This is a convenience method to set a member to a given value. */
+    this.compoundDataUpdate = function(updateInfo) {
+        apogee.action.compoundDataUpdate(updateInfo,fromMember);
+    }
+
+    /** This is a convenience method to set a member tohave an error message. */
+    this.errorUpdate = function(updateMemberName,errorMessage) {
+        apogee.action.errorUpdate(updateMemberName,fromMember,errorMessage);
+    }
+
+    /** This is a convenience method to set a member to a given value when the dataPromise resolves. */
+    this.asynchDataUpdate = function(updateMemberName,dataPromise) {
+        apogee.action.dataUpdate(updateMemberName,fromMember,dataPromise);
+    }
+}
+
 
