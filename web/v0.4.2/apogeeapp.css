@@ -157,6 +157,8 @@ input[type=text] focus {
 }
 
 /* These elements should not be overridden */ 
+.visiui_win_headerCell {
+}
 .visiui_win_bodyCell {
   background-color: rgb(240,240,240);
   /*display set in javascript*/
@@ -200,8 +202,15 @@ input[type=text] focus {
 
 .visiui_win_headerCell {
 }
+.visiui_win_headerRow {
+    z-index: -1; /* this is for a mouse resize event issue in firefox */
+}
+.visiui_win_bannerRow {
+    z-index: -1; /* this is for a mouse resize event issue in firefox */
+}
 .visiui_win_bodyRow {
   height: 100%;
+  z-index: -1; /* this is for a mouse resize event issue in firefox */
 }
 .visiui_win_topLeft {
   cursor: nw-resize;
@@ -263,11 +272,16 @@ input[type=text] focus {
 .visiui_win_menu_style {
     /* fixed */
     display:inline-block;
+    position: relative;
 
     /* configurable */
     margin-right:3px;
 }
-
+.visiui_win_icon_overlay_style {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
 .visiui_win_cmd_button { 
     /* fixed */
     display:inline-block;
@@ -464,6 +478,14 @@ input[type=text] focus {
     /*border: 1px solid gray*/
     border-bottom-width: 0px;
 }
+.visiui-tf-tab-header {
+    /*fixed*/
+    position:relative;
+    display:table-row;
+    width:100%;
+    top:0px;
+    left:0px;
+}
 .visiui-tf-tab-bar {
     /*fixed*/
     position:relative;
@@ -506,10 +528,16 @@ input[type=text] focus {
 
 .visiui-tf_tab-menuDiv {
     /* fixed */
-    display:inline;
+    display:inline-block;
+    position: relative;
     
     /* configurable */
     margin-right:3px;
+}
+.visiui_tf_icon_overlay {
+    position: absolute;
+    top: 0px;
+    left: 0px;
 }
 .visiui_tf_tab_title {
     /* fixed */
@@ -555,8 +583,21 @@ input[type=text] focus {
     position:relative;
     left:-5px;
 }
+.visiui-tc-icon-container {
+    /* fixed */
+    display:inline-block;
+    position: relative;
+
+    /* configurable */
+    /*margin-right:3px;*/
+}
 .visiui-tc-icon {
     display:inline-block;
+}
+.visiui_tc_icon_overlay {
+    position: absolute;
+    top: 0px;
+    left: 0px;
 }
 .visiui-tc-child-list {
     list-style: none;

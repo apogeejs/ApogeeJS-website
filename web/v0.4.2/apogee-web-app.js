@@ -159,13 +159,16 @@ apogeeapp.ui.initWindows = function(appElementId) {
  *normal options for a window frame. (Note - if there are other events with whihc to act with
  *the app they may need to be shileded too.) */
 apogeeapp.ui.createDialog = function(options) {
-    var shieldElement = apogeeapp.ui.createElement("div",null,apogeeapp.ui.DIALOG_SHIELD_STYLE);
-    var dialogParent = new apogeeapp.ui.ParentContainer(shieldElement);
-    apogeeapp.ui.dialogLayer.appendChild(shieldElement);
-    
     var dialog = new apogeeapp.ui.WindowFrame(options);
-    dialog.setParent(dialogParent);
     return dialog;
+}
+
+apogeeapp.ui.showDialog = function(dialog) {
+    var shieldElement = apogeeapp.ui.createElement("div",null,apogeeapp.ui.DIALOG_SHIELD_STYLE);
+    var dialogParent = new apogeeapp.ui.WindowParent(shieldElement);
+    apogeeapp.ui.dialogLayer.appendChild(shieldElement);
+
+    dialogParent.addWindow(dialog);
 }
 
 /** This method closes a dialog created with apogeeapp.ui.createDialog. It
@@ -189,6 +192,9 @@ apogeeapp.ui.REQUEST_CLOSE = "request_close";
 apogeeapp.ui.DENY_CLOSE = -1;
 
 apogeeapp.ui.CLOSE_EVENT = "closed";
+apogeeapp.ui.RESIZED_EVENT = "resized";
+apogeeapp.ui.SHOWN_EVENT = "shown";
+apogeeapp.ui.HIDDEN_EVENT = "hidden";
 
 /** This function adds CSS data for a given member id. */
 apogeeapp.ui.setMemberCssData = function(objectId,cssText) {
@@ -217,7 +223,10 @@ apogeeapp.ui.setMemberCssData = function(objectId,cssText) {
 ;
 /** This object is a container for window frames. The argument of the constructor should
  * be an element that will hold the window frames.  */
-apogeeapp.ui.ParentContainer = function(containerElement) {
+apogeeapp.ui.WindowParent = function(containerElement) {
+    
+    //base init
+    apogee.EventManager.init.call(this);
     
     this.containerElement = containerElement;
     
@@ -229,32 +238,48 @@ apogeeapp.ui.ParentContainer = function(containerElement) {
     this.wrapCount = 0;
 }
 
+//add components to this class
+apogee.base.mixin(apogeeapp.ui.WindowParent,apogee.EventManager);
 
-apogeeapp.ui.ParentContainer.BASE_ZINDEX = 0;
+apogeeapp.ui.WindowParent.BASE_ZINDEX = 0;
 
 //constants for window placement
-apogeeapp.ui.ParentContainer.DELTA_CHILD_X = 75;
-apogeeapp.ui.ParentContainer.DELTA_CHILD_Y = 75;
-apogeeapp.ui.ParentContainer.MIN_WRAP_WIDTH = 20; 
-apogeeapp.ui.ParentContainer.MIN_WRAP_HEIGHT = 200;
+apogeeapp.ui.WindowParent.DELTA_CHILD_X = 25;
+apogeeapp.ui.WindowParent.DELTA_CHILD_Y = 25;
+apogeeapp.ui.WindowParent.MAX_WRAP_WIDTH = 400; 
+apogeeapp.ui.WindowParent.MAX_WRAP_HEIGHT = 400;
 
 //==============================
 // Public Instance Methods
 //==============================
 
-apogeeapp.ui.ParentContainer.prototype.getOuterElement = function() {
+/** This should be called when the window parent element is shown, if the
+ * "shown" event is to be supported.  */
+apogeeapp.ui.WindowParent.prototype.elementIsShown = function() {
+    this.dispatchEvent(apogeeapp.ui.SHOWN_EVENT,this);
+}
+
+/** This should be called when the window parent element is shown, if the
+ * "shown" event is to be supported.  */
+apogeeapp.ui.WindowParent.prototype.elementIsHidden = function() {
+    this.dispatchEvent(apogeeapp.ui.HIDDEN_EVENT,this);
+}
+
+apogeeapp.ui.WindowParent.prototype.getOuterElement = function() {
     return this.containerElement;
 }
 
 /** This method adds a windows to the parent. It does not show the window. Show must be done. */
-apogeeapp.ui.ParentContainer.prototype.addWindow = function(windowFrame) {
+apogeeapp.ui.WindowParent.prototype.addWindow = function(windowFrame) {
     this.containerElement.appendChild(windowFrame.getElement());
     this.windowFrameStack.push(windowFrame);
     this.updateOrder();
+    
+    windowFrame.setParent(this);
 }
 
 /** This method removes the window from the parent container. */
-apogeeapp.ui.ParentContainer.prototype.removeWindow = function(windowFrame) {
+apogeeapp.ui.WindowParent.prototype.removeWindow = function(windowFrame) {
     this.containerElement.removeChild(windowFrame.getElement());
     var index = this.windowFrameStack.indexOf(windowFrame);
     this.windowFrameStack.splice(index,1);
@@ -262,7 +287,7 @@ apogeeapp.ui.ParentContainer.prototype.removeWindow = function(windowFrame) {
 }
 
 /** This brings the given window to the front inside this container. */
-apogeeapp.ui.ParentContainer.prototype.bringToFront = function(windowFrame) {
+apogeeapp.ui.WindowParent.prototype.bringToFront = function(windowFrame) {
     //remove from array
     var index = this.windowFrameStack.indexOf(windowFrame);
     this.windowFrameStack.splice(index,1);
@@ -273,7 +298,7 @@ apogeeapp.ui.ParentContainer.prototype.bringToFront = function(windowFrame) {
 
 /** This method centers the dialog on the page. It must be called after the conten
  * is set, and possibly after it is rendered, so the size of it is calculated. */
-apogeeapp.ui.ParentContainer.prototype.getCenterOnPagePosition = function(child) {
+apogeeapp.ui.WindowParent.prototype.getCenterOnPagePosition = function(child) {
     var element = child.getElement();
     var x = (this.containerElement.offsetWidth - element.clientWidth)/2;
     var y = (this.containerElement.offsetHeight - element.clientHeight)/2;
@@ -282,15 +307,15 @@ apogeeapp.ui.ParentContainer.prototype.getCenterOnPagePosition = function(child)
 
 
 /** This method returns the position of the next window for auto/cascade positioning. */
-apogeeapp.ui.ParentContainer.prototype.getNextWindowPosition = function() {
-    var x = this.prevNewChildX + apogeeapp.ui.ParentContainer.DELTA_CHILD_X;
-    var y = this.prevNewChildY + apogeeapp.ui.ParentContainer.DELTA_CHILD_Y;
+apogeeapp.ui.WindowParent.prototype.getNextWindowPosition = function() {
+    var x = this.prevNewChildX + apogeeapp.ui.WindowParent.DELTA_CHILD_X;
+    var y = this.prevNewChildY + apogeeapp.ui.WindowParent.DELTA_CHILD_Y;
     
-    if( ((x > this.containerElement.offsetWidth)&&(x > apogeeapp.ui.ParentContainer.MIN_WRAP_WIDTH)) && 
-        ((y > this.containerElement.offsetHeight)&&(y > apogeeapp.ui.ParentContainer.MIN_WRAP_HEIGHT)) ) {
+    if( ((x > apogeeapp.ui.WindowParent.MAX_WRAP_WIDTH) || 
+        (y > apogeeapp.ui.WindowParent.MAX_WRAP_HEIGHT)) ) {
         this.wrapCount++;
-        x = apogeeapp.ui.ParentContainer.DELTA_CHILD_X * (this.wrapCount + 1);
-        y = apogeeapp.ui.ParentContainer.DELTA_CHILD_Y;
+        x = apogeeapp.ui.WindowParent.DELTA_CHILD_X * (this.wrapCount + 1);
+        y = apogeeapp.ui.WindowParent.DELTA_CHILD_Y;
     }
     
     this.prevNewChildX = x;
@@ -308,8 +333,8 @@ apogeeapp.ui.ParentContainer.prototype.getNextWindowPosition = function() {
 
 /** This updates the order for the windows.
  * @private */
-apogeeapp.ui.ParentContainer.prototype.updateOrder = function() {
-    var zIndex = apogeeapp.ui.ParentContainer.BASE_ZINDEX;
+apogeeapp.ui.WindowParent.prototype.updateOrder = function() {
+    var zIndex = apogeeapp.ui.WindowParent.BASE_ZINDEX;
     for(var i = 0; i < this.windowFrameStack.length; i++) {
         var windowFrame = this.windowFrameStack[i];
         windowFrame.setZIndex(zIndex++);
@@ -321,7 +346,7 @@ apogeeapp.ui.ParentContainer.prototype.updateOrder = function() {
  * 
  * options:
  * minimizable - allow content to be minimized. defaylt value: false
- * maximizable - allow content to be maximized. defaylt value: false
+ * maximizable - allow content to be maximized. default value: false
  * closable - display a close button. defalt value: false
  * resizable- allow resizing window with mouse. default vlue: false
  * movable - allow moving window with mouse. default value : false
@@ -339,7 +364,7 @@ apogeeapp.ui.WindowFrame = function(options) {
     apogee.EventManager.init.call(this);
 	
     //variables
-    this.parentContainer = null;
+    this.windowParent = null;
     this.parentElement = null;
     this.options = options;
 
@@ -353,12 +378,12 @@ apogeeapp.ui.WindowFrame = function(options) {
 	this.sizeInfo.width = apogeeapp.ui.WindowFrame.DEFAULT_WINDOW_WIDTH;
 	this.sizeInfo.height = apogeeapp.ui.WindowFrame.DEFAULT_WINDOW_HEIGHT;
 	
-    this.isShowing = false;
-	
     this.frame = null;
     this.titleCell = null;
+    this.headerCell = null;
     this.bodyCell = null;
     
+    this.headerContent = null;
     this.content = null;
     
     this.windowDragActive = false;
@@ -390,7 +415,7 @@ apogeeapp.ui.WindowFrame = function(options) {
     //add the handler to move the active window to the front
     var instance = this;
 	var frontHandler = function(e) {
-        instance.parentContainer.bringToFront(instance);
+        instance.windowParent.bringToFront(instance);
     };
     var element = this.getElement();
 	element.addEventListener("mousedown",frontHandler);
@@ -443,19 +468,40 @@ apogeeapp.ui.WindowFrame.prototype.setTitle = function(title) {
 apogeeapp.ui.WindowFrame.prototype.createMenu = function(iconUrl) {
     if(!iconUrl) iconUrl = apogeeapp.ui.getResourcePath(apogeeapp.ui.MENU_IMAGE);
     this.menu = apogeeapp.ui.Menu.createMenuFromImage(iconUrl);
-    var firstLeftElementChild = this.titleBarLeftElements.firstChild;
-    if(firstLeftElementChild) {
-        this.titleBarLeftElements.insertBefore(this.menu.getElement(),firstLeftElementChild);
-    }
-    else {
-        this.titleBarLeftElements.appendChild(this.menu.getElement());
-    }
+    this.titleBarMenuElement.appendChild(this.menu.getElement());
+    //create the icon (menu) overlay
+    this.iconOverlayElement = apogeeapp.ui.createElementWithClass("div","visiui_win_icon_overlay_style",this.titleBarMenuElement);
+    
     return this.menu;
 }
 
 /** This method shows the window. */
 apogeeapp.ui.WindowFrame.prototype.getMenu = function() {
     return this.menu;
+}
+
+/** This sets the given element as the icon overlay. If null or other [false} is passed
+ * this will just clear the icon overlay. */
+apogeeapp.ui.WindowFrame.prototype.setIconOverlay = function(element) {
+    if(this.iconOverlayElement) {
+        this.clearIconOverlay();
+        if(element) {
+            this.iconOverlayElement.appendChild(element);
+        }
+    }
+}
+
+apogeeapp.ui.WindowFrame.prototype.clearIconOverlay = function() {
+    if(this.iconOverlayElement) {
+        apogeeapp.ui.removeAllChildren(this.iconOverlayElement);
+    }
+}
+
+/** This sets the content for the window */
+apogeeapp.ui.WindowFrame.prototype.setHeaderContent = function(contentElement) {
+    apogeeapp.ui.removeAllChildren(this.headerCell);
+    this.headerCell.appendChild(contentElement);
+    this.headerContent = contentElement;
 }
 
 /** This sets the content for the window */
@@ -482,64 +528,30 @@ apogeeapp.ui.WindowFrame.prototype.removeTitleToolElement = function(element) {
 
 /** This method returns the parent container for the window.*/
 apogeeapp.ui.WindowFrame.prototype.getParent = function() {
-    return this.parentContainer;
-}
-
-/** This method shows the window. */
-apogeeapp.ui.WindowFrame.prototype.setParent = function(newParentContainer) {
-    this.parentContainer = newParentContainer;
-    this.parentElement = newParentContainer.getOuterElement();
-    this.show();
-}
-
-/** This method shows the window. */
-apogeeapp.ui.WindowFrame.prototype.show = function() {
-    if(this.isShowing) return;
-    if(!this.parentContainer) return;
-    
-    //add window to the parent
-    this.parentContainer.addWindow(this);
-
-    this.isShowing = true;
-
-    //we will redo this since the size of elements used in calculation may have been wrong
-    if(this.sizeInfo.height !== undefined) {
-        this.updateCoordinates();
-    }
-
+    return this.windowParent;
 }
 
 /** This method closes the window. If the argument forceClose is not
  * set to true the "request_close" handler is called to check if
  * it is ok to close the window. */
 apogeeapp.ui.WindowFrame.prototype.close = function(forceClose) {
-    if(!this.parentContainer) return;
+    if(!this.windowParent) return;
     
-    if(this.isShowing) {
-        if(!forceClose) {
-            //make a close request
-            var requestResponse = this.callHandler(apogeeapp.ui.REQUEST_CLOSE,this);
-            if(requestResponse == apogeeapp.ui.DENY_CLOSE) {
-                //do not close the window
-                return;
-            }
+    if(!forceClose) {
+        //make a close request
+        var requestResponse = this.callHandler(apogeeapp.ui.REQUEST_CLOSE,this);
+        if(requestResponse == apogeeapp.ui.DENY_CLOSE) {
+            //do not close the window
+            return;
         }
-        
-        this.parentContainer.removeWindow(this);
-        this.isShowing = false;
-        
-        this.dispatchEvent(apogeeapp.ui.CLOSE_EVENT,this);
     }
-}
 
-/** This method returns true if the window is showing. */
-apogeeapp.ui.WindowFrame.prototype.getIsShowing = function() {
-    return this.isShowing;
-}
+    this.windowParent.removeListener(apogeeapp.ui.SHOWN_EVENT, this.windowShownListener);
+    this.windowParent.removeListener(apogeeapp.ui.HIDDEN_EVENT, this.windowHiddenListener);
+    this.windowParent.removeWindow(this);
+    this.windowParent = null;
 
-/** This method returns true if the window is showing. */
-apogeeapp.ui.WindowFrame.prototype.getContentIsShowing = function() {
-    return (this.isShowing)&&(this.windowState != apogeeapp.ui.WINDOW_STATE_MINIMIZED);
+    this.dispatchEvent(apogeeapp.ui.CLOSE_EVENT,this);
 }
 
 /** This method sets the position of the window frame in the parent. */
@@ -611,32 +623,16 @@ apogeeapp.ui.WindowFrame.prototype.getElement = function() {
 //----------------------------------------------------------------
 //object specific
 
-/** This method sets the size of the window to fit the content. It should only be 
- * called after the window has been shown. If this is used a scrolling frame should not be
- * used a the content. */
+/** This method sets the size of the window to fit the content. */
 apogeeapp.ui.WindowFrame.prototype.fitToContent = function() {
-	//figure out how big to make the frame to fit the content
-    var viewWidth = this.bodyCell.offsetWidth;
-    var viewHeight = this.bodyCell.offsetHeight;
-    var contentWidth = this.content.offsetWidth;
-    var contentHeight = this.content.offsetHeight;
-	
-	var targetWidth = this.sizeInfo.width + contentWidth - viewWidth + apogeeapp.ui.WindowFrame.FIT_WIDTH_BUFFER;
-	var targetHeight = this.sizeInfo.height + contentHeight - viewHeight + apogeeapp.ui.WindowFrame.FIT_HEIGHT_BUFFER;
-	
-    this.setSize(targetWidth,targetHeight);
+    this.sizeInfo.width = undefined;
+	this.sizeInfo.height = undefined;
 }
-
-/** @private */
-apogeeapp.ui.WindowFrame.FIT_HEIGHT_BUFFER = 20;
-/** @private */
-apogeeapp.ui.WindowFrame.FIT_WIDTH_BUFFER = 20;
-
 
 /** This method centers the window in its parent. it should only be called
  *after the window is shown. */
 apogeeapp.ui.WindowFrame.prototype.centerInParent = function() {
-    var coords = this.parentContainer.getCenterOnPagePosition(this);
+    var coords = this.windowParent.getCenterOnPagePosition(this);
     this.setPosition(coords[0],coords[1]);
 }
 
@@ -664,6 +660,32 @@ apogeeapp.ui.WindowFrame.prototype.setWindowState = function(windowState) {
         default:
             alert("Unknown window state: " + windowState);
             break;
+    }
+}
+
+//================================
+// Internal
+//================================
+
+/** This method shows the window. */
+apogeeapp.ui.WindowFrame.prototype.setParent = function(newWindowParent) {
+    this.windowParent = newWindowParent;
+    this.parentElement = newWindowParent.getOuterElement();
+    
+    var instance = this;
+    //attach to listeners to forward show and hide events
+    this.windowShownListener = function(windowParent) {
+        instance.dispatchEvent(apogeeapp.ui.SHOWN_EVENT,instance);
+    };
+    this.windowParent.addListener(apogeeapp.ui.SHOWN_EVENT, this.windowShownListener);
+    this.windowHiddenListener = function(windowParent) {
+        instance.dispatchEvent(apogeeapp.ui.HIDDEN_EVENT,instance);
+    };
+    this.windowParent.addListener(apogeeapp.ui.HIDDEN_EVENT, this.windowHiddenListener);
+
+    //we will redo this since the size of elements used in calculation may have been wrong
+    if(this.sizeInfo.height !== undefined) {
+        this.updateCoordinates();
     }
 }
 
@@ -720,20 +742,20 @@ apogeeapp.ui.WindowFrame.prototype.resizeMouseDownImpl = function(e,resizeFlags)
 	if(resizeFlags) {
 		if(resizeFlags & apogeeapp.ui.WindowFrame.RESIZE_EAST) {
 			this.resizeEastActive = true;
-			this.resizeOffsetWidth = e.clientX - this.frame.clientWidth;
+			this.resizeOffsetWidth = e.clientX - this.bodyCell.clientWidth;
 		}
 		else if(resizeFlags & apogeeapp.ui.WindowFrame.RESIZE_WEST) {
 			this.resizeWestActive = true;
-			this.resizeOffsetWidth = e.clientX + this.frame.clientWidth;
+			this.resizeOffsetWidth = e.clientX + this.bodyCell.clientWidth;
 			this.moveOffsetX = e.clientX - this.frame.offsetLeft;
 		}
 		if(resizeFlags & apogeeapp.ui.WindowFrame.RESIZE_SOUTH) {
 			this.resizeSouthActive = true;
-			this.resizeOffsetHeight = e.clientY - this.frame.clientHeight;
+			this.resizeOffsetHeight = e.clientY - this.bodyCell.clientHeight;
 		}
 		else if(resizeFlags & apogeeapp.ui.WindowFrame.RESIZE_NORTH) {
 			this.resizeNorthActive = true;
-			this.resizeOffsetHeight = e.clientY + this.frame.clientHeight;
+			this.resizeOffsetHeight = e.clientY + this.bodyCell.clientHeight;
 			this.moveOffsetY = e.clientY - this.frame.offsetTop;
 		}
 
@@ -754,13 +776,13 @@ apogeeapp.ui.WindowFrame.prototype.resizeMouseMoveImpl = function(e) {
     
 	if(this.resizeEastActive) {
 		newWidth = e.clientX - this.resizeOffsetWidth;
-		if(newWidth < this.minWidth) return;
+		//if(newWidth < this.minWidth) return;
         this.sizeInfo.width = newWidth;
         changeMade = true;
 	}
 	else if(this.resizeWestActive) {
 		newWidth = this.resizeOffsetWidth - e.clientX;
-		if(newWidth < this.minWidth) return;
+		//if(newWidth < this.minWidth) return;
 		newX = e.clientX - this.moveOffsetX;
 		if(newX < 0) newX = 0;
         this.sizeInfo.width = newWidth;
@@ -769,13 +791,13 @@ apogeeapp.ui.WindowFrame.prototype.resizeMouseMoveImpl = function(e) {
 	}
 	if(this.resizeSouthActive) {
 		newHeight = e.clientY - this.resizeOffsetHeight;
-		if(newHeight < this.minHeight) return;
+		//if(newHeight < this.minHeight) return;
 		this.sizeInfo.height = newHeight;
         changeMade = true;
 	}
 	else if(this.resizeNorthActive) {
 		newHeight = this.resizeOffsetHeight - e.clientY;
-		if(newHeight < this.minHeight) return;
+		//if(newHeight < this.minHeight) return;
 		newY = e.clientY - this.moveOffsetY;
 		if(newY < 0) newY = 0;
 		this.sizeInfo.height = newHeight;
@@ -829,6 +851,7 @@ apogeeapp.ui.WindowFrame.prototype.endResize = function() {
 apogeeapp.ui.WindowFrame.prototype.minimizeContent = function() {
     
     //set body as hidden
+    this.headerCell.style.display = "none";
     this.bodyCell.style.display = "none";
     
     var wasMinimized = (this.windowState === apogeeapp.ui.WINDOW_STATE_MINIMIZED);
@@ -840,13 +863,16 @@ apogeeapp.ui.WindowFrame.prototype.minimizeContent = function() {
     this.setMinMaxButtons();
     
     //dispatch resize event
-    if(!wasMinimized) this.dispatchEvent(apogeeapp.ui.WindowFrame.WINDOW_MINIMIZED,this);
+    if(!wasMinimized) { 
+        this.dispatchEvent(apogeeapp.ui.WindowFrame.WINDOW_MINIMIZED,this);
+    }
 }
 
 /** This is the restore function for the window.*/
 apogeeapp.ui.WindowFrame.prototype.restoreContent = function() {
     
     //set body as not hidden
+    this.headerCell.style.display = "";
     this.bodyCell.style.display = "";
     
     var wasMinimized = (this.windowState === apogeeapp.ui.WINDOW_STATE_MINIMIZED);
@@ -857,13 +883,16 @@ apogeeapp.ui.WindowFrame.prototype.restoreContent = function() {
     this.updateCoordinates();
     this.setMinMaxButtons();
     
-    if(wasMinimized) this.dispatchEvent(apogeeapp.ui.WindowFrame.WINDOW_RESTOREDED,this);
+    if((wasMinimized)||(wasMaximized)) {
+        this.dispatchEvent(apogeeapp.ui.WindowFrame.WINDOW_RESTOREDED,this);
+    }
 }
 
 /** This is the minimize function for the window.*/
 apogeeapp.ui.WindowFrame.prototype.maximizeContent = function() {
     
     //set body as not hidden
+    this.headerCell.style.display = "";
     this.bodyCell.style.display = "";
     
     var wasMinimized = (this.windowState === apogeeapp.ui.WINDOW_STATE_MINIMIZED);
@@ -873,11 +902,16 @@ apogeeapp.ui.WindowFrame.prototype.maximizeContent = function() {
     this.updateCoordinates();
     this.setMinMaxButtons();
     
-    if(wasMinimized) this.dispatchEvent(apogeeapp.ui.WindowFrame.WINDOW_MAXIMIZED,this);
+    if(!wasMaximized) {
+        this.dispatchEvent(apogeeapp.ui.WindowFrame.WINDOW_MAXIMIZED,this);
+    }
 }
 
 /** @private */
 apogeeapp.ui.WindowFrame.prototype.updateCoordinates = function() {
+    
+    var initialBodyHeight = this.bodyCell.style.height;
+    var initialBodyWidth = this.bodyCell.style.width;
 	
     if(this.windowState === apogeeapp.ui.WINDOW_STATE_MAXIMIZED) {
         //apply the maximized coordinates size
@@ -885,31 +919,43 @@ apogeeapp.ui.WindowFrame.prototype.updateCoordinates = function() {
 		this.frame.style.top = "0px";
 		this.frame.style.height = "100%";
 		this.frame.style.width = "100%";
+        
+        this.bodyCell.style.height = "100%";
+        this.bodyCell.style.width = "100%";
     }
     else if(this.windowState === apogeeapp.ui.WINDOW_STATE_NORMAL) {
         //apply the normal size to the window
 		this.frame.style.left = this.posInfo.x + "px";
         this.frame.style.top = this.posInfo.y + "px";
+        this.frame.style.height = "";
+		this.frame.style.width = "";
+        
 		if(this.sizeInfo.height !== undefined) {
-			this.frame.style.height = this.sizeInfo.height + "px";
+			this.bodyCell.style.height = this.sizeInfo.height + "px";
 		}
-		else {
-			this.frame.style.height = apogeeapp.ui.WindowFrame.DEFAULT_WINDOW_HEIGHT + "px";
-		}
+        else {
+            this.bodyCell.style.height = "";
+        }
 		if(this.sizeInfo.width !== undefined) {
-			this.frame.style.width = this.sizeInfo.width + "px";
+			this.bodyCell.style.width = this.sizeInfo.width + "px";
 		}
-		else {
-			this.frame.style.width = apogeeapp.ui.WindowFrame.DEFAULT_WINDOW_WIDTH + "px";
-		}
+        else {
+            this.bodyCell.style.width = "";
+        }
     }
     else if(this.windowState === apogeeapp.ui.WINDOW_STATE_MINIMIZED) {
         //apply the minimized size to the window
 		this.frame.style.left = this.posInfo.x + "px";
         this.frame.style.top = this.posInfo.y + "px";
-		
-		this.frame.style.height = "0px";
-		this.frame.style.width = "0px";
+		this.frame.style.height = "";
+		this.frame.style.width = "";
+        
+		this.bodyCell.style.height = "0px";
+		this.bodyCell.style.width = "0px";
+    }
+    
+    if((initialBodyHeight != this.bodyCell.style.height)||(initialBodyWidth != this.bodyCell.style.width)) {
+        this.dispatchEvent(apogeeapp.ui.RESIZED_EVENT,this);
     }
 }
 
@@ -950,7 +996,7 @@ apogeeapp.ui.WindowFrame.prototype.initUI = function() {
     cell = document.createElement("td");
     cell.className = "visiui_win_windowColorClass visiui_win_left";
     this.addResizeHandlers(cell,apogeeapp.ui.WindowFrame.RESIZE_WEST); 
-    cell.rowSpan = 2;
+    cell.rowSpan = 3;
     row.appendChild(cell);
     cell = document.createElement("td");
     cell.className = "visiui_win_windowColorClass";
@@ -959,7 +1005,16 @@ apogeeapp.ui.WindowFrame.prototype.initUI = function() {
     cell = document.createElement("td");
     cell.className = "visiui_win_windowColorClass visiui_win_right";
     this.addResizeHandlers(cell,apogeeapp.ui.WindowFrame.RESIZE_EAST); 
-    cell.rowSpan = 2;
+    cell.rowSpan = 3;
+    row.appendChild(cell);
+    
+    //header
+    row = document.createElement("tr");
+    row.className = "visiui_win_headerRow";
+    table.appendChild(row);
+    cell = document.createElement("td");
+    cell.className = "visiui_win_headerCell";
+    this.headerCell = cell;
     row.appendChild(cell);
     
     //body
@@ -1052,13 +1107,14 @@ apogeeapp.ui.WindowFrame.prototype.createTitleBar = function() {
     }
     
     //maximize button and logic
-    if(this.options.maximizable) {
-        this.maximizeButton = apogeeapp.ui.createElementWithClass("img","visiui_win_cmd_button",this.titleBarRightElements);
-        this.maximizeButton.src = apogeeapp.ui.getResourcePath(apogeeapp.ui.MAXIMIZE_CMD_IMAGE);
-        this.maximizeButton.onclick = function() {
-            instance.maximizeContent();
-        }
-    }
+//DISABLE MAXIMIZE - just don't show button for now
+//    if(this.options.maximizable) {
+//        this.maximizeButton = apogeeapp.ui.createElementWithClass("img","visiui_win_cmd_button",this.titleBarRightElements);
+//        this.maximizeButton.src = apogeeapp.ui.getResourcePath(apogeeapp.ui.MAXIMIZE_CMD_IMAGE);
+//        this.maximizeButton.onclick = function() {
+//            instance.maximizeContent();
+//        }
+//    }
     
     //layout the window buttons
     this.windowState = apogeeapp.ui.WINDOW_STATE_NORMAL;
@@ -1095,17 +1151,6 @@ apogeeapp.ui.WindowFrame.prototype.createTitleBar = function() {
             instance.moveMouseLeaveImpl(event);
         }
     }
-    
-//    //listen for cmd events from title bar
-//    this.addListener("minimize_request",function() {
-//        instance.minimizeContent();
-//    });
-//    this.addListener("maximize_request",function() {
-//        instance.maximizeContent();
-//    });
-//    this.addListener("restore_request",function() {
-//        instance.restoreContent();
-//    });
 }
 
 
@@ -1159,11 +1204,6 @@ apogeeapp.ui.TabFrame = function() {
 //add components to this class
 apogee.base.mixin(apogeeapp.ui.TabFrame,apogee.EventManager);
 
-//events
-apogeeapp.ui.TabFrame.TAB_ADDED = "tabAdded";
-apogeeapp.ui.TabFrame.TAB_SHOWN = "tabShown";
-apogeeapp.ui.TabFrame.TAB_HIDDEN = "tabHidden";
-
 apogeeapp.ui.TabFrame.CONTAINER_FRAME_MARGIN_PX = 5;
 
 /** This method returns the dom element for the control. */
@@ -1172,30 +1212,25 @@ apogeeapp.ui.TabFrame.prototype.getElement = function() {
 }
 
 /** This method returns the main dom element for the window frame. */
-apogeeapp.ui.TabFrame.prototype.getTab = function(name) {
-    var tabData = this.tabTable[name];
-    if(tabData) {
-        return tabData.tabDisplay;
-    }
-    else {
-        return null;
-    }
+apogeeapp.ui.TabFrame.prototype.getTab = function(id) {
+    return this.tabTable[id];
 }
 
 /** This method adds a tab to the tab frame. */
-apogeeapp.ui.TabFrame.prototype.addTab = function(id) {
+apogeeapp.ui.TabFrame.prototype.addTab = function(tab,makeActive) {
+    var id = tab.getId();
+    
     //make sure there is no tab with this name
     if(this.tabTable[id]) {
-        alert("There is already a tab with this name!");
+        alert("There is already a tab with this id!");
         return null;
     }
     
-    //create tab label - initialize with the id (should be renamed)
-    var tabLabelElement = apogeeapp.ui.createElementWithClass("div","visiui-tf-tab-base visiui-tf-tab-inactive",this.tabBar);
+    tab.setTabFrame(this);
+    this.tabFrame.appendChild(tab.getMainElement());
     
-    //create the tab object
-    var tab = new apogeeapp.ui.Tab(id, tabLabelElement, this);
-    this.tabFrame.appendChild(tab.getOuterElement());
+    var tabLabelElement = tab.getLabelElement();
+    this.tabBar.appendChild(tabLabelElement);
 	
     //add the click handler
     var instance = this;
@@ -1208,30 +1243,31 @@ apogeeapp.ui.TabFrame.prototype.addTab = function(id) {
     }
 	
     //add to tabs
-    var tabData = {};
-    tabData.tabDisplay = tab;
-    tabData.tabLabel = tabLabelElement;
+    this.tabTable[id] = tab;
     
-    this.tabTable[id] = tabData;
-    if(this.activeTab == null) {
-        this.activeTab = id;
+    if((makeActive)||(this.activeTab == null)) {
+        this.setActiveTab(id);
     }
-    
-    this.dispatchEvent(apogeeapp.ui.TabFrame.TAB_ADDED,tab);
-    this.updateTabDisplay();
-    return tab;
+    else {
+        this.updateTabDisplay();
+    }
 }
 
 /** This method adds a tab to the tab frame. */
 apogeeapp.ui.TabFrame.prototype.closeTab = function(id) {
-    var tabData = this.tabTable[id];
-    if(tabData) {
-        this.tabFrame.removeChild(tabData.tabDisplay.getOuterElement());
-        this.tabBar.removeChild(tabData.tabLabel);
+    var tab = this.tabTable[id];
+    if(tab) {
+        this.tabFrame.removeChild(tab.getMainElement());
+        
+        var tabLabelElement = tab.getLabelElement();
+        this.tabBar.removeChild(tabLabelElement);
+        delete tabLabelElement.onclick;
+        delete tabLabelElement.onmousedown;
+        
         delete this.tabTable[id];
 		
         if(this.activeTab == id) {
-            this.dispatchEvent(apogeeapp.ui.TabFrame.TAB_HIDDEN,id);
+            this.dispatchEvent(apogeeapp.ui.HIDDEN_EVENT,id);
             this.activeTab = null;
             //choose a random tab
             for(var newId in this.tabTable) {
@@ -1239,51 +1275,48 @@ apogeeapp.ui.TabFrame.prototype.closeTab = function(id) {
                 break;
             }
         }
+        
         this.updateTabDisplay();
     }
 }
 
 /** This mesets the active tab, by tab title. */
 apogeeapp.ui.TabFrame.prototype.setActiveTab = function(id) {
-    var tabEntry = this.tabTable[id];
-	if(tabEntry) {
+    var tab = this.tabTable[id];
+	if(tab) {
 		this.activeTab = id;
-		this.tabFrame.appendChild(tabEntry.tabDisplay.getOuterElement());
+		this.tabFrame.appendChild(tab.getMainElement());
 		this.updateTabDisplay();
-		this.dispatchEvent(apogeeapp.ui.TabFrame.TAB_SHOWN,id);
+		this.dispatchEvent(apogeeapp.ui.SHOWN_EVENT,tab);
 	}
-}
-
-/** This mesets the active tab, by tab title. */
-apogeeapp.ui.TabFrame.prototype.getActiveTabTitle = function() {
-    return this.activeTab;
 }
 
 /** This updates the tabs. */
 apogeeapp.ui.TabFrame.prototype.updateTabDisplay = function() {
-    var title;
-    for(title in this.tabTable) {
-        var tabData = this.tabTable[title];
-        if(title == this.activeTab) {
-            tabData.tabDisplay.getOuterElement().style.display = "";
-            tabData.tabLabel.className = "visiui-tf-tab-base visiui-tf-tab-active";
+    var id;
+    for(id in this.tabTable) {
+        var tab = this.tabTable[id];
+        if(id == this.activeTab) {
+            tab.getMainElement().style.display = "";
+            tab.getLabelElement().className = "visiui-tf-tab-base visiui-tf-tab-active";
         }
         else {
-            tabData.tabDisplay.getOuterElement().style.display = "none";
-            tabData.tabLabel.className = "visiui-tf-tab-base visiui-tf-tab-inactive";
+            tab.getMainElement().style.display = "none";
+            tab.getLabelElement().className = "visiui-tf-tab-base visiui-tf-tab-inactive";
         }
     }
 }
 ;
 
-apogeeapp.ui.Tab = function(id, tabLabelElement, tabFrame) {
+apogeeapp.ui.Tab = function(id) {
     
     //base init
     apogee.EventManager.init.call(this);
     
-    this.tabFrame = tabFrame;
+    this.tabFrame = null;
     this.id = id;
-    this.tabLabelElement= tabLabelElement;
+    this.tabLabelElement = apogeeapp.ui.createElementWithClass("div","visiui-tf-tab-base visiui-tf-tab-inactive");
+    
     this.menuContainer = apogeeapp.ui.createElementWithClass("div","visiui-tf_tab-menuDiv",this.tabLabelElement);
     this.titleElement = apogeeapp.ui.createElementWithClass("div","visiui_tf_tab_title",this.tabLabelElement);
     
@@ -1295,22 +1328,17 @@ apogeeapp.ui.Tab = function(id, tabLabelElement, tabFrame) {
         instance.close();
     };
     
-    //attach to listeners to forward show and hide events
-    this.tabShownListener = function(shownId) {
-        if(shownId == id) {
-            instance.dispatchEvent(apogeeapp.ui.TabFrame.TAB_SHOWN,this);
-        }
-    };
-    this.tabFrame.addListener(apogeeapp.ui.TabFrame.TAB_SHOWN, this.tabShownListener);
-    this.tabHiddenListener = function(hiddenId) {
-        if(hiddenId == id) {
-            instance.dispatchEvent(apogeeapp.ui.TabFrame.TAB_HIDDEN,this);
-        }
-    };
-    this.tabFrame.addListener(apogeeapp.ui.TabFrame.TAB_HIDDEN, this.tabHiddenListener);
-    
     //create the tab element
     this.displayFrame = apogeeapp.ui.createElementWithClass("div","visiui-tf-tab-window");
+    this.tabInsideContainer = new apogeeapp.ui.DisplayAndHeader(apogeeapp.ui.DisplayAndHeader.FIXED_PANE,
+            null,
+            apogeeapp.ui.DisplayAndHeader.FIXED_PANE,
+            null
+        );
+    this.displayFrame.appendChild(this.tabInsideContainer.getOuterElement());
+    
+    this.headerContainer = this.tabInsideContainer.getHeaderContainer();
+    this.bodyContainer = this.tabInsideContainer.getBodyContainer();
     
     this.isShowing = false;
 }
@@ -1322,36 +1350,65 @@ apogee.base.mixin(apogeeapp.ui.Tab,apogee.EventManager);
 // WINDOW CONTAINER
 //---------------------------
 
-/** This method must be implemented in inheriting objects. */
-apogeeapp.ui.Tab.prototype.getContentIsShowing = function() {
-    return this.isShowing;
+/** This is called by the tab frame. */
+apogeeapp.ui.Tab.prototype.setTabFrame = function(tabFrame) {
+    this.tabFrame = tabFrame;
+    var instance = this;
+    //attach to listeners to forward show and hide events
+    this.tabShownListener = function(tab) {
+        if(tab == instance) {
+            instance.dispatchEvent(apogeeapp.ui.SHOWN_EVENT,instance);
+        }
+    };
+    this.tabFrame.addListener(apogeeapp.ui.SHOWN_EVENT, this.tabShownListener);
+    this.tabHiddenListener = function(tab) {
+        if(tab == instance) {
+            instance.dispatchEvent(apogeeapp.ui.HIDDEN_EVENT,instance);
+        }
+    };
+    this.tabFrame.addListener(apogeeapp.ui.HIDDEN_EVENT, this.tabHiddenListener);
+}
+
+/** This sets the tab as the active tab. It returns true if it can do this. In the case
+ * it does not have an active frame, it returns false. */
+apogeeapp.ui.Tab.prototype.makeActive = function() {
+    if(this.tabFrame) {
+        this.tabFrame.setActiveTab(this.id);
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 /** This method must be implemented in inheriting objects. */
-apogeeapp.ui.Tab.prototype.setName = function(name) {
-    this.titleElement.innerHTML = name;
-    this.name = name;
+apogeeapp.ui.Tab.prototype.getId = function() {
+    return this.id;
 }
 
 /** This method must be implemented in inheriting objects. */
-apogeeapp.ui.Tab.prototype.getTitle = function() {
-    return this.name;
+apogeeapp.ui.Tab.prototype.setTitle = function(title) {
+    this.titleElement.innerHTML = title;
+    this.title = title;
 }
 
-/** This method must be implemented in inheriting objects. */
-apogeeapp.ui.Tab.prototype.setTitle = function(name) {
+/** This sets the content for the window */
+apogeeapp.ui.Tab.prototype.setHeaderContent = function(contentElement) {
+    apogeeapp.ui.removeAllChildren(this.headerContainer);
+    this.headerContainer.appendChild(contentElement);
+    this.headerContent = contentElement;
 }
 
 /** This method must be implemented in inheriting objects. */
 apogeeapp.ui.Tab.prototype.setContent = function(contentElement) {
-    apogeeapp.ui.removeAllChildren(this.displayFrame);
-    this.displayFrame.appendChild(contentElement);
+    apogeeapp.ui.removeAllChildren(this.bodyContainer);
+    this.bodyContainer.appendChild(contentElement);
     this.content = contentElement;
 }
 
 /** This method must be implemented in inheriting objects. */
-apogeeapp.ui.Tab.prototype.getName = function() {
-    return this.name;
+apogeeapp.ui.Tab.prototype.getTitle = function() {
+    return this.title;
 }
 
 /** This method shows the window. */
@@ -1359,12 +1416,31 @@ apogeeapp.ui.Tab.prototype.createMenu = function(iconUrl) {
     if(!iconUrl) iconUrl = apogeeapp.ui.getResourcePath(apogeeapp.ui.MENU_IMAGE);
     this.menu = apogeeapp.ui.Menu.createMenuFromImage(iconUrl);
     this.menuContainer.appendChild(this.menu.domElement);
+    //add the icon overlay element
+    this.iconOverlayElement = apogeeapp.ui.createElementWithClass("div","visiui_tf_icon_overlay",this.menuContainer);
     return this.menu;
 }
 
 /** This method shows the window. */
 apogeeapp.ui.Tab.prototype.getMenu = function() {
     return this.menu;
+}
+
+/** This sets the given element as the icon overlay. If null or other [false} is passed
+ * this will just clear the icon overlay. */
+apogeeapp.ui.Tab.prototype.setIconOverlay = function(element) {
+    if(this.iconOverlayElement) {
+        this.clearIconOverlay();
+        if(element) {
+            this.iconOverlayElement.appendChild(element);
+        }
+    }
+}
+
+apogeeapp.ui.Tab.prototype.clearIconOverlay = function() {
+    if(this.iconOverlayElement) {
+        apogeeapp.ui.removeAllChildren(this.iconOverlayElement);
+    }
 }
 
 /** This method closes the window. */
@@ -1380,8 +1456,8 @@ apogeeapp.ui.Tab.prototype.close = function(forceClose) {
         }
     }
     
-    this.tabFrame.removeListener(apogeeapp.ui.TabFrame.TAB_SHOWN, this.tabShownListener);
-    this.tabFrame.removeListener(apogeeapp.ui.TabFrame.TAB_HIDDEN, this.tabHiddenListener);
+    this.tabFrame.removeListener(apogeeapp.ui.SHOWN_EVENT, this.tabShownListener);
+    this.tabFrame.removeListener(apogeeapp.ui.HIDDEN_EVENT, this.tabHiddenListener);
     this.tabFrame.closeTab(this.id);
     this.tabFrame = null;
     
@@ -1395,8 +1471,13 @@ apogeeapp.ui.Tab.prototype.close = function(forceClose) {
 //---------------------------
 
 /** This method must be implemented in inheriting objects. */
-apogeeapp.ui.Tab.prototype.getOuterElement = function() {
+apogeeapp.ui.Tab.prototype.getMainElement = function() {
     return this.displayFrame;
+}
+
+/** This method must be implemented in inheriting objects. */
+apogeeapp.ui.Tab.prototype.getLabelElement = function() {
+    return this.tabLabelElement;
 }
 
 ;
@@ -1729,6 +1810,14 @@ apogeeapp.ui.MenuBody.prototype.addMenuItem = function(itemInfo) {
         childMenuDiv.style.left = "100%";
         childMenuDiv.style.top = "0%";
         itemInfo.element.appendChild(childMenuDiv);
+        
+        //prevent normal action on a click
+        itemInfo.element.onmousedown = function(event) {
+            event.stopPropagation();
+        }
+        itemInfo.element.onclick = function(event) {
+            event.stopPropagation();
+        }
     }
     else {
         //create a norman (clickable) menu item
@@ -3481,14 +3570,14 @@ apogeeapp.jsonedit.JsonEditArea.prototype.valueEdited = function() {
 
 
 ;
-/** This file provides a resize listener. The element must be a positioned element
+/** This file provides a load listener. The element must be a positioned element
  * (position must be set to something besides static. It can only be done once per element(!)
  * 
  * It places an iframe inside the element to be tested and uses the onresize of the 
  * iframe document body. It calls load (and resize) on initial loading of the iframe.
  */
 
-apogeeapp.ui.setResizeListener = function(element, resizeCallback, loadCallback){
+apogeeapp.ui.setLoadListener = function(element, loadCallback, resizeCallback){
 
     var styleJson = {
         "position":"absolute",
@@ -3500,7 +3589,9 @@ apogeeapp.ui.setResizeListener = function(element, resizeCallback, loadCallback)
         "zIndex":-1
     };
 
-    var onLoadCallback = function() {
+    //create and attach element
+    var dummyFrameElement = apogeeapp.ui.createElement("iframe",null,styleJson);
+    dummyFrameElement.onload = function() {
         var dummyFrameBody = dummyFrameElement.contentDocument.body; 
         
         if(loadCallback) {
@@ -3513,10 +3604,6 @@ apogeeapp.ui.setResizeListener = function(element, resizeCallback, loadCallback)
             dummyFrameBody.onresize = resizeCallback;
         }
     }
-
-    //create and attach element
-    var dummyFrameElement = apogeeapp.ui.createElement("iframe",null,styleJson);
-    dummyFrameElement.onload = onLoadCallback;
     element.appendChild(dummyFrameElement);
 }
 
@@ -3746,21 +3833,26 @@ apogeeapp.ui.treecontrol.TreeEntry = function(labelText,iconSrc,dblClickCallback
     
     this.element = apogeeapp.ui.createElementWithClass("li", baseCssClass);
     this.control = apogeeapp.ui.createElementWithClass("img", "visiui-tc-control",this.element);
+    
 
     //icon/menu
     if(iconSrc) {
+        this.iconContainerElement = apogeeapp.ui.createElementWithClass("div", "visiui-tc-icon-container",this.element);
         if(menuItemCallback) {
             //icon as menu
             this.menu = apogeeapp.ui.Menu.createMenuFromImage(iconSrc);
             this.menu.setAsOnTheFlyMenu(menuItemCallback);
-            this.element.appendChild(this.menu.getElement());
+            this.iconContainerElement.appendChild(this.menu.getElement());
         }
         else {
             //plain icon
-            this.icon = apogeeapp.ui.createElementWithClass("img", "visiui-tc-icon",this.element);
+            this.icon = apogeeapp.ui.createElementWithClass("img", "visiui-tc-icon",this.iconContainerElement);
             this.icon.src = iconSrc; 
         }
+        this.iconOverlayElement = apogeeapp.ui.createElementWithClass("div","visiui_tc_icon_overlay",this.iconContainerElement);
     }
+    
+    
     
     //label
     this.label = apogeeapp.ui.createElementWithClass("div", "visiui-tc-label",this.element);
@@ -3868,6 +3960,18 @@ apogeeapp.ui.treecontrol.TreeEntry.prototype.setState = function(state) {
     }
 }
 
+/** This sets the given element as the icon overlay. If null or other [false} is passed
+ * this will just clear the icon overlay. */
+apogeeapp.ui.treecontrol.TreeEntry.prototype.setIconOverlay = function(element) {
+    this.clearIconOverlay();
+    if(element) {
+        this.iconOverlayElement.appendChild(element);
+    }
+}
+
+apogeeapp.ui.treecontrol.TreeEntry.prototype.clearIconOverlay = function() {
+    apogeeapp.ui.removeAllChildren(this.iconOverlayElement);
+}
 
 
 
@@ -4067,20 +4171,21 @@ apogeeapp.app.Apogee.prototype.createUI = function(containerId) {
     
     //add listener for displaying the active tab
     var instance = this;
-    this.tabFrame.addListener(apogeeapp.ui.TabFrame.TAB_SHOWN,function(tabId){instance.onTabShown(tabId);});
-    this.tabFrame.addListener(apogeeapp.ui.TabFrame.TAB_HIDDEN,function(tabId){instance.onTabHidden(tabId);});
+    this.tabFrame.addListener(apogeeapp.ui.SHOWN_EVENT,function(tab){instance.onTabShown(tab);});
+    this.tabFrame.addListener(apogeeapp.ui.HIDDEN_EVENT,function(tab){instance.onTabHidden(tab);});
 
 }
 
 /** This method creates the app ui. 
  * @private */
-apogeeapp.app.Apogee.prototype.onTabHidden = function(tabId) {
+apogeeapp.app.Apogee.prototype.onTabHidden = function(tab) {
     this.activeTabIconDisplay.style.display = "none";
     this.activeTabTitleDisplay.style.display = "none";
 }
 
-apogeeapp.app.Apogee.prototype.onTabShown = function(tabId) {
-    var component = this.workspaceUI.getComponentById(tabId);
+apogeeapp.app.Apogee.prototype.onTabShown = function(tab) {
+    var id = tab.getId();
+    var component = this.workspaceUI.getComponentById(id);
     if(component) {
         this.activeTabIconDisplay.src = component.getIconUrl();
         this.activeTabTitleDisplay.innerHTML = component.getObject().getDisplayName(true);
@@ -4592,16 +4697,8 @@ apogeeapp.app.WorkspaceUI.prototype.close = function() {
     this.setLinks([],[]);
 }
 
-apogeeapp.app.WorkspaceUI.prototype.setActiveTab = function(id) {
-    this.tabFrame.setActiveTab(id);
-}
-
-apogeeapp.app.WorkspaceUI.prototype.requestTab = function(id,makeActive) {
-    var tab = this.tabFrame.addTab(id);
-    if(makeActive) {
-        this.tabFrame.setActiveTab(id);
-    }
-    return tab;
+apogeeapp.app.WorkspaceUI.prototype.getTabFrame = function() {
+    return this.tabFrame;
 }
 
 //====================================
@@ -4733,24 +4830,13 @@ apogeeapp.app.WorkspaceUI.prototype.createLinkAddRemoveList = function(linkArray
 /** This is a class that manages banner messages for display classes. */
 apogeeapp.app.WindowHeaderManager = function() {
     
-    //set fixed pane for header container - will customize later
-    this.windowInsideContainer = null;
-    this.body = null;
-    
     //headers
     this.toolbarDiv = null;
     this.toolbarActive = false;
     this.bannerDiv = null;
     this.bannerBarActive = false;
     
-    this.windowInsideContainer = new apogeeapp.ui.DisplayAndHeader(apogeeapp.ui.DisplayAndHeader.FIXED_PANE,
-            null,
-            apogeeapp.ui.DisplayAndHeader.FIXED_PANE,
-            null
-        );
-    
-    this.body = this.windowInsideContainer.getBody();
-      
+    this.headerContainer = document.createElement("div");
 }
 
 //=======================
@@ -4761,10 +4847,12 @@ apogeeapp.app.WindowHeaderManager = function() {
 apogeeapp.app.WindowHeaderManager.BANNER_TYPE_ERROR = "error";
 apogeeapp.app.WindowHeaderManager.BANNER_BGCOLOR_ERROR = "red";
 apogeeapp.app.WindowHeaderManager.BANNER_FGCOLOR_ERROR = "white";
+apogeeapp.app.WindowHeaderManager.ERROR_ICON_IMAGE = "/error.png";
 
 apogeeapp.app.WindowHeaderManager.BANNER_TYPE_PENDING = "pending";
 apogeeapp.app.WindowHeaderManager.BANNER_BGCOLOR_PENDING = "yellow";
 apogeeapp.app.WindowHeaderManager.BANNER_FGCOLOR_PENDING = "black";
+apogeeapp.app.WindowHeaderManager.PENDING_ICON_IMAGE = "/pending.png";
 
 apogeeapp.app.WindowHeaderManager.BANNER_BGCOLOR_UNKNOWN = "yellow";
 apogeeapp.app.WindowHeaderManager.BANNER_FGCOLOR_UNKNOWN = "black";
@@ -4810,33 +4898,33 @@ apogeeapp.app.WindowHeaderManager.prototype.showBannerBar = function(text,type) 
     //set message
     this.bannerDiv.innerHTML = text;
     this.bannerBarActive = true;
-	
-	this.showActiveHeaders();
+    
+    this.updateHeaderElement();
 }
 
 /** This method returns the base member for this component. */
 apogeeapp.app.WindowHeaderManager.prototype.hideBannerBar = function() {
 	this.bannerBarActive = false;
-	this.showActiveHeaders();
+    this.updateHeaderElement();
 }
 
 /** This method returns the base member for this component. */
 apogeeapp.app.WindowHeaderManager.prototype.showToolbar = function(toolbarDiv) {
     this.toolbarActive = true;
     this.toolbarDiv = toolbarDiv;
-	this.showActiveHeaders();
+    this.updateHeaderElement();
 }
 
 /** This method returns the base member for this component. */
 apogeeapp.app.WindowHeaderManager.prototype.hideToolbar = function() {
     this.toolbarActive = false;
     this.toolbarDiv = null;	
-	this.showActiveHeaders();
+    this.updateHeaderElement();
 }
 
 /** This method shows the active headers. 
  * @private */
-apogeeapp.app.WindowHeaderManager.prototype.showActiveHeaders = function() {
+apogeeapp.app.WindowHeaderManager.prototype.updateHeaderElement = function() {
 	var headerElements = [];
     if((this.toolbarActive)&&(this.toolbarDiv)) {
 		headerElements.push(this.toolbarDiv);
@@ -4847,13 +4935,11 @@ apogeeapp.app.WindowHeaderManager.prototype.showActiveHeaders = function() {
 	if((this.bannerBarActive)&&(this.bannerDiv)) {
 		headerElements.push(this.bannerDiv);
 	}
-	
-    var headerContainer = this.windowInsideContainer.getHeader();
     
-    apogeeapp.ui.removeAllChildren(headerContainer);
+    apogeeapp.ui.removeAllChildren(this.headerContainer);
     if(headerElements.length > 0) {
         for(var i = 0; i < headerElements.length; i++) {
-			headerContainer.appendChild(headerElements[i]);
+			this.headerContainer.appendChild(headerElements[i]);
 		}
     }
 }
@@ -4862,51 +4948,30 @@ apogeeapp.app.WindowHeaderManager.prototype.showActiveHeaders = function() {
 // Public Instance Methods
 //==============================
 
-
-/** This method sets the content element as a scrolling element. */
-apogeeapp.app.WindowHeaderManager.prototype.setScrollingContentElement = function() {
-    this.windowInsideContainer.setBodyType(apogeeapp.ui.DisplayAndHeader.SCROLLING_PANE);
-}
-
-/** This method sets the content element as a fixed element. */
-apogeeapp.app.WindowHeaderManager.prototype.setFixedContentElement = function() {
-    //load the content div
-    this.windowInsideContainer.setBodyType(apogeeapp.ui.DisplayAndHeader.FIXED_PANE);
-}
-
 /** This method returns the content element for the windowframe for this component. */
-apogeeapp.app.WindowHeaderManager.prototype.getBody = function() {
-     return this.body;
+apogeeapp.app.WindowHeaderManager.prototype.getHeaderElement = function() {
+     return this.headerContainer;
 }
-
-/** This method sets a content element in the body. Alternatively the body can 
- * be retrieved and loaded as desired. */
-apogeeapp.app.WindowHeaderManager.prototype.setContent = function(element) {
-    //remove the old content
-    while(this.body.firstChild) {
-        this.body.removeChild(this.body.firstChild);
-    }
-	
-    //add the new content
-    this.content = element;
-    if(this.content) {
-        this.body.appendChild(this.content);
-    }
-}
-
-
-/** This method returns the fixed element which contains the body element. */
-apogeeapp.app.WindowHeaderManager.prototype.getOuterElement = function() {
-     return this.windowInsideContainer.getOuterElement();
-}
-
-
 
 //===========================
-// Protected Methods
+// Static Methods
 //===========================
 
-;
+apogeeapp.app.WindowHeaderManager.getIconOverlay = function(bannerState) {
+    var resource;
+    if(bannerState == apogeeapp.app.WindowHeaderManager.BANNER_TYPE_ERROR) {
+        resource = apogeeapp.app.WindowHeaderManager.ERROR_ICON_IMAGE;
+    }
+    else if(bannerState == apogeeapp.app.WindowHeaderManager.BANNER_TYPE_PENDING) {
+        resource = apogeeapp.app.WindowHeaderManager.PENDING_ICON_IMAGE;
+    }
+    
+    if(!resource) return null;
+    var url = apogeeapp.ui.getResourcePath(resource);
+    var element = document.createElement("img");
+    element.src = url;
+    return element;
+};
 /** This is the base functionality for a component. */
 apogeeapp.app.Component = function(workspaceUI,object,generator,options) {
     
@@ -5001,6 +5066,10 @@ apogeeapp.app.Component.prototype.createWindowDisplay = function() {
     return windowDisplay;
 }
 
+apogeeapp.app.Component.prototype.getWindowDisplay = function() {
+    return this.windowDisplay;
+}
+
 apogeeapp.app.Component.prototype.closeWindowDisplay = function() {
     if(this.windowDisplay) {
         //first store the window state
@@ -5009,10 +5078,6 @@ apogeeapp.app.Component.prototype.closeWindowDisplay = function() {
         //delete the window
         this.windowDisplay.deleteDisplay();
     }
-}
-
-apogeeapp.app.Component.prototype.getWindowDisplay = function() {
-    return this.windowDisplay;
 }
 
 apogeeapp.app.Component.prototype.getMenuItems = function(optionalMenuItemList) {
@@ -5046,21 +5111,29 @@ apogeeapp.app.Component.prototype.getOpenMenuItem = function() {
     }
 }
 
-
 //Implement in extending class:
 ///** This indicates if the component has a tab display. */
-//apogeeapp.app.Component.prototype.hasTabDisplay = function();
+//apogeeapp.app.Component.prototype.usesTabDisplay = function();
 
 //Implement in extending class:
 ///** This creates the tab display for the component. */
 //apogeeapp.app.Component.prototype.instantiateTabDisplay = function();
 
-apogeeapp.app.Component.prototype.openTabDisplay = function() {
-    if(!this.tabDisplay) {
-        this.tabDisplay = this.instantiateTabDisplay();
-        tabDisplay.setBannerState(this.bannerState,this.bannerMessage);
+apogeeapp.app.Component.prototype.createTabDisplay = function() {
+    //we shouldn't call if there is a tab!
+    if(this.tabDisplay) {
+        this.tabDisplay.closeTab();
     }
-    this.workspaceUI.setActiveTab(this.object.getId());
+    
+    if(this.usesTabDisplay()) {
+        this.tabDisplay = this.instantiateTabDisplay();
+        this.tabDisplay.setBannerState(this.bannerState,this.bannerMessage);
+    }
+    return this.tabDisplay;
+}
+
+apogeeapp.app.Component.prototype.getTabDisplay = function() {
+    return this.tabDisplay;
 }
 
 /** This closes the tab display for the component. */
@@ -5228,23 +5301,37 @@ apogeeapp.app.Component.prototype.getPropertyValues = function() {
 apogeeapp.app.Component.prototype.createOpenCallback = function() {
     var instance = this;
     var openCallback;
+    var workspaceUI = this.workspaceUI;
     
-    if(this.hasTabDisplay()) {
+    var makeTabActive = function(tabComponent) {
+        var tabDisplay = tabComponent.getTabDisplay();
+        if(tabDisplay) {
+            var tab = tabDisplay.getTab();
+            tab.makeActive();
+        }
+        else {
+            var tabDisplay = tabComponent.createTabDisplay();
+            var tab = tabDisplay.getTab();
+            var tabFrame = workspaceUI.getTabFrame();
+            tabFrame.addTab(tab,true);
+        }
+    }
+    
+    if(this.usesTabDisplay()) {
         openCallback = function() {
-            instance.openTabDisplay();
+            makeTabActive(instance);
         }
     }
     else {
         var parent = this.object.getParent();
         if(parent) {
-            var parentComponent = this.workspaceUI.getComponent(parent);
-            if((parentComponent)&&(parentComponent.hasTabDisplay())) {
+            
+            var parentComponent = workspaceUI.getComponent(parent);
+            if((parentComponent)&&(parentComponent.usesTabDisplay())) {
                 //remove the tree from the parent
                 openCallback = function() {
-                    //open the parent
-                    parentComponent.openTabDisplay();
-                    
-                    //bring thsi child to the front
+                    //open the parent and bring this child to the front
+                    makeTabActive(parentComponent);
                     parentComponent.showChildComponent(instance);
                 }
             }
@@ -5290,7 +5377,8 @@ apogeeapp.app.Component.prototype.createDeleteCallback = function() {
 //apogeeapp.app.JsonTableComponent.generator.DEFAULT_WIDTH = 200;
 //apogeeapp.app.JsonTableComponent.generator.DEFAULT_HEIGHT = 200;
 //apogeeapp.app.JsonTableComponent.generator.ICON_RES_PATH = "path to icon in resource directory";
-//apogeeapp.app.JsonTableComponent.generator.ICON_URL = "absolute icon url";;
+//apogeeapp.app.JsonTableComponent.generator.ICON_URL = "absolute icon url";
+;
 /** This is the base class for a parent component (an object that has children),
  * It extends the component class. */
 apogeeapp.app.ParentComponent = function(workspaceUI,object,generator,options) {
@@ -5308,21 +5396,11 @@ apogeeapp.app.ParentComponent.prototype.instantiateWindowDisplay = function() {
 }
 
 //----------------------
-// ParentContainer Methods
+// WindowParent Methods
 //----------------------
-
-/** This method must be implemented in inheriting objects. */
-apogeeapp.app.ParentComponent.prototype.getContentIsShowing = function() {
-    return this.getWindow().getContentIsShowing();
-}
     
-apogeeapp.app.ParentComponent.prototype.hasTabDisplay = function() {    
+apogeeapp.app.ParentComponent.prototype.usesTabDisplay = function() {    
     return true;
-}
-
-apogeeapp.app.ParentComponent.prototype.instantiateTabDisplay = function() {
-    this.tabDisplay = new apogeeapp.app.TabComponentDisplay(this);   
-    return this.tabDisplay;
 }
 
 /** This brings the child component to the front and takes any other actions
@@ -5384,7 +5462,7 @@ apogeeapp.app.ParentComponent.prototype.removeChildComponent = function(childCom
     //remove child windows - just hide them. They will be deleted in the component
     var childWindowDisplay = childComponent.getWindowDisplay();
     if(childWindowDisplay) {
-        childWindowDisplay.getWindowEntry().close();
+        childWindowDisplay.deleteDisplay();
     }
 }
 
@@ -5415,24 +5493,15 @@ apogeeapp.app.EditComponent.prototype = Object.create(apogeeapp.app.Component.pr
 apogeeapp.app.EditComponent.prototype.constructor = apogeeapp.app.EditComponent;
 
 apogeeapp.app.EditComponent.prototype.instantiateWindowDisplay = function() {
-    var windowDisplay
-    
-    //here we allow for an existing window display so we can set an alternate window display 
-    if(this.alternateWindowDisplay) {
-        windowDisplay = this.alternateWindowDisplay;
-        windowDisplay.setStateJson(this.windowDisplayStateJson);
-    }
-    else {
-        windowDisplay = new apogeeapp.app.EditWindowComponentDisplay(this,this.windowDisplayStateJson);
-    }
-
-    return windowDisplay;
+    return new apogeeapp.app.EditWindowComponentDisplay(this,this.windowDisplayStateJson);
 }
 
 /** This is used when an alternate UI is used for the workspace. This replaces the window display 
  *  used in the standard UI. */
 apogeeapp.app.EditComponent.prototype.setAlternateWindowDisplay = function(windowDisplay) {
     this.alternateWindowDisplay = windowDisplay;
+    this.windowDisplay = windowDisplay;
+    windowDisplay.setBannerState(this.bannerState,this.bannerMessage);
 }
 
 //===============================
@@ -5444,7 +5513,7 @@ apogeeapp.app.EditComponent.prototype.setAlternateWindowDisplay = function(windo
 // * @protected */
 //apogeeapp.app.EditComponent.prototype.getTableEditSettings = function();
 
-apogeeapp.app.EditComponent.prototype.hasTabDisplay = function() {    
+apogeeapp.app.EditComponent.prototype.usesTabDisplay = function() {    
     return false;
 }
 
@@ -5453,7 +5522,10 @@ apogeeapp.app.EditComponent.prototype.instantiateTabDisplay = function() {
 }
 
 apogeeapp.app.EditComponent.prototype.getMenuItems = function(optionalMenuItemList) {
-    var menuItemList = optionalMenuItemList ? optionalMenuItemList : [];
+    var menuItemList = optionalMenuItemList ? optionalMenuItemList : [];    
+    
+    //call base class
+    var menuItemList = apogeeapp.app.Component.prototype.getMenuItems.call(this,menuItemList);
     
     //initialize the "clear function" menu entry, used only when there is code
      if((this.object.isCodeable)&&(this.object.hasCode())) {
@@ -5465,9 +5537,6 @@ apogeeapp.app.EditComponent.prototype.getMenuItems = function(optionalMenuItemLi
             menuItemList.push(itemInfo);
         }   
     }
-    
-    //call base class
-    var menuItemList = apogeeapp.app.Component.prototype.getMenuItems.call(this,optionalMenuItemList);
 			
     return menuItemList;
 }
@@ -5512,7 +5581,13 @@ apogeeapp.app.TreeComponentDisplay.prototype.deleteDisplay = function() {
 }
 
 apogeeapp.app.TreeComponentDisplay.prototype.setBannerState = function(bannerState,bannerMessage) {
-    //add this!
+    var iconOverlay = apogeeapp.app.WindowHeaderManager.getIconOverlay(bannerState);
+    if(iconOverlay) {
+        this.treeEntry.setIconOverlay(iconOverlay);
+    }
+    else {
+        this.treeEntry.clearIconOverlay();
+    }
 }
 
 apogeeapp.app.TreeComponentDisplay.prototype.updateData = function() {
@@ -5550,9 +5625,10 @@ apogeeapp.app.TreeComponentDisplay.prototype._createTreeEntry = function() {
 }
 ;
 /** This component represents a json table object. */
-apogeeapp.app.TabComponentDisplay = function(component) {
+apogeeapp.app.TabComponentDisplay = function(component,member,folder) {
     this.component = component;
-    this.object = component.getObject();
+    this.member = member;
+    this.folder = folder;
     
     this._loadTabEntry();
     
@@ -5578,19 +5654,29 @@ apogeeapp.app.TabComponentDisplay.prototype.setBannerState = function(bannerStat
     else {
         this.windowHeaderManager.showBannerBar(bannerMessage,bannerState);
     }
+    
+    if(this.tab) {
+        var iconOverlay = apogeeapp.app.WindowHeaderManager.getIconOverlay(bannerState);
+        if(iconOverlay) {
+            this.tab.setIconOverlay(iconOverlay);
+        }
+        else {
+            this.tab.clearIconOverlay();
+        }
+    }
 }
 
 apogeeapp.app.TabComponentDisplay.prototype.updateData = function() {
-    this.tab.setName(this.object.getName());
+    this.tab.setTitle(this.member.getName());
 }
 
 /** This creates and adds a display for the child component to the parent container. */
 apogeeapp.app.TabComponentDisplay.prototype.addChildComponent = function(childComponent) {
     
     var windowComponentDisplay = childComponent.createWindowDisplay();
-    var childWindow = windowComponentDisplay.getWindowEntry();
+    var childWindow = windowComponentDisplay.getWindowFrame();
 
-    childWindow.setParent(this.parentContainer);
+    
     
     //set position
     var pos = windowComponentDisplay.getPreferredPosition();
@@ -5599,7 +5685,7 @@ apogeeapp.app.TabComponentDisplay.prototype.addChildComponent = function(childCo
     }
     childWindow.setPosition(pos.x,pos.y);
     
-    childWindow.show();
+    this.parentContainer.addWindow(childWindow);
     
     //set state 
     var state = windowComponentDisplay.getPreferredState();
@@ -5610,7 +5696,7 @@ apogeeapp.app.TabComponentDisplay.prototype.addChildComponent = function(childCo
 apogeeapp.app.TabComponentDisplay.prototype.showChildComponent = function(childComponent) {
     var windowComponentDisplay = childComponent.getWindowDisplay();
     if(windowComponentDisplay) {
-        var childWindow = windowComponentDisplay.getWindowEntry();
+        var childWindow = windowComponentDisplay.getWindowFrame();
         if(childWindow) {
             this.parentContainer.bringToFront(childWindow);
         }
@@ -5622,31 +5708,44 @@ apogeeapp.app.TabComponentDisplay.prototype.showChildComponent = function(childC
 
 /** @private */
 apogeeapp.app.TabComponentDisplay.prototype._loadTabEntry = function() {
-    this.tab = this.component.getWorkspaceUI().requestTab(this.object.getId(),true);
+    this.tab = new apogeeapp.ui.Tab(this.member.getId());    
     
     //-----------------------
     //add headers for display
     //-----------------------
     this.windowHeaderManager = new apogeeapp.app.WindowHeaderManager();
-    this.tab.setContent(this.windowHeaderManager.getOuterElement());
+    this.tab.setHeaderContent(this.windowHeaderManager.getHeaderElement());
+    
 
     //-----------------------
     //set the content
     //-----------------------
     this._createDisplayContent();
-    this.windowHeaderManager.setContent(this.contentElement);
+    this.tab.setContent(this.contentElement);
+    
+    var tabShown = function() {
+        instance.parentContainer.elementIsShown();
+    }
+    this.tab.addListener(apogeeapp.ui.SHOWN_EVENT,tabShown);
+    var tabHidden = function() {
+        instance.parentContainer.elementIsHidden();
+    }
+    this.tab.addListener(apogeeapp.ui.HIDDEN_EVENT,tabHidden);
     
     //------------------
     // set menu
     //------------------
     var menu = this.tab.createMenu(this.component.getIconUrl());
-    var menuItemInfoList = this.component.getMenuItems();
-    menu.setMenuItems(menuItemInfoList);
+    var instance = this;
+    var createMenuItemsCallback = function() {
+        return instance.component.getMenuItems();
+    }
+    menu.setAsOnTheFlyMenu(createMenuItemsCallback);
     
     //-----------------
     //set the tab title
     //-----------------
-    this.tab.setName(this.object.getName());
+    this.tab.setTitle(this.member.getName());
     
     //-----------------------------
     //add the handlers for the tab
@@ -5672,18 +5771,18 @@ apogeeapp.app.TabComponentDisplay.PARENT_CONTAINER_STYLE = {
 apogeeapp.app.TabComponentDisplay.prototype._createDisplayContent = function() {
    
     this.contentElement = apogeeapp.ui.createElement("div",null,apogeeapp.app.TabComponentDisplay.PARENT_CONTAINER_STYLE);
-    this.parentContainer = new apogeeapp.ui.ParentContainer(this.contentElement);
+    this.parentContainer = new apogeeapp.ui.WindowParent(this.contentElement);
 
     //we ony use this context menu and child map for parents
     //modify if we use this elsewhere
-    if(!this.object.isParent) return;
+    if(!this.folder.isParent) return;
     
     //add content menu
     this.setAddChildrenContextMenu();
 
     //show all children
     var workspaceUI = this.component.getWorkspaceUI();
-    var children = this.object.getChildMap();
+    var children = this.folder.getChildMap();
     for(var childName in children) {
         var child = children[childName];
         var childComponent = workspaceUI.getComponent(child);
@@ -5699,7 +5798,7 @@ apogeeapp.app.TabComponentDisplay.prototype.setAddChildrenContextMenu = function
     var app = workspaceUI.getApp();
 
     var initialValues = {};
-    initialValues.parentName = this.object.getFullName();
+    initialValues.parentName = this.member.getFullName();
     
     this.contentElement.oncontextmenu = function(event) {
         event.preventDefault();
@@ -5728,7 +5827,7 @@ apogeeapp.app.TabComponentDisplay.prototype.setAddChildrenContextMenu = function
 
 /** @protected */
 apogeeapp.app.TabComponentDisplay.prototype.destroy = function() {
-    var children = this.object.getChildMap();
+    var children = this.folder.getChildMap();
     var workspaceUI = this.component.getWorkspaceUI();
     
     //TODO THIS LOGIC IS NOT GOOD! FIX IT!
@@ -5758,7 +5857,7 @@ apogeeapp.app.ParentWindowComponentDisplay = function(component, options) {
 };
 
 
-apogeeapp.app.ParentWindowComponentDisplay.prototype.getWindowEntry = function() {
+apogeeapp.app.ParentWindowComponentDisplay.prototype.getWindowFrame = function() {
     return this.windowFrame;
 }
 
@@ -5795,7 +5894,15 @@ apogeeapp.app.ParentWindowComponentDisplay.prototype.deleteDisplay = function() 
 }
 
 apogeeapp.app.ParentWindowComponentDisplay.prototype.setBannerState = function(bannerState,bannerMessage) {
-    //banner not shown on parent window
+    if(this.windowFrame) {
+        var iconOverlay = apogeeapp.app.WindowHeaderManager.getIconOverlay(bannerState);
+        if(iconOverlay) {
+            this.windowFrame.setIconOverlay(iconOverlay);
+        }
+        else {
+            this.windowFrame.clearIconOverlay();
+        }
+    }
 }
 
 apogeeapp.app.ParentWindowComponentDisplay.prototype.updateData = function() {
@@ -5844,13 +5951,17 @@ apogeeapp.app.ParentWindowComponentDisplay.prototype._loadWindowFrameEntry = fun
     
     // set menu
     var menu = this.windowFrame.createMenu(this.component.getIconUrl());
-    var menuItemList = [];
-    var openMenuItem = this.component.getOpenMenuItem();
-    if(openMenuItem) {
-        menuItemList.push(openMenuItem);
+    
+    var instance = this;
+    var createMenuItemsCallback = function() {
+        var menuItemList = [];
+        var openMenuItem = instance.component.getOpenMenuItem();
+        if(openMenuItem) {
+            menuItemList.push(openMenuItem);
+        }
+        return instance.component.getMenuItems(menuItemList);
     }
-    var menuItemList = this.component.getMenuItems(menuItemList);
-    menu.setMenuItems(menuItemList);
+    menu.setAsOnTheFlyMenu(createMenuItemsCallback);
 }
 
 //-----------------------------------
@@ -5887,7 +5998,7 @@ apogeeapp.app.EditWindowComponentDisplay = function(component, options) {
 /** This value is used as the background color when an editor is read only. */
 apogeeapp.app.EditWindowComponentDisplay.NO_EDIT_BACKGROUND_COLOR = "#f4f4f4";
 
-apogeeapp.app.EditWindowComponentDisplay.prototype.getWindowEntry = function() {
+apogeeapp.app.EditWindowComponentDisplay.prototype.getWindowFrame = function() {
     return this.windowFrame;
 }
 
@@ -5926,7 +6037,14 @@ apogeeapp.app.EditWindowComponentDisplay.prototype.getMember = function() {
 }
 
 apogeeapp.app.EditWindowComponentDisplay.prototype.deleteDisplay = function() {
-    //window will get deleted! New parent will get new windows, as is appropriate
+    //dispose any view elements
+    for(var viewType in this.viewModeElements) {
+        var viewModeElement = this.viewModeElements[viewType];
+        if(viewModeElement) {
+            viewModeElement.destroy();
+        }
+    }
+    
     if(this.windowFrame) {
         this.windowFrame.close();
     }
@@ -5939,6 +6057,15 @@ apogeeapp.app.EditWindowComponentDisplay.prototype.setBannerState = function(ban
         }
         else {
             this.windowHeaderManager.showBannerBar(bannerMessage,bannerState);
+        }
+    }
+    if(this.windowFrame) {
+        var iconOverlay = apogeeapp.app.WindowHeaderManager.getIconOverlay(bannerState);
+        if(iconOverlay) {
+            this.windowFrame.setIconOverlay(iconOverlay);
+        }
+        else {
+            this.windowFrame.clearIconOverlay();
         }
     }
 }
@@ -6022,7 +6149,7 @@ apogeeapp.app.EditWindowComponentDisplay.prototype._loadWindowFrameEntry = funct
 
     //header manager - for banner and toolbars
     this.windowHeaderManager = new apogeeapp.app.WindowHeaderManager();
-    this.windowFrame.setContent(this.windowHeaderManager.getOuterElement());
+    this.windowFrame.setHeaderContent(this.windowHeaderManager.getHeaderElement());
     
     //set title
     this.windowFrame.setTitle(this.object.getDisplayName());
@@ -6144,7 +6271,7 @@ apogeeapp.app.EditWindowComponentDisplay.prototype._updateViewTypeSelect = funct
 apogeeapp.app.EditWindowComponentDisplay.prototype._updateViewContent = function() {
     if(this.viewModeElement) {
         this.viewModeElement.showData();
-        this.windowHeaderManager.setContent(this.viewModeElement.getElement());
+        this.windowFrame.setContent(this.viewModeElement.getElement());
     }
     else {
         alert("Error: View mode element not found!");
@@ -6209,17 +6336,6 @@ apogeeapp.app.EditWindowComponentDisplay.prototype.hideSaveBar = function() {
 	this.windowHeaderManager.showToolbar(this.normalToolbarDiv);
 }
 
-//-----------------------------------
-// Callbacks for management
-//-----------------------------------
-
-/** @protected */
-apogeeapp.app.EditWindowComponentDisplay.prototype.destroy = function() {
-    for(var viewType in viewModeElements) {
-        var viewModeElement = this.viewModeElemens[viewType];
-        viewModeElement.destroy();
-    }
-}
 ;
 /** This component represents a table object. */
 apogeeapp.app.FolderComponent = function(workspaceUI,folder,componentJson) {
@@ -6234,6 +6350,12 @@ apogeeapp.app.FolderComponent = function(workspaceUI,folder,componentJson) {
 
 apogeeapp.app.FolderComponent.prototype = Object.create(apogeeapp.app.ParentComponent.prototype);
 apogeeapp.app.FolderComponent.prototype.constructor = apogeeapp.app.FolderComponent;
+
+apogeeapp.app.FolderComponent.prototype.instantiateTabDisplay = function() {
+    var folder = this.getObject();
+    this.tabDisplay = new apogeeapp.app.TabComponentDisplay(this,folder,folder);   
+    return this.tabDisplay;
+}
 
 
 //======================================
@@ -6805,6 +6927,13 @@ apogeeapp.app.FolderFunctionComponent = function(workspaceUI,folderFunction,comp
 
 apogeeapp.app.FolderFunctionComponent.prototype = Object.create(apogeeapp.app.ParentComponent.prototype);
 apogeeapp.app.FolderFunctionComponent.prototype.constructor = apogeeapp.app.FolderFunctionComponent;
+
+apogeeapp.app.FolderFunctionComponent.prototype.instantiateTabDisplay = function() {
+    var member = this.getObject();
+    var folder = member.getInternalFolder();
+    this.tabDisplay = new apogeeapp.app.TabComponentDisplay(this,member,folder);   
+    return this.tabDisplay;
+}
 
 //======================================
 // Callbacks
@@ -8305,6 +8434,13 @@ apogeeapp.app.ViewMode.prototype.getMember = function() {
     return this.member;
 }
 
+/** This returns the UiObject, such as the window frame for this data display. */
+apogeeapp.app.ViewMode.prototype.getUiObject = function() {
+    return this.componentDisplay.getWindowFrame();
+}
+
+
+
 /** If doKeepAlive is set to true, the output mode is not destroyed when it is 
  * hidden. Otherwise it is destroyed when it is hidden and recreated nect time it
  * is shown. */
@@ -8454,13 +8590,6 @@ apogeeapp.app.TextAreaEditor = function(viewMode) {
 	this.workingData = null;
 	this.editOk = false;
 	this.editMode = false;
-	
-//	//resize the editor on window size change
-//    var resizeCallback = function() {
-//        editor.resize();
-//    }
-	
-//    apogeeapp.ui.setResizeListener(this.outsideDiv, resizeCallback);
 	
 	//add click handle to enter edit mode
 	var instance = this;
@@ -8653,11 +8782,10 @@ apogeeapp.app.AceTextEditor = function(viewMode,aceMode) {
     this.editor = editor;
 	
 	//resize the editor on window size change
-    var resizeCallback = function() {
+    this.resizeCallback = function() {
         editor.resize();
     }
-	
-    apogeeapp.ui.setResizeListener(this.outsideDiv, resizeCallback);
+    this.callbackAttached = false;
 	
 	//add click handle to enter edit mode
 	var instance = this;
@@ -8707,6 +8835,27 @@ apogeeapp.app.AceTextEditor.prototype.showData = function(text,editOk) {
         this.editorDiv.style.backgroundColor = apogeeapp.app.EditWindowComponentDisplay.NO_EDIT_BACKGROUND_COLOR;
     }
     
+    if(!this.callbackAttached) {
+        var uiObject = this.viewMode.getUiObject();
+        if(uiObject) {
+            uiObject.addListener(apogeeapp.ui.RESIZED_EVENT,this.resizeCallback);
+            uiObject.addListener(apogeeapp.ui.SHOWN_EVENT,this.resizeCallback);
+            this.callbackAttached = true;
+        }
+    }
+    
+    //call resize to make sure size is initialized
+    this.resizeCallback();
+    
+}
+
+apogeeapp.app.AceTextEditor.prototype.hide = function() {
+    var uiObject = this.viewMode.getUiObject();
+    if(uiObject) {
+        uiObject.removeListener(apogeeapp.ui.RESIZED_EVENT,this.resizeCallback);
+        uiObject.removeListener(apogeeapp.ui.SHOWN_EVENT,this.resizeCallback);
+        this.callbackAttached = false;
+    }
 }
 
 apogeeapp.app.AceTextEditor.prototype.destroy = function() {
@@ -9107,6 +9256,7 @@ apogeeapp.app.HtmlJsDataDisplay = function(html,resource,outputMode) {
     //add resize/load listener if needed
     //------------------------
     
+    var addLoadListener = false;
     var addResizeListener = false;
     var resizeCallback;
     var loadCallback;
@@ -9123,8 +9273,13 @@ apogeeapp.app.HtmlJsDataDisplay = function(html,resource,outputMode) {
             //set data now that element is loaded
             instance.outputMode.showData();
         };
-        addResizeListener = true;
+        addLoadListener = true;
     }
+    
+    if(addLoadListener) {
+        apogeeapp.ui.setLoadListener(this.containerElement, loadCallback);
+    }
+    
     if(resource.onResize) {
         resizeCallback = function() {
             try {
@@ -9136,18 +9291,25 @@ apogeeapp.app.HtmlJsDataDisplay = function(html,resource,outputMode) {
         };
         addResizeListener = true;
     }
-    if(addResizeListener) {
-        apogeeapp.ui.setResizeListener(this.containerElement, resizeCallback, loadCallback);
-    }
     
     //-------------------------
     //add the (other) optional methods to this class
     //-------------------------
     
-    if(this.resource.setData) {
+    if((this.resource.setData)||(addResizeListener)) {
         this.showData = function(data) {
             try {
-                resource.setData.call(instance,data,instance.outputElement,instance.outputMode);
+                if(this.resource.setData) {
+                    resource.setData.call(instance,data,instance.outputElement,instance.outputMode);
+                }
+            
+                if((addResizeListener)&&(!instance.callbackAttached)) {
+                    var uiObject = instance.outputMode.getUiObject();
+                    if(uiObject) {
+                        uiObject.addListener(apogeeapp.ui.RESIZED_EVENT,resizeCallback);
+                        instance.callbackAttached = true;
+                    }
+                }
             }
             catch(error) {
                 alert("Error in " + instance.outputMode.getFullName() + " setData function: " + error.message);
@@ -9155,6 +9317,7 @@ apogeeapp.app.HtmlJsDataDisplay = function(html,resource,outputMode) {
         }
     }
     else {
+        //we must include a function here
         this.showData = function(data){};
     }
     
@@ -9162,7 +9325,6 @@ apogeeapp.app.HtmlJsDataDisplay = function(html,resource,outputMode) {
         this.hideRequest = function() {
             try {
                 resource.onHide.call(instance,instance.outputElement,instance.outputMode);
-
             }
             catch(error) {
                 alert("Error in " + instance.outputMode.getFullName() + " onHide function: " + error.message);
@@ -9170,11 +9332,20 @@ apogeeapp.app.HtmlJsDataDisplay = function(html,resource,outputMode) {
         }
     }
 
-    if(this.resource.onHide) {   
+    if((this.resource.onHide)||(instance.callbackAttached)) {   
         this.hide = function() {
             try {
-                resource.onHide.call(instance,instance.outputElement,instance.outputMode);
-
+                if(instance.resource.onHide) {
+                    resource.onHide.call(instance,instance.outputElement,instance.outputMode);
+                }
+                
+                if(instance.callbackAttached) {
+                    var uiObject = instance.outputMode.getUiObject();
+                    if(uiObject) {
+                        uiObject.removeListener(apogeeapp.ui.RESIZED_EVENT,instance.resizeCallback);
+                        instance.callbackAttached = false;
+                    }
+                }
             }
             catch(error) {
                 alert("Error in " + instance.outputMode.getFullName() + " onHide function: " + error.message);
@@ -9401,15 +9572,22 @@ apogeeapp.app.HandsonGridEditor = function(viewMode) {
 	
 	//resize the editor on window size change
     var instance = this;
-    var resizeCallback = function() {
+    this.resizeCallback = function() {
         instance.gridDiv.style.width = instance.outsideDiv.clientWidth + "px";
         instance.gridDiv.style.height = instance.outsideDiv.clientHeight + "px";
         if(instance.gridControl) {
             instance.gridControl.render();
         }
     }
-   apogeeapp.ui.setResizeListener(this.outsideDiv, resizeCallback);
-	
+   this.callbackAttached = false;
+   
+   //we have to make sure the element is loaded before initailizing for handsontable to work properly
+   this.loadCallback = function() {
+       instance.onLoad(viewMode);
+   }
+   apogeeapp.ui.setLoadListener(this.outsideDiv, this.loadCallback);
+   this.loaded = false;
+   
 	//grid edited function
 	this.gridEdited = function(args) {
 		instance.save(arguments);
@@ -9458,21 +9636,25 @@ apogeeapp.app.HandsonGridEditor.prototype.getElement = function() {
 }
 	
 apogeeapp.app.HandsonGridEditor.prototype.showData = function(json,editOk) {
+    if(!this.loaded) return;
+    
 	if((this.inputData === json)&&(editOk)) return;
 	
 	var oldEditOk = this.editOk;
 	this.editOk = editOk;
 	this.inputData = json;
 	var editData = apogee.util.deepJsonCopy(json);
-	
-	if((!this.gridControl)||(oldEditOk !== editOk)) {
-		this.createNewGrid();
-	}
-	
+    
     if(!editData) {
         editData = [[]];
     }
-	this.gridControl.loadData(editData);
+
+    if((!this.gridControl)||(oldEditOk !== editOk)) {
+        this.createNewGrid(editData);
+    }
+    else {
+        this.gridControl.loadData(editData);
+    }
     
     //set the background color
     if(this.editOk) {
@@ -9481,6 +9663,32 @@ apogeeapp.app.HandsonGridEditor.prototype.showData = function(json,editOk) {
     else {
         this.gridDiv.style.backgroundColor = apogeeapp.app.EditWindowComponentDisplay.NO_EDIT_BACKGROUND_COLOR;
     }
+    
+    if(!this.callbackAttached) {
+        var uiObject = this.viewMode.getUiObject();
+        if(uiObject) {
+            uiObject.addListener(apogeeapp.ui.RESIZED_EVENT,this.resizeCallback);
+            this.callbackAttached = true;
+        }
+        
+        //call resize to make sure size is initialized
+        this.resizeCallback();
+    }
+    
+}
+
+apogeeapp.app.HandsonGridEditor.prototype.onLoad = function(viewMode) {
+    this.loaded = true;
+    viewMode.showData();
+}
+
+apogeeapp.app.HandsonGridEditor.prototype.hide = function() {
+    var uiObject = this.viewMode.getUiObject();
+    if(uiObject) {
+        uiObject.removeListener(apogeeapp.ui.RESIZED_EVENT,this.resizeCallback);
+        this.callbackAttached = false;
+    }
+    this.loaded = false;
 }
 
 apogeeapp.app.HandsonGridEditor.prototype.destroy = function() {
@@ -9496,7 +9704,7 @@ apogeeapp.app.HandsonGridEditor.prototype.destroy = function() {
 
 /** This method creates a new grid. 
  * @private */
-apogeeapp.app.HandsonGridEditor.prototype.createNewGrid = function() {
+apogeeapp.app.HandsonGridEditor.prototype.createNewGrid = function(initialData) {
     if(this.gridControl) {
         this.gridControl.destroy();
         this.gridControl = null;
@@ -9505,6 +9713,7 @@ apogeeapp.app.HandsonGridEditor.prototype.createNewGrid = function() {
     var gridOptions; 
     if(this.editOk) {
         gridOptions = {
+            data: initialData,
             rowHeaders: true,
             colHeaders: true,
             contextMenu: true,
@@ -9519,9 +9728,10 @@ apogeeapp.app.HandsonGridEditor.prototype.createNewGrid = function() {
     }
     else {
         gridOptions = {
+            data: initialData,
             readOnly: true,
             rowHeaders: true,
-            colHeaders: true
+            colHeaders: true,
         }
         this.gridEditable = false;
     }
@@ -9655,7 +9865,7 @@ apogeeapp.app.dialog.showConfigurableDialog = function(layout,onSubmitFunction) 
     
     //show dialog
     dialog.setContent(content);
-    dialog.show();
+    apogeeapp.ui.showDialog(dialog);
     
     //size the dialog to the content
     dialog.fitToContent();
@@ -9844,7 +10054,7 @@ apogeeapp.app.dialog.showConfigurableDialog.lineFunctions = {
 /** This method shows a dialog to update the workspace links. */
 apogeeapp.app.dialog.showUpdateLinksDialog = function(workspaceUI) {
     
-    var dialog = apogeeapp.ui.createDialog({"minimizable":true,"maximizable":true,"movable":true,"resizable":true});
+    var dialog = apogeeapp.ui.createDialog({"minimizable":true,"maximizable":true,"movable":true});
             
 //    //create body
 //    var content = apogeeapp.ui.createElement("div",{"className":"dialogBody"}); 
@@ -9976,7 +10186,7 @@ apogeeapp.app.dialog.showUpdateLinksDialog = function(workspaceUI) {
     dialog.setContent(content);
     
     //show dialog
-    dialog.show();
+    apogeeapp.ui.showDialog(dialog);
     
     //size the dialog to the content
     dialog.fitToContent();
@@ -10040,26 +10250,6 @@ cssLinksEditor.$blockScrolling = Infinity;
     
     cssLinksRadio.onchange = onRadioChange;
     jsLinksRadio.onchange = onRadioChange;
-    
-    //set the resize handler
-    //resize the editor on window size change
-    var resizeCallback = function() {
-        //this needs to be fixed
-        var container = content.parentElement;
-        //this is kind of cludgy, I am using this as the last line and assuming it has even margins
-        var margin = line.offsetLeft;
-        var endPosition = line.offsetTop + line.offsetHeight + margin;
-        var totalWidth = container.clientWidth - 2 * margin;
-        var extraHeight = container.clientHeight - endPosition;
-        //size the editor, with some arbitrary padding
-        editorDiv.style.width = (totalWidth - 5) + "px";
-        editorDiv.style.height = (editorDiv.offsetHeight + extraHeight - 5) + "px";
-       
-        if(cssLinksEditor) cssLinksEditor.resize();
-        if(jsLinksEditor) jsLinksEditor.resize();
-    }
-    var container = content.parentElement;
-    apogeeapp.ui.setResizeListener(container, resizeCallback);
 }
 
 /** @private */
@@ -10140,7 +10330,7 @@ apogeeapp.app.dialog.showSelectComponentDialog = function(componentList,onSelect
     dialog.setContent(content);  
     
     //show dialog
-    dialog.show();
+    apogeeapp.ui.showDialog(dialog);
     
     //size the dialog to the content
     dialog.fitToContent();

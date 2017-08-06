@@ -203,7 +203,7 @@ apogee.net = {};
  * "body" - HTTP body
  * "header" - HTTP headers, example: {"Content-Type":"text/plain","other-header":"xxx"}
  */
-apogee.net.makeRequest = function(url,onSuccess,onError,options) {
+apogee.net.callbackRequest = function(url,onSuccess,onError,options) {
     
     var xmlhttp=new XMLHttpRequest();
 
@@ -245,17 +245,17 @@ apogee.net.makeRequest = function(url,onSuccess,onError,options) {
 }
 
 /** This method creates an integer has value for a string. 
- * See apogee.net.makeRequest for a list of options. */
-apogee.net.promiseRequest = function(url,options) {
+ * See apogee.net.callbackRequest for a list of options. */
+apogee.net.textRequest = function(url,options) {
     return new Promise(function(onSuccess,onError) {
-        apogee.net.makeRequest(url,onSuccess,onError,options);
+        apogee.net.callbackRequest(url,onSuccess,onError,options);
     });
 }
 
 /** This method creates an integer has value for a string.
- * See apogee.net.makeRequest for a list of options. */
-apogee.net.promiseJsonRequest = function(url,options) {
-    return apogee.net.promiseRequest(url,options).then(JSON.parse);
+ * See apogee.net.callbackRequest for a list of options. */
+apogee.net.jsonRequest = function(url,options) {
+    return apogee.net.textRequest(url,options).then(JSON.parse);
 }
 ;
 /* 
@@ -2313,6 +2313,13 @@ apogee.Codeable.memberFunctionInitialize = function() {
         this.addError(actionError);
         this.initReturnValue = false;
     }
+    finally {
+        //This lets us do something outside the catch block - mainly just to 
+        //let some things throw the (cludgy) pending error.
+        if(this.postInitializeAction) {
+            this.postInitializeAction();
+        }
+    }
     
     this.calcInProgress = false;
     this.functionInitialized = true;
@@ -2959,21 +2966,16 @@ apogee.base.mixin(apogee.FunctionTable,apogee.Codeable);
 //------------------------------
 
 apogee.FunctionTable.prototype.processMemberFunction = function(memberFunction) {	
-    var instance = this;
-    var dataObject = function() {
-        
-        //member function wrapper
-        var returnValue = memberFunction.apply(null,arguments);
-        //pending check - we don't know if a function is pending until we
-        //actually call it. I didn't know how else to capture this in the 
-        //calling code other than use an error. But this is not an error.
-        if(instance.getResultPending()) {
-            throw apogee.Codeable.MEMBER_FUNCTION_PENDING;
-        }
-        return returnValue;
+	this.setData(memberFunction);
+}
+
+apogee.FunctionTable.prototype.postInitializeAction = function() {
+    //pending check - we don't know if a function is pending until we
+    //actually call it. I didn't know how else to capture this in the 
+    //calling code other than use an error. But this is not an error
+    if(this.getResultPending()) {
+        throw apogee.Codeable.MEMBER_FUNCTION_PENDING;
     }
-    //tjhe data is the function
-	this.setData(dataObject);
 }
 
 //------------------------------
@@ -3926,9 +3928,9 @@ apogee.action.updateInfoToActionList = function(updateInfo,workspace) {
         var updateEntry = updateInfo[i];
         var subActionData = {};
         subActionData.action = "updateData";
-        subActionData.memberName = updateEntry.memberName;
+        subActionData.memberName = updateEntry[0];
         subActionData.workspace = workspace;
-        subActionData.data = updateEntry.data;
+        subActionData.data = updateEntry[1];
         actionList.push(subActionData);
     }
     
@@ -4581,7 +4583,7 @@ apogee.deletemember.deleteMember = function(actionData,optionalContext,processed
 
 /** @private */
 apogee.deletemember.getDeleteList =  function(member,deleteList) {
-    deleteList.push(member);
+    //delete children first if there are any
     if(member.isParent) {
         var childMap = member.getChildMap();
         for(var key in childMap) {
@@ -4593,6 +4595,8 @@ apogee.deletemember.getDeleteList =  function(member,deleteList) {
         var root = member.getRoot();
         apogee.deletemember.getDeleteList(root,deleteList);
     }
+    //delete the member
+    deleteList.push(member);
 }
 
 
@@ -4670,7 +4674,7 @@ apogee.action.Messenger = function(fromMember) {
 
     /** This is a convenience method to set a member to a given value when the dataPromise resolves. */
     this.asynchDataUpdate = function(updateMemberName,dataPromise) {
-        apogee.action.dataUpdate(updateMemberName,fromMember,dataPromise);
+        apogee.action.asynchDataUpdate(updateMemberName,fromMember,dataPromise);
     }
 }
 
