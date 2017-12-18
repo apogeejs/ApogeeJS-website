@@ -24,9 +24,9 @@ function onLibLoad() {
 //===================================
 
 /** This is a simple google chart component. */
-apogeeapp.app.GoogleChartComponent = function(workspaceUI,control,generator,componentJson) {
+apogeeapp.app.GoogleChartComponent = function(workspaceUI,control) {
     //extend edit component
-    apogeeapp.app.BasicControlComponent.call(this,workspaceUI,control,generator,componentJson);
+    apogeeapp.app.BasicControlComponent.call(this,workspaceUI,control,apogeeapp.app.GoogleChartComponent);
     
     //if not yet done, load the google chart library
     if(!googleLoadCalled) {
@@ -38,6 +38,11 @@ apogeeapp.app.GoogleChartComponent = function(workspaceUI,control,generator,comp
 
 apogeeapp.app.GoogleChartComponent.prototype = Object.create(apogeeapp.app.BasicControlComponent.prototype);
 apogeeapp.app.GoogleChartComponent.prototype.constructor = apogeeapp.app.GoogleChartComponent;
+
+//attach the standard static values to the static object (this can also be done manually)
+apogeeapp.app.BasicControlComponent.attachStandardStaticProperties(apogeeapp.app.GoogleChartComponent,
+        "GoogleChartComponent",
+        "apogeeapp.app.GoogleChartComponent");
 
 /** Implement the method to get the data display. JsDataDisplay is an 
  * easily configurable data display. */
@@ -110,18 +115,10 @@ apogeeapp.app.GoogleChartDisplay.prototype.createDataTable = function(data) {
 }
 
 //-----------------
-//create a component generator
-//-----------------
-apogeeapp.app.GoogleChartComponent.generator = apogeeapp.app.BasicControlComponent.createGenerator(
-        "GoogleChartComponent",
-        "apogeeapp.app.GoogleChartComponent",
-        apogeeapp.app.GoogleChartComponent);
-
-//-----------------
 //auto registration
 //-----------------
 if(registerComponent) {
-    registerComponent(apogeeapp.app.GoogleChartComponent.generator);
+    registerComponent(apogeeapp.app.GoogleChartComponent);
 }
 
 }
