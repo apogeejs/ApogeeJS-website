@@ -2151,7 +2151,7 @@
 					"state": 0,
 					"viewType": "Data"
 				},
-				"dataView": "JSON"
+				"dataView": "Colorized"
 			},
 			"outputStringsGrid": {
 				"type": "apogeeapp.app.GridTableComponent",
@@ -2182,7 +2182,7 @@
 					"state": 0,
 					"viewType": "Data"
 				},
-				"dataView": "JSON"
+				"dataView": "Colorized"
 			},
 			"inputStringsGrid": {
 				"type": "apogeeapp.app.GridTableComponent",
