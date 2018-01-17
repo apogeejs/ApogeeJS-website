@@ -1,41 +1,20 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Sample Apogee Task Web App</title>
+        <title>Sample Apogee Web App</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-            html {
-                position: absolute;
-                top: 10px;
-                left: 10px;
-                bottom: 10px;
-                right: 10px;
-                margin: 0px;
-                padding: 0px;
-            }
-            body {
-                position: relative;
-                top: 0px;
-                left: 0px;
-                width: 100%;
-                height: 100%;
-                margin: 0px;
-                padding: 0px;
-            }
-			#displayPanel {
+			.contentTest {
+				width: 500px;
+                height: 300px;
+				outline: solid 1px gray;
+				margin: 10px;
 				display: table;
-                margin: 0px;
-                
                 position: relative;
-                top: 0px;
-                left: 0px;
-                width: 100%;
-                height: 100%;
 			}
-     
+            
 		</style>
-        
         
         <script type="text/javascript" src="https://cdn.jsdelivr.net/ace/1.2.3/min/ace.js"></script>
         <script src="https://cdn.rawgit.com/jquery/esprima/2.7.2/esprima.js"></script>
@@ -66,7 +45,6 @@
         <script type="text/javascript" src="../../../apogee/data/FunctionTable.js"></script>
         <script type="text/javascript" src="../../../apogee/data/Folder.js"></script>
         <script type="text/javascript" src="../../../apogee/data/FolderFunction.js"></script>
-        <script type="text/javascript" src="../../../apogee/data/ErrorTable.js"></script>
         <script type="text/javascript" src="../../../apogee/actions/action.js"></script>
         <script type="text/javascript" src="../../../apogee/actions/compoundaction.js"></script>
         <script type="text/javascript" src="../../../apogee/actions/createmember.js"></script>
@@ -119,7 +97,6 @@
         <script type="text/javascript" src="../../../apogeeapp/app/components/FolderFunctionComponent.js"></script>
         <script type="text/javascript" src="../../../apogeeapp/app/components/BasicControlComponent.js"></script>
 		<script type="text/javascript" src="../../../apogeeapp/app/components/CustomControlComponent.js"></script>
-        <script type="text/javascript" src="../../../apogeeapp/app/components/ErrorTableComponent.js"></script>
         <script type="text/javascript" src="../../../apogeeapp/app/actions/errorhandling.js"></script>
         <script type="text/javascript" src="../../../apogeeapp/app/actions/createworkspace.js"></script>
         <script type="text/javascript" src="../../../apogeeapp/app/actions/updateworkspace.js"></script>
@@ -148,22 +125,20 @@
 		<script type="text/javascript" src="../../../apogeeapp/app/editors/HandsonGridEditor.js"></script>
 		<script type="text/javascript" src="../../../apogeeapp/app/editors/HandsonGridMode.js"></script>
         <script type="text/javascript" src="../../../apogeeapp/app/editors/ControlOutputMode.js"></script>
-        <script type="text/javascript" src="../../../apogeeapp/app/editors/ErrorDisplay.js"></script>
-		<script type="text/javascript" src="../../../apogeeapp/app/editors/ErrorMode.js"></script>
         <script type="text/javascript" src="../../../apogeeapp/app/dialogs/ConfigurableDialog.js"></script>
-        <script type="text/javascript" src="../../../apogeeapp/app/dialogs/TextIoDialog.js"></script>
+        <script type="text/javascript" src="../../../apogeeapp/app/dialogs/UpdateLinksDialog.js"></script>
         <script type="text/javascript" src="../../../apogeeapp/app/dialogs/SelectControlDialog.js"></script>
+        <script type="text/javascript" src="../../../apogeeapp/app/dialogs/propdialog.js"></script>
         
         <script type="text/javascript" src="../../../supplemental/cutNPasteCode/file_impl_cutnpaste.js"></script>
-
+        <script type="text/javascript" src="../../../supplemental/cutNPasteCode/PasteOpenDialog.js"></script>
+        <script type="text/javascript" src="../../../supplemental/cutNPasteCode/CutSaveDialog.js"></script>
         
         <script type="text/javascript" src="../../../supplemental/debugHook.js"></script>
         
-        <script type="text/javascript" src="../webApp/webAppAccess.js"></script>
-        <script type="text/javascript" src="taskWebApp.js"></script>
-        <link rel="stylesheet" type="text/css" href="taskWebApp.css">
+        <script type="text/javascript" src="webAppAccess.js"></script>
         
-        <!--<link rel="stylesheet" type="text/css" href="../../../apogeeapp/app/apogeeapp.css">-->
+        <link rel="stylesheet" type="text/css" href="../../../apogeeapp/app/apogeeapp.css">
 		<link rel="stylesheet" type="text/css" href="../../../apogeeapp/ui/jsonedit/jsonedit.css">
         <link rel="stylesheet" type="text/css" href="../../../apogeeapp/ui/window/WindowFrame.css">
         <link rel="stylesheet" type="text/css" href="../../../apogeeapp/ui/window/dialog.css">
@@ -176,22 +151,47 @@
         <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/handsontable/0.33.0/handsontable.full.min.css">
         
         <script>
-            var workspaceUrl = "editMetaFile.json";
-            
-            var INITIAL_PANEL_NAME = "Model.tasks.login.loginControl";
-            var CONTAINER_PANEL_ID = "displayPanel";
+            var workspaceUrl = "BasicExample.json";
             
             'use strict'
-            
 			function init() {
-                taskWebApp.initTaskApp(workspaceUrl,CONTAINER_PANEL_ID,INITIAL_PANEL_NAME);                      
+                //apogeeapp.ui.initResourcePath("../../resources");
+                
+                webAppAccess.initWebApp(workspaceUrl,onWorkspaceLoad)           
+            }
+              
+            function onWorkspaceLoad() {
+                //load the UI controls
+                addDisplay("Model.plainValue","plainValueCell",apogeeapp.app.JsonTableComponent.VIEW_DATA);
+                addDisplay("Model.derivedValue","derivedValueCell",apogeeapp.app.JsonTableComponent.VIEW_DATA);
             }
             
+            function addDisplay(memberName,parentElementId,optionalViewType) {
+                
+                var parentElement = document.getElementById(parentElementId);
+                if(!parentElement) {
+                    alert("DOM Element not found:" + parentElementId);
+                    return;
+                }
+
+                //show the display
+                var displayFrame = webAppAccess.getDisplayFrame(memberName,optionalViewType);
+                
+                //put the display element in the parent
+                var element = displayFrame.getElement();
+                parentElement.appendChild(element);
+                
+                //the display frame method "setIsShowing" must be called when
+                //the object is shown or hidden for proper operation
+                displayFrame.setIsShowing(true);
+            }
+              
         </script>
     </head>
-    <body onload="init()" onbeforeunload="return 'Are you sure you want to leave this page?'">
-        <div id="displayPanel">
-            <h3>Loading...</h3>
-        </div>
+    <body onload="init()" onbeforeunload="return '[add a dirty flag check]'">
+        <h1>Plain Value</h1>
+        <div class="contentTest" id="plainValueCell"></div>
+        <h1>Derived Value</h1>
+        <div class="contentTest" id="derivedValueCell"></div>
     </body>
 </html>
