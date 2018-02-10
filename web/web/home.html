@@ -23,6 +23,26 @@
                 border: #2d3ea1 1px solid;
                 width: 50%;
             }
+            .nodecoration:link {}
+            .nodecoration:visited {}
+            .nodecoration:hover {}
+            .nodecoration:active {}
+            .highlightBox {
+                margin-left: 20px;
+                margin-right: 20px;
+                margin-top: 10px;
+                margin-bottom: 10px;
+                padding: 10px;
+                border: 1px solid gray;
+                background-color: #ffffa0;
+            }
+            .openButton {
+                float: right;
+                margin: 20px;
+            }
+            .openButton {
+                height: 60px;
+            }
         </style>
     </head>
     <body>
@@ -35,14 +55,25 @@
         <a class="headerLink" href="/web/about.html">About</a>
         <hr class="headerBreak">
         <!-- end header -->
-        <h2>Apogee - A Spreadsheet-Inspired Programming Tool / "Data Processor"</h2>
-        
-        <p>Apogee is an easy-to-use, reactive, functional programming environment based on the idea of a spreadsheet.</p>
+
+        <a href="/apogee.html" class="openButtonLink"><img src="openWebApp.png" class="openButton"></a>
+        <h2>Apogee Programming Tool / "Data Processor"</h2>
+        <p>Apogee is an easy-to-use, reactive, Javascript programming environment based on the idea of a spreadsheet.</p>
         <p>It works well for <b>data manipulation</b>, <b>data analysis</b>, <b>algorithm prototyping</b> and <b>writing single-use code</b>.
             It can also be used for <b>general software development</b>.
         </p>
+        <div class="highlightBox">
+            Apogee is in early stages of development. Today, you should try it for:
+            <ul>
+                <li><b>Programmatically editing JSON files</b></li>
+                <li><b>Data Munging</b> - Converting the format of data, particularly in one-off use cases. It is especially good for working with data in JSON format, 
+                    including converting to or from Spreadsheet table format or plain text.</li>     
+            </ul>
+        </div>
+            
         
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/8uLW2eKX6kM" frameborder="0" allowfullscreen></iframe>
+        <!--<iframe width="560" height="315" src="https://www.youtube.com/embed/8uLW2eKX6kM" frameborder="0" allowfullscreen></iframe>-->
+        <a href="https://www.youtube.com/watch?v=_aBkp-kvc0c" target="_blank" class="no_decoration"><image src="introVideoScreenshot.png"/></a>
         
         <h2>Implementation</h2>
         <p>The Apogee web application runs completely in the browser and is written in javascript. The user scripting language
@@ -56,7 +87,7 @@
         
         <h2>Compatibility</h2>
         <ul>
-            <li>Desktop Chrome, Firefox and Edge browsers tested. Safari also supported.</li>
+            <li>Desktop Chrome, Firefox and Edge browsers tested. Safari also supported. It requires ES6.</li>
             <li>Internet Explorer not supported</li>
             <li>Desktop support only. Touch not supported.</li>
         </ul>
