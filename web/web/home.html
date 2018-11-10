@@ -37,12 +37,13 @@
             .nodecoration:active {}
             .highlightBox {
                 margin-left: 20px;
-                margin-right: 20px;
+                /*margin-right: 20px;*/
                 margin-top: 10px;
                 margin-bottom: 10px;
-                padding: 10px;
+                padding: 15px;
                 border: 1px solid gray;
                 background-color: #ffffa0;
+                display: table;
             }
             .openButton {
                 float: right;
@@ -57,7 +58,7 @@
         <!-- header -->
         <a class="headerLink" href="/web/home.html"><img class="headerLogo" src="/web/logo36.png"></a>
         <a class="headerLink" href="/web/home.html">Home</a>
-        <a class="headerLink" href="/web/gettingStarted.html">Getting Started</a>
+        <a class="headerLink" href="/web/gettingStarted/gettingStarted.html">Getting Started</a>
         <a class="headerLink" href="/web/reference/reference.html">Reference</a>
         <a class="headerLink" href="/web/downloads/downloads.html">Downloads/Links</a>
         <a class="headerLink" href="/web/about.html">About</a>
@@ -66,20 +67,20 @@
 
         <a href="/apogee.html" class="openButtonLink"><img src="openWebApp.png" class="openButton"></a>
         <h2>Apogee Programming Tool / "Data Processor"</h2>
-        <p>Apogee is an easy-to-use, reactive, Javascript programming environment based on the idea of a spreadsheet.</p>
+        <p>Apogee is an easy-to-use, reactive, Javascript programming environment based on the idea of a spreadsheet. Watch the video for an introduction.</p>
+        <a href="https://youtu.be/ieT8ejE9kto" target="_blank" class="no_decoration"><image src="/web/gettingStarted/quickstartThumbnail.png" width="400px"/></a>
+        <p>The above video also serves as the quickstart. For more help on using Apogee, go to <a href="/web/gettingStarted/gettingStarted.html">Getting Started</a>.</p> 
         <div class="highlightBox">
-            What should I do with Apogee?
+            <b>What should I do with Apogee?</b>
             <ul>
-                <li><b>Data Munging</b> - Manipulating data, converting data format, filtering data, editing data programmatically. 
+                <li><b>Data Wrangling/Data Munging</b> - Manipulating data, converting data format, filtering data, editing data programmatically. 
                     It is great for writing quick and dirty code you only plan on using once. It is especially good for working with JSON data, 
                     including converting to or from Spreadsheet table format or plain text.</li>
             </ul>
             In the future it should also be useful simple web services and applications, but it needs bit of work before it gets there...
         </div>
-            
         
-        <!--<iframe width="560" height="315" src="https://www.youtube.com/embed/8uLW2eKX6kM" frameborder="0" allowfullscreen></iframe>-->
-        <a href="https://www.youtube.com/watch?v=_aBkp-kvc0c" target="_blank" class="no_decoration"><image src="introVideoScreenshot.png"/></a>
+        
         
         <h2>Implementation</h2>
         <p>The Apogee web application runs completely in the browser and is written in javascript. The user scripting language
