@@ -95,6 +95,11 @@ return apogee.util.INVALID_VALUE;
                         </div>
                     </li>
                 </ol>
+                <p>The purpose of this feature is so you don't have to do null checking or the equivalent in your functions. This is especially handy when you have a long cascade
+                of tables based on a single value. Apogee does the check for you, and does not execute the code if it depends on a table with an INVALID VALUE.</p>
+                <p>This does not depend one whether the executed path will use the variable, only if it is present. What this means is you <em>can't</em> do an INVALID VALUE
+                check and make a decision based on that. That is a feature that should possibly added in a future version (along with a way of handling an error 
+                in parent table).</p>
             </li>
         </ol>
         

@@ -26,14 +26,28 @@
         <!-- end header -->
         <h1>Tutorial - Folders and Scope</h1>
         
-        <p>
-            content TBD!<br>
-            <a class="exampleLink" href="https://www.apogeejs.com/apogee.html?url=https://www.apogeejs.com/web/examples/FoldersAndScope.json">Folders and Scope</a>
-        </p>
+        <a href="https://youtu.be/ieT8ejE9kto" target="_blank" class="no_decoration"><image src="quickstartThumbnail.png" width="128" alt="Video not available"/></a>
+        
+        <p><a class="exampleLink" target="_blank" href="https://www.apogeejs.com/apogee.html?url=https://www.apogeejs.com/web/examples/FoldersAndScope.json">Folders and Scope Example Workspace</a></p>
+        
+        <p>The workspace linked above contains several data tables and folders. A folder can be created the same way you create a data table, except you select 
+            <em>Add Folder</em> instead of <em>Add Data Table</em>.</p>
+        <p>A folder behaves the way you think it would, basically added as a path prefix when accessing a child table. This workspace shows the general scope rules used in Apogee.</p>
+        <p>There are four folders in this example, the top level folder in the workspace, called <em>Model</em>, two child folders inside of <em>Model</em>, called <em>folder1</em> 
+            and <em>folder2</em>, and one folder inside of <em>folder1</em>, called <em>folder11</em>.</p>
+        <p>Each of these folders contains a table <em>x</em> which contains a string telling which folder it is in.</p>
+        <p>Each folder also contains some test tables, in which the formula simple returns a variable named <em>x</em>, possibly with a path prefix.</p>
+        <p>The following rule is used to locate a variable:</p>
+        <ul>
+            <li>When a variable is access from a formula of a given table, that variable (table) is looked for inside the folder of the table whose formula we are reading.</li>
+            <li>If the variable (table) is not found in the local folder, parent folders are checked for the variable, sequentially.</li>
+            <li>In order to access a table from a child folder, a prefix on the name must be used giving the folder path to the table.</li>
+        </ul>
+        <p>You can experiment renaming (or deleting) the table called <em>x</em> in a given folder and see who this effects the test tables.</p>
         
         Tutorial Links:<br>
-        <a class="tutorialNavLinks" href="definingFunctions.html">Previous: <em>Defining Functions</em></a><br>
         <a class="tutorialNavLinks" href="immutable.html">Next: <em>Immutable Values "Gotcha"</em></a><br>
+        <a class="tutorialNavLinks" href="definingFunctions.html">Previous: <em>Defining Functions</em></a><br>
         <a class="tutorialNavLinks" href="../gettingStarted.html">Back to <em>Getting Started</em></a>
            
     </body>
