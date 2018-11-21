@@ -57,7 +57,7 @@
         
         <h4>Basic Usage Example</h4>
         
-        <a>Basic Usage Sample Workspace</a>
+        <a class="exampleLink" target="_blank" href="https://www.apogeejs.com/apogee.html?url=https://www.apogeejs.com/web/examples/SimpleMessengerExample.json">Basic Usage Sample Workspace</a>
         <p>Here we show the basic usage of the messenger from a formula. This example contains three tables (and the notes table):</p>
         <ul>
             <li><b>valueToCopy</b> - This holds a simple manually defined value.</li>
@@ -69,19 +69,21 @@
         
         <h4>User Input Example</h4>
         
-        <a>User Input Sample Workspace</a>
-        <p>This example is one of the most common cases of using the messenger. It uses a control called a <em>Dymnamic Form Table</em>, which is basically a
+        <a class="exampleLink" target="_blank" href="https://www.apogeejs.com/apogee.html?url=https://www.apogeejs.com/web/examples/DataEntryMessengerExample.json">User Input Sample Workspace</a>
+        <p>This example is one of the most common cases of using the messenger. It uses a control called a <em>Dynamic Form Table</em>, which is basically a
             customizable form that acts as a dialog box. There are other customizable forms too, such as ones that hold a value just like a data table. These
             form tables are introduced elsewhere.</p>
         <p>From the <em>userInputForm</em>, view the code by selecting <em>code</em> from the <em>View Dropdown</em> in the top right corner. The code contains the layout
             of the form and, at the top, an <em>onSubmit</em> callback function. From within this function, the messenger is accessed. It is used to send the value of the form
             to the table <em>inputValue</em></p>
         <p>To see this work, just enter data into the form and press <em>OK</em>.</p>
-        <b>FIX THE WORKSPACE FOR THE NEW NAMES!</b>
+        <p>Incidently, the code that defines the form layout for the <em>userInputForm</em> references the table <em>inputValue</em>, which is the table we write to when we press <em>OK</em>. If
+            you update the data in the table <em>inputValue</em> manually, it will be reflected in the form. (But you might get an error. We didn't put much error checking in
+            the form code.</p>
         
         <h4>Iterative Calculation Example</h4>
         
-        <a>Iterative Calculation Example Workspace</a>
+        <a class="exampleLink" target="_blank" href="https://www.apogeejs.com/apogee.html?url=https://www.apogeejs.com/web/examples/IterativeMessengerExample.json">Iterative Calculation Example Workspace</a>
         <p>Generally in functional programming you must do recursive functions rather than iterative functions, which is OK. In Apogee, however, you can choose to do an 
             iterative calculation, using the messenger. Sometimes it is more natural to do this, such as if you are simulating a feedback control system.</p>
         <p>In this sample workspace, we calculate the factorial function iteratively. (Of course, this particular example is one that is very natural to do recursively,
@@ -99,8 +101,7 @@
         <p>You may notice the calculation is very slow, so that you can actually see the values changing. The Apogee calculation itself is not that slow,
             however, the update to the user interface is. There is time added to each iteration of the calculation, but the calculation itself for each 
             iteration is much faster. <b>THAT DELAY MIGHT NOT BE ALL UI BUT OTHER OVERHEAD WITH A CALCULATION. FIGURE IT OUT AND FIX TEXT!</b></p>
-        
-        <b>CREATE ALL THE WORKSPACES!</b>
+      
         
         Tutorial Links:<br>
         <a class="tutorialNavLinks" href="externalLibraries.html">Next: <em>External Libraries and Controls</em></a><br>
