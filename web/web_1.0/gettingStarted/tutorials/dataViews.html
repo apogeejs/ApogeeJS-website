@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tutorial - Data Views in a Data Table</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-114935409-1"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'UA-114935409-1');
+        </script>
+        <link rel="stylesheet" href="/web/base.css">
+        <link rel="stylesheet" href="tutorial.css">
+    </head>
+    <body>
+        <!-- header -->
+        <a class="headerLink" href="/web/home.html"><img class="headerLogo" src="/web/logo36.png"></a>
+        <a class="headerLink" href="/web/home.html">Home</a>
+        <a class="headerLink" href="/web/gettingStarted/gettingStarted.html">Getting Started</a>
+        <a class="headerLink" href="/web/reference/reference.html">Reference</a>
+        <a class="headerLink" href="/web/downloads/downloads.html">Downloads/Links</a>
+        <a class="headerLink" href="/web/about.html">About</a>
+        <hr class="headerBreak">
+        <!-- end header -->
+        <h1>Tutorial - Data Views in a Data Table</h1>
+        
+        <!--<a href="https://youtu.be/ieT8ejE9kto" target="_blank" class="no_decoration"><image src="quickstartThumbnail.png" width="128"/></a>-->
+        
+        <p><a class="exampleLink" target="_blank" href="https://www.apogeejs.com/apogee.html?url=https://www.apogeejs.com/web/examples/DataViewExmaple.json">Data View Example Workspace</a></p>
+        
+        <p>The workspace linked above contains four tables, with different data views. To set the data view, you select from the "Data View" dropdown on the 
+        properties dialog box, either when creating the table or when you edit the properties of the table.</p>
+        <p>The data view selected does not affect the value or internal mechanics of the table, other than how the value is presented.</p>
+        <ul>
+            <li><b>gridTable</b> - This is a data table with the view set to <em>Grid</em>. It shows the value of the table in a grid, like a spreadsheet. This makes it
+            easy to paste in value from a spreadsheet, or copy values to a spreadsheet.</li>
+            <li><b>jsonOfGridTable</b> - This is a data table with a standard JSON view (<em>colorized</em>). The formula gives it the same value as <em>gridTable</em>. 
+                This shows you the JSON structure of the value. Here it is an array of arrays.</li>
+            <li><b>textDataTable</b> - This is a data table with the view set to <em>Text Data</em>. This is good when you want to work with text and not format it like a JSON.</li>
+            <li><b>jsonOfGridTable</b> - This is a data table with a standard JSON view (<em>colorized</em>). The formula gives it the same value as <em>textDataTable</em>. 
+                This shows you the JSON structure of the value. Here it is the text value with start and end quotes, and proper escaping inside.</li>
+        </ul>
+        <p>You can also change the data view of any table by going to "Edit Properties" (click on the icon in the table upper left to get the menu) to see the different views
+            of the data for a given table.</p>
+        
+        Tutorial Links:<br>
+        <a class="tutorialNavLinks" href="definingFunctions.html">Next: <em>Defining Functions</em></a><br>
+        <a class="tutorialNavLinks" href="populateDataTable.html">Previous: <em>Populating a Data Table</em></a><br>
+        <a class="tutorialNavLinks" href="../gettingStarted.html">Back to <em>Getting Started</em></a>
+           
+    </body>
+</html>

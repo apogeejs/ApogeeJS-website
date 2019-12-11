@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tutorial - The Messenger, and Functional Programming</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-114935409-1"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'UA-114935409-1');
+        </script>
+        <link rel="stylesheet" href="/web/base.css">
+        <link rel="stylesheet" href="tutorial.css">
+    </head>
+    <body>
+        <!-- header -->
+        <a class="headerLink" href="/web/home.html"><img class="headerLogo" src="/web/logo36.png"></a>
+        <a class="headerLink" href="/web/home.html">Home</a>
+        <a class="headerLink" href="/web/gettingStarted/gettingStarted.html">Getting Started</a>
+        <a class="headerLink" href="/web/reference/reference.html">Reference</a>
+        <a class="headerLink" href="/web/downloads/downloads.html">Downloads/Links</a>
+        <a class="headerLink" href="/web/about.html">About</a>
+        <hr class="headerBreak">
+        <!-- end header -->
+        <h1>Tutorial - The Messenger, and Functional Programming</h1>
+
+        <p>In the tutorial <a class="tutorialNavLinks" href="immutable.html"><em>Immutable Values "Gotcha"</em></a>, we stated 
+            that the value of a table is immutable once it is set. Specifically, this means you can not modify the value of one table
+            from the formula of another. This is done so there are no side effects, so we can properly determine the order 
+            to calculate the tables.</p> 
+        <p>However, there actually <em>is</em> a way to modify the value of one table from the formula of another table. And, this actually 
+            respects the requirement of no side effects, so that we can determine the proper order of calculation of the tables.</p>
+        <p>Before we talk about this, we will talk about how you modify the value of a table from <em>outside</em> the formula of a 
+            table. You use the keyboard. If we could not edit the workspace, you couldn't do anything with the application.</p>
+
+        <h3>Editing the Workspace</h3>
+
+        <p>You edit a table by either entering a value explicitly or updating the formula. When you press <em>save</em>, Apogee 
+                recalculates the workspace. Given the fixed values or formulas for each table, it determines the proper order to 
+                evaluate all the formulas. It is during this calculation that there are no side effects.</p>
+        <p>If you then create another table or edit an existing table, once you press 
+            save the process will repeat. It is treated as an entirely new system and we recalculate the value of all the tables, 
+            again not allowing side effects during the calculation.</p>
+
+        <h3>The Messenger</h3>
+
+        <p>There is something called the <em>messenger</em>. You can access this from a formula for a table and use it to send a new 
+            value to another table. However, it doesn't change the value of the table right away. It waits until the current calculation 
+            is over. Then it sets the new value.</p>
+        <p>This is the same as if you decided to update the workspace yourself with a new value, just as we did in the above section 
+            <em>Editing the Workspace</em>. In fact, the two processes use the same code internally. As above, this does not violate the no side effect 
+            rule during a calculation.</p>
+        
+        <h3>Examples</h3>
+        
+        <h4>Basic Usage Example</h4>
+        
+        <a class="exampleLink" target="_blank" href="https://www.apogeejs.com/apogee.html?url=https://www.apogeejs.com/web/examples/SimpleMessengerExample.json">Basic Usage Sample Workspace</a>
+        <p>Here we show the basic usage of the messenger from a formula. This example contains three tables (and the notes table):</p>
+        <ul>
+            <li><b>valueToCopy</b> - This holds a simple manually defined value.</li>
+            <li><b>test</b> - This table has a formula that calls the messenger, and sends the value from <em>valueToCopy</em> to the table called
+                <em>remoteTable</em>. It also returns a dummy value for its own value.</li>
+            <li><b>remoteTable</b> - This table has no formula. It will receive its value from the messenger. To see this, update the value in the 
+                <em>valueToCopy</em> table. </li>
+        </ul>
+        
+        <h4>User Input Example</h4>
+        
+        <a class="exampleLink" target="_blank" href="https://www.apogeejs.com/apogee.html?url=https://www.apogeejs.com/web/examples/DataEntryMessengerExample.json">User Input Sample Workspace</a>
+        <p>This example is one of the most common cases of using the messenger. It uses a control called a <em>Dynamic Form Table</em>, which is basically a
+            customizable form that acts as a dialog box. There are other customizable forms too, such as ones that hold a value just like a data table. These
+            form tables are introduced elsewhere.</p>
+        <p>From the <em>userInputForm</em>, view the code by selecting <em>code</em> from the <em>View Dropdown</em> in the top right corner. The code contains the layout
+            of the form and, at the top, an <em>onSubmit</em> callback function. From within this function, the messenger is accessed. It is used to send the value of the form
+            to the table <em>inputValue</em></p>
+        <p>To see this work, just enter data into the form and press <em>OK</em>.</p>
+        <p>Incidently, the code that defines the form layout for the <em>userInputForm</em> references the table <em>inputValue</em>, which is the table we write to when we press <em>OK</em>. If
+            you update the data in the table <em>inputValue</em> manually, it will be reflected in the form. (But you might get an error. We didn't put much error checking in
+            the form code.</p>
+        
+        <h4>Iterative Calculation Example</h4>
+        
+        <a class="exampleLink" target="_blank" href="https://www.apogeejs.com/apogee.html?url=https://www.apogeejs.com/web/examples/IterativeMessengerExample.json">Iterative Calculation Example Workspace</a>
+        <p>Generally in functional programming you must do recursive functions rather than iterative functions, which is OK. In Apogee, however, you can choose to do an 
+            iterative calculation, using the messenger. Sometimes it is more natural to do this, such as if you are simulating a feedback control system.</p>
+        <p>In this sample workspace, we calculate the factorial function iteratively. (Of course, this particular example is one that is very natural to do recursively,
+            but we are just doing this an an example.)</p>
+        <p>This example contains four tables (and the notes table):</p>
+        <ul>
+            <li><b>desiredN</b> - This holds the value whose factorial you would like to calculate.</li>
+            <li><b>nMinus1Factorial</b> - This should be initialized to some known factorial, such as 0!,where n=1.</li>
+            <li><b>n</b> - This table should be initialized to the proper value of <em>n</em> associated with the <em>nMinus1Factorial</em> 
+                 table.</li>
+            <li><b>nFactorial</b> - This is the only table with a formula. It contains the simple formula <b>n! = n * (n-1)!</b> .
+                In addition, it also uses the messenger to iterate the values of the <b>nMinus1Factorial</b> and <b>n</b> tables.</li>
+        </ul>
+        <p>To try this out, update the value in the <em>desiredN</em> table. FYI, the largest factorial that can be calculated here is 171.</p>
+        <p>You may notice the calculation is very slow, so that you can actually see the values changing. The Apogee calculation itself is not that slow,
+            however, the there is a lot of overhead with each iteration of the calculation, mainly from the UI. So, for now at least, doing a lot of 
+            iterations has a high performance cost. The messenger works best for things like the previous example, user input.</p>
+      
+        
+        Tutorial Links:<br>
+        <a class="tutorialNavLinks" href="externalLibraries.html">Next: <em>External Libraries and Controls</em></a><br>
+        <a class="tutorialNavLinks" href="reusingCode.html">Previous: <em>Reusing Code</em></a><br>
+        <a class="tutorialNavLinks" href="../gettingStarted.html">Back to <em>Getting Started</em></a>
+           
+    </body>
+</html>

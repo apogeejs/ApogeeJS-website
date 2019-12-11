@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tutorial - Immutable Values "Gotcha"</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-114935409-1"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'UA-114935409-1');
+        </script>
+        <link rel="stylesheet" href="/web/base.css">
+        <link rel="stylesheet" href="tutorial.css">
+    </head>
+    <body>
+        <!-- header -->
+        <a class="headerLink" href="/web/home.html"><img class="headerLogo" src="/web/logo36.png"></a>
+        <a class="headerLink" href="/web/home.html">Home</a>
+        <a class="headerLink" href="/web/gettingStarted/gettingStarted.html">Getting Started</a>
+        <a class="headerLink" href="/web/reference/reference.html">Reference</a>
+        <a class="headerLink" href="/web/downloads/downloads.html">Downloads/Links</a>
+        <a class="headerLink" href="/web/about.html">About</a>
+        <hr class="headerBreak">
+        <!-- end header -->
+        <h1>Tutorial - Immutable Values "Gotcha"</h1>
+        
+        <p><a class="exampleLink" target="_blank" href="https://www.apogeejs.com/apogee.html?url=https://www.apogeejs.com/web/examples/ImmutableValues.json">"Immutable" Values Example Workspace</a></p>
+        
+        <p>In Apogee, the value of a table is immutable, meaning you can't modify it once it is set. Well, you can always edit the workspace, 
+            but you can not modify a remote table from within a calculation. This example project illustrates exactly what this means.</p>
+        <p>The example workspace contains three tables (and the notes table):</p>
+        <ul>
+            <li><b>coordinates</b> - This holds a manually defined array of coordinate pairs.</li>
+            <li><b>badModifiedCoordinate</b> - This table takes one of the coordinate pairs from the <em>coordinates</em> table and tries to modify it. This throws 
+                an error because modifying the coordinate pair as is done here would also modify the value of the <em>coordinates</em> table. The error message 
+                says "Cannot assign to read only property..." because the value of the <em>coordinates</em> table is read only once it has been set.</li>
+            <li><b>goodModifiedCoordinate</b> - This table does the same thing as the table <em>badModifiedCoordinate</em> except it first makes a copy of the 
+                data before it modifies it. In this case, modifying the copied data does not attempt to modify the <em>coordinates</em> table. The return value from 
+                this copy function is not read only, so we can change its value.</li>
+        </ul>
+        <p>The reason Apogee works this way is that once you make a change to the workspace, Apogee internally determines the order in which it must calculate the table values 
+            so that every table is calculated before it is used in the formula of another table. If one table could be modified during the calculation of another 
+            table, then the determination of the order to calculate tables would be impossible (or at least a lot harder).</p>
+        <p>Another way to say this rule is that there are "no side effects". We don't want the calculation of one table to affect the values of the other tables. This is a tenet 
+            of functional programming, and sure enough, Apogee is a form of functional programming, just like a spreadsheet.</p>
+        
+        Tutorial Links:<br>
+        <a class="tutorialNavLinks" href="debugging.html">Next: <em>Debugging</em></a><br>
+        <a class="tutorialNavLinks" href="foldersAndScope.html">Previous: <em>Folders and Scope</em></a><br>
+        <a class="tutorialNavLinks" href="../gettingStarted.html">Back to <em>Getting Started</em></a>
+           
+    </body>
+</html>

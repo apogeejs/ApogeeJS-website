@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tutorial - Different Ways to Populate a Data Table</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-114935409-1"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'UA-114935409-1');
+        </script>
+        <link rel="stylesheet" href="/web/base.css">
+        <link rel="stylesheet" href="tutorial.css">
+    </head>
+    <body>
+        <!-- header -->
+        <a class="headerLink" href="/web/home.html"><img class="headerLogo" src="/web/logo36.png"></a>
+        <a class="headerLink" href="/web/home.html">Home</a>
+        <a class="headerLink" href="/web/gettingStarted/gettingStarted.html">Getting Started</a>
+        <a class="headerLink" href="/web/reference/reference.html">Reference</a>
+        <a class="headerLink" href="/web/downloads/downloads.html">Downloads/Links</a>
+        <a class="headerLink" href="/web/about.html">About</a>
+        <hr class="headerBreak">
+        <!-- end header -->
+        <h1>Tutorial - Different Ways to Populate a Data Table</h1>
+        <!--<a href="https://youtu.be/ieT8ejE9kto" target="_blank" class="no_decoration"><image src="quickstartThumbnail.png" width="128"/></a>-->
+        <ol>
+            <li>Create a new workspace.
+            <li><a class="workspaceLink" target="_blank" href="https://www.apogeejs.com/apogee.html?url=https://www.apogeejs.com/web/examples/TableBasics_StaticTable.json">Add a data table with a <em>static value</em></a>
+                <ol>
+                    <li>Create a data table named "year". Use the default data view, colorized.</li>
+                    <li>Inside the data view of the table place the number "1980".</li>
+                </ol>
+            </li>
+            <li><a class="workspaceLink" target="_blank" href="https://www.apogeejs.com/apogee.html?url=https://www.apogeejs.com/web/examples/TableBasics_SimpleFormula.json">Add a data table with a <em>simple formula</em></a>
+                <ol>
+                    <li>Create a data table named "url".</li>
+                    <li>Inside the formula view, add a single line formula, creating a URL using a javascript string template literal and the value from our "year" table. Tables are treated as normal javascript variables.<br>
+                        <div class="codeBlock">
+<pre>
+return `https://www.apogeejs.com/web/examples/population/us${year}.json`;
+</pre>
+                        </div>
+                    </li>
+                </ol>
+            </li>
+            <li><a class="workspaceLink" target="_blank" href="https://www.apogeejs.com/apogee.html?url=https://www.apogeejs.com/web/examples/TableBasics_Completed.json">Add a data table with an <em>asynchronous</em> formula - web request</a><br>
+                <p>The formula for a data table must be synchronous. If you want to do an asynchronous action,
+                    like a web request, you can return a Promise object from the formula.</p>
+                <p>While the promise is pending, a yellow banner is displayed.When the promise resolves, on success the banner will clear. On failure
+                an error will be displayed.</p>
+                <ol>
+                    <li>Create a data table named "populationData".</li>
+                    <li>Inside the formula view, add a single line formula, requesting a json object from the given URL.
+                        <div class="codeBlock">
+<pre>
+return apogee.net.jsonRequest(url);
+</pre>
+                        </div>
+                        <p>This function is from the apogee library. It 
+                        is like the javascript "fetch" function except its promise returns either the body of the request, converted into a json object, or it throws an
+                        error.</p>
+                        
+                    </li>
+                </ol>
+            </li>
+            <li><a class="workspaceLink" target="_blank" href="https://www.apogeejs.com/apogee.html?url=https://www.apogeejs.com/web/examples/TableBasics_Error.json">Modify a data table so it <em>throws an error</em></a><br>
+                <p>In apogee, errors are displayed to the user as a red banner on the table. Additionally, any table that depends on that table will also show a red banner
+                with the message that a table on which it depends has an error.</p>
+                <ol>
+                    <li>On the "url" table, modify the formula so it just throws an error.
+                        <div class="codeBlock">
+<pre>
+throw new Error("This is an error we generated ourselves!");
+
+//return `https://www.apogeejs.com/web/examples/population/us${year}.json`;
+</pre>
+                        </div> 
+                    </li>
+                </ol>
+            </li>
+            <li><a class="workspaceLink" target="_blank" href="https://www.apogeejs.com/apogee.html?url=https://www.apogeejs.com/web/examples/TableBasics_InvalidValue.json">Modify a data table so it <em>returns INVALID VALUE</em></a><br>
+                <p>If you return apogee.util.INVALID_VALUE, the table displays a gray banner. Additionally, any table that depends on that table will also show a gray banner.
+                This can be done to prevent downstream tables from trying to calculate a value if one table does not have a valid value.</p>
+                <ol>
+                    <li>On the "url" table, modify the formula so it just returns apogee.util.INVALID_VALUE.
+                        <div class="codeBlock">
+<pre>
+return apogee.util.INVALID_VALUE;
+
+//return `https://www.apogeejs.com/web/examples/population/us${year}.json`;
+</pre>
+                        </div>
+                    </li>
+                </ol>
+                <p>The purpose of this feature is so you don't have to do null checking or the equivalent in your functions. This is especially handy when you have a long cascade
+                of tables based on a single value. Apogee does the check for you, and does not execute the code if it depends on a table with an INVALID VALUE.</p>
+                <p>This does not depend one whether the executed path will use the variable, only if it is present. What this means is you <em>can't</em> do an INVALID VALUE
+                check and make a decision based on that. That is a feature that should possibly added in a future version (along with a way of handling an error 
+                in parent table).</p>
+            </li>
+        </ol>
+        
+        Tutorial Links:<br>
+        <a class="tutorialNavLinks" href="dataViews.html">Next: <em>Data Views in a Data Table</em></a><br>
+        <a class="tutorialNavLinks" href="../gettingStarted.html">Back to <em>Getting Started</em></a>
+           
+    </body>
+</html>
