@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Apogee Home</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-114935409-1"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'UA-114935409-1');
+        </script>
+        <link rel="stylesheet" href="base.css">
+        <style>           
+            .compareTable {
+                margin: 0px;
+                paddingm: 0px;
+                /*border-collapse: collapse;*/
+                
+            }
+            .nodecoration:link {}
+            .nodecoration:visited {}
+            .nodecoration:hover {}
+            .nodecoration:active {}
+            .highlightBox {
+                margin-left: 20px;
+                /*margin-right: 20px;*/
+                margin-top: 10px;
+                margin-bottom: 10px;
+                margin-right: 20px;
+                padding: 15px;
+                border: 1px solid gray;
+                background-color: lightgray;
+                display: table;
+            }
+            .openButton {
+                float: right;
+                margin: 20px;
+                height: 60px;
+            }
+        </style>
+    </head>
+    <body><div class="displayBlock">
+        <!-- header -->
+        <div class="logoSection">
+            <a class="headerLink" href="/web/home.html"><img class="headerLogo" src="textlogo68.png"></a>
+        </div>
+        <div class="headerLinkSection">
+            <a class="headerLink" href="Old Version home.html">Home</a>
+            <a class="headerLink" href="https://apogeejs.gitbook.io/apogeejs/">Getting Started</a>
+            <a class="headerLink" href="reference/reference.html">Reference</a>
+        </div>
+        <hr class="headerBreak">
+        <!-- end header -->
+
+        <a href="/apogee.html" class="openButtonLink"><img src="openWebApp.png" class="openButton"></a>
+        <div class="contentBlock">
+            
+            <h2>Apogee Programming Tool / "Data Processor" - OLD VERSION REFERENCE</h2>
+            <p><b>NOTE</b> - this page references information on an old version of Apogee!!!</p>
+            <p>Apogee is an easy-to-use, reactive, Javascript programming environment based on the idea of a spreadsheet. Watch the video for an introduction.</p>
+            <div style="width: 50%; margin:auto;"><a href="https://www.youtube.com/watch?v=-yp7rXglEug" target="_blank" class="no_decoration"><image src="/web/gettingStarted/quickstartThumbnail2.png" style="width:100%"/></a></div>      
+
+            <h2>Implementation</h2>
+            <p>The Apogee web application runs completely in the browser and is written in javascript. The user scripting language
+                is also javascript. Alternative implementations in other languages like Python would also work well.
+            </p>
+            <p>Because Apogee is uses javascript, the data format for data structures is JSON. This is a convenient
+                because JSON is one of the most prevelent data formats, such as for metadata files and data transfer
+                in web services.    
+            </p>
+            <p>Apogee if open source and hosted at <a href="https://github.com/sutter-dave/ApogeeJS">https://github.com/sutter-dave/ApogeeJS</a>.
+
+            <h2>Compatibility</h2>
+            <ul>
+                <li>Desktop Chrome, Firefox and Edge browsers tested. Safari also supported. It requires ES6.</li>
+                <li>Internet Explorer not supported</li>
+                <li>Desktop support only. Touch not supported.</li>
+            </ul>
+            
+        </div>
+    </div></body>
+</html>
