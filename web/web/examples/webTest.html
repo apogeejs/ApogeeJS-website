@@ -5,26 +5,23 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         
-        <link rel="stylesheet" type="text/css" href="/lib/v0.9.0b/assets/cssBundle.css">
+        <link rel="stylesheet" type="text/css" href="/lib/v1.0.0/assets/cssBundle.css">
    
         
         <script type="module">
-            import apogeeAppLib from "/lib/v0.9.0b/assets/apogeeWebClientLib.es.js";
+            import {ApogeeWebView} from "/lib/v1.0.0/assets/apogeeWebClientLib.es.js";
         
+            //configure app and load the workspace
             let workspaceUrl = "webAppTestWorkspace.json";
+            let appView;
 
 			window.init = function() {
-                //start app
-                apogeeAppLib.initWebApp(workspaceUrl,onWorkspaceLoad,onWorkspaceLoadFailed);
-            }
+                appView = new ApogeeWebView();
 
-            function onWorkspaceLoad(openResult) {
-                apogeeAppLib.addDisplay("Model.a","aDisplayElement",true);
-                apogeeAppLib.addDisplay("Model.b","bDisplayElement",true);
-            }
+                appView.addDisplay("Main.a","aDisplayElement",true,"Data");
+                appView.addDisplay("Main.b","bDisplayElement",true,"Data");
 
-            function onWorkspaceLoadFailed(failResult) {
-                alert("Workspace open complete: " + JSON.stringify(failResult));
+                appView.openWorkspace(workspaceUrl);
             }
             
 		</script>
