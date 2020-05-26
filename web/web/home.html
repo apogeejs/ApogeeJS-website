@@ -15,7 +15,7 @@
         <style>           
             .compareTable {
                 margin: 0px;
-                paddingm: 0px;
+                padding: 0px;
                 /*border-collapse: collapse;*/
                 
             }
@@ -41,61 +41,69 @@
             }
         </style>
     </head>
-    <body><div class="displayBlock">
-        <!-- header -->
-        <div class="logoSection">
-            <a class="headerLink" href="/web/home.html"><img class="headerLogo" src="/web/textlogo68.png"></a>
-        </div>
-        <div class="headerLinkSection">
-            <a class="headerLink" href="/web/home.html">Home</a>
-            <a class="headerLink" href="https://apogeejs.gitbook.io/apogeejs/">Getting Started</a>
-            <a class="headerLink" href="/web/reference/reference.html">Reference</a>
-            <a class="headerLink" href="/web/downloads/downloads.html">Downloads/Links</a>
-            <a class="headerLink" href="/web/about.html">About</a>
-        </div>
-        <hr class="headerBreak">
-        <!-- end header -->
-
-        <a href="/apogee.html" class="openButtonLink"><img src="openWebApp.png" class="openButton"></a>
-        <div class="contentBlock">
-            
-            <h2>Apogee Programming Tool / "Data Processor"</h2>
-            <p>Apogee is an easy-to-use, reactive, Javascript programming environment based on the idea of a spreadsheet. Watch the video for an introduction.</p>
-            <div style="width: 50%; margin:auto;"><a href="https://www.youtube.com/watch?v=-yp7rXglEug" target="_blank" class="no_decoration"><image src="/web/gettingStarted/quickstartThumbnail2.png" style="width:100%"/></a></div>      
-            <p>The above video also serves as the quickstart. For more help on using Apogee, go to <a href="/web/gettingStarted/gettingStarted.html">Getting Started</a>.</p> 
-            <div class="highlightBox">
-                <b>What should I do with Apogee now?</b>
-                <ul>
-                    <li><b>Data Wrangling/Data Munging</b> - Manipulating data, converting data format, filtering data, editing data programmatically. 
-                        It is great for writing quick and dirty code you only plan on using once. It is especially good for working with JSON data, 
-                        including converting to or from Spreadsheet table format or plain text.</li>
-                </ul>
+    <body>
+        <div class="displayBlock">
+            <!-- header -->
+            <div class="logoSection">
+                <a class="headerLink" href="home.html"><img class="headerLogo" src="resources/textlogo68.png"></a>
             </div>
-            <p>In the future Apogee will also be able to make web services and client applications, but it needs bit of work before it gets there. The following links give more on this.</p>
-            <ul>
-                <li><a href="" onclick="alert('Web client documentation not currently available');">Web Client Applications</a></li>
-                <li><a href="" onclick="alert('Web service documentation not currently available');">Web Services</a></li>
-            </ul>
+            <div class="headerLinkSection">
+                <a class="headerLink" href="home.html">Home</a>
+                <a class="headerLink" href="gettingStarted.html">Getting Started</a>
+                <a class="headerLink" href="reference.html">Reference</a>
+                <a class="headerLink" href="downloads.html">Downloads/Links</a>
+                <a class="headerLink" href="about.html">About</a>
+            </div>
+            <hr class="headerBreak">
+            <!-- end header -->
 
+            <a href="apogee.html" class="openButtonLink"><img src="resources/openWebApp.png" class="openButton"></a>
+            <div class="contentBlock">
+                
+                <h2>Apogee - an <em>Easy Code</em> Environment</h2>
+                <p>Apogee is an easy-to-use javascript programming environment that allows you to do <em>iterative</em> programming. It's main motivation comes
+                    from the spreadsheet, and it also shares the literate programming interface of a Jupyter notebook. It is intended to be used as a general 
+                    programming tool.</p>
+                <p> Watch the video below for an introduction or <a href="/web/apogee.html?url=/web/examples/diveInWorkspace.json" target="_blank">DIVE IN AND TRY IT ONLINE NOW!</a></p>
+                <div style="width: 50%; margin:auto;"><a href="" onclick="alert('Introduction video not currently available');" targetXXX="_blank" class="no_decoration"><image src="gettingStarted/quickstartThumbnail2.png" style="width:100%"/></a></div>      
+                <p>For more help on using Apogee, go to <a href="gettingStarted.html">Getting Started</a>.</p> 
+                <div class="highlightBox">
+                    <b>What can I do with Apogee?</b>
+                    <ul>
+                        <li><b>Data Wrangling/Data Munging</b> - Quick and dirty data manipulation.</li>
+                        <li><b>Analysis/Reporting</b> - Use it like a notebook for analysis and reports.</li>
+                        <li><b>Web Client Applictions</b> - Apogee can be used to write application code for single page web applications. Learn more:
+                            <a href="" onclick="alert('Web client documentation not currently available');">Web Client Applications</a>.
+                        </li>
+                        <li><b>Web Services</b> - Apogee can also be used to code web services. Learn more:
+                            <a href="" onclick="alert('Web service documentation not currently available');">Web Services</a>.
+                        </li>
 
+                    </ul>
+                </div>
 
-            <h2>Implementation</h2>
-            <p>The Apogee web application runs completely in the browser and is written in javascript. The user scripting language
-                is also javascript. Alternative implementations in other languages like Python would also work well.
-            </p>
-            <p>Because Apogee is uses javascript, the data format for data structures is JSON. This is a convenient
-                because JSON is one of the most prevelent data formats, such as for metadata files and data transfer
-                in web services.    
-            </p>
-            <p>Apogee if open source and hosted at <a href="https://github.com/sutter-dave/ApogeeJS">https://github.com/sutter-dave/ApogeeJS</a>.
+                <h2>Implementation</h2>
+                <p>The Apogee web application runs completely in the browser and is written in javascript. The user scripting language
+                    is also javascript. Alternative implementations in other languages like Python would also work well.
+                </p>
+                <p>Because Apogee is uses javascript, the main data format for data structures is JSON. This is a convenient
+                    because JSON is one of the most prevelent data formats, such as for metadata files and data transfer
+                    in web services.    
+                </p>
+                <p>An Electron desktop version of Apogee and the Apogee web server runtime is available from NPM. For more information on these
+                    see the assoicated links above.</p>
+                <p>Apogee if open source and hosted at <a href="https://github.com/sutter-dave/ApogeeJS">https://github.com/sutter-dave/ApogeeJS</a>.
 
-            <h2>Compatibility</h2>
-            <ul>
-                <li>Desktop Chrome, Firefox and Edge browsers tested. Safari also supported. It requires ES6.</li>
-                <li>Internet Explorer not supported</li>
-                <li>Desktop support only. Touch not supported.</li>
-            </ul>
-            
+                <h2>Compatibility</h2>
+                <em>THIS NEEDS TO BE UPDATED!</em>
+                <ul>
+                    <li>Desktop Chrome, Firefox and new (Chromium based) Edge browsers tested. Safari also supported. ES6 is required and support for dynamic importing of ES6
+                        is recommended.</li>
+                    <li>Internet Explorer not supported.</li>
+                    <li>Desktop/mouse support only. Mobile/touch not currently supported.</li>
+                </ul>
+                
+            </div>
         </div>
-    </div></body>
+    </body>
 </html>
