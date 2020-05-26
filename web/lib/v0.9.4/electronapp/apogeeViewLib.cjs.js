@@ -757,22 +757,26 @@ function addComponent(appView,app,componentClass,optionalInitialProperties,optio
             let parentComponentView;
             if(componentViewClass.hasChildEntry) {
                 let parentComponentId = modelManager.getComponentIdByMemberId(parentMemberId);
-                parentComponentView = modelView.getComponentViewByComponentId(parentComponentId);
-                additionalCommandInfo = getAdditionalCommands(parentComponentView,userInputProperties.name);
+                if(parentComponentId) {
+                    parentComponentView = modelView.getComponentViewByComponentId(parentComponentId);
+                    if(!parentComponentView) throw new Error("Parent component not found!");
 
-                //added the editor setup command
-                if(additionalCommandInfo.editorSetupCommand) commands.push(additionalCommandInfo.editorSetupCommand);
+                    additionalCommandInfo = getAdditionalCommands(parentComponentView,userInputProperties.name);
 
-                //add any delete commands
-                if(additionalCommandInfo.deletedComponentCommands){
-                    //make sure the user wants to proceed
-                    let doDelete = confirm("Are you sure you want to delete these apogee nodes: " + additionalCommandInfo.deletedComponentShortNames);
-                    
-                    //return if user rejects
-                    if(!doDelete) return;
+                    //added the editor setup command
+                    if(additionalCommandInfo.editorSetupCommand) commands.push(additionalCommandInfo.editorSetupCommand);
 
-                    commands.push(...additionalCommandInfo.deletedComponentCommands);
-                } 
+                    //add any delete commands
+                    if(additionalCommandInfo.deletedComponentCommands){
+                        //make sure the user wants to proceed
+                        let doDelete = confirm("Are you sure you want to delete these apogee nodes: " + additionalCommandInfo.deletedComponentShortNames);
+                        
+                        //return if user rejects
+                        if(!doDelete) return;
+
+                        commands.push(...additionalCommandInfo.deletedComponentCommands);
+                    } 
+                }
             }
 
             //store create command
@@ -801,7 +805,7 @@ function addComponent(appView,app,componentClass,optionalInitialProperties,optio
             app.executeCommand(commandData);
 
             //give focus back to editor
-            if(componentViewClass.hasChildEntry) {
+            if(parentComponentView) {
                 parentComponentView.giveEditorFocusIfShowing();
             }
 
@@ -839,8 +843,8 @@ function addAdditionalComponent(appView,app,optionalInitialProperties,optionalBa
     showSelectComponentDialog(componentInfoList,onSelect);
 }
 
+/** This is to get an commands needed to add the a child node onto a parent page. */
 function getAdditionalCommands(parentComponentView,childName) {
-
     //check selection
     let useParentSelection = getUseParentSelection(parentComponentView);
     
@@ -2121,7 +2125,7 @@ class ApogeeView {
         if((component.getId() == this.tabFrame.getActiveTab())) {
             //this is pretty messy too... 
             let model = this.workspaceView.getModelView().getModelManager().getModel();
-            if((component.isDisplayNameUpdated())&&(component.getMember().isFullNameUpdated(model))) {
+            if((component.isDisplayNameUpdated())||(component.getMember().isFullNameUpdated(model))) {
                 let tab = this.tabFrame.getTab(component.getId());
                 this.onTabShown(tab);
             }
@@ -19381,7 +19385,7 @@ class LiteratePageComponentDisplay {
         }
     }
 
-    /** This will move the selection to the end of the document. */
+    /** This will move the selection to the start of the document. */
     selectStartOfDocument() {
         let state = this.componentView.getEditorData();
         let $startPos = state.doc.resolve(0);
@@ -19531,8 +19535,8 @@ class LiteratePageComponentDisplay {
         // this.editorView.updateState(editorData);
         this.initEditor();
 
-        //set the selection to the end of the view
-        this.selectEndOfDocument();
+        //set the selection to the start of the view
+        this.selectStartOfDocument();
     }
 
     initComponentToolbar() {

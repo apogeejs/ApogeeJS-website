@@ -8200,7 +8200,7 @@ class ModelManager extends FieldObject {
 
 //this is the json for an empty model
 ModelManager.EMPTY_MODEL_COMPONENT_JSON = {
-    "Main": {
+    "main": {
         "type":"apogeeapp.PageComponent"
     }
 };
