@@ -50,4 +50,11 @@ a {
     border-style: solid;
     color: lightgray;
 }
+.headerVersion {
+    color: red;
+    font-weight: bold;
+    font-size: 18px;
+    margin-right: 20px;
+    margin-left: 20px;
+}
 
