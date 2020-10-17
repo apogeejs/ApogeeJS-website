@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Apogee File Version Converter</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-114935409-1"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'UA-114935409-1');
+        </script>
+        <link rel="stylesheet" href="/web/base.css">
+        <style>
+            textarea.workspaceText {
+                outline: black 1px solid;
+                font-family: monospace;
+                width: 600px;
+                margin: 10px;
+            }
+        </style>
+        <script>
+            function convertTo_0p2_File() {
+                var inputTextArea = document.getElementById("inputText");
+                var inputString = inputTextArea.value;
+                
+                var temp = inputString.replace(/apogee.core/g,"apogee");
+                temp = temp.replace(/apogee.app.visiui/g,"apogeeapp.app");
+                temp = temp.replace(/apogee.visiui/g,"apogeeapp.ui");
+                var outputString = temp.replace(/"version":0.1/g,'"version":0.2');
+                
+                var outputTextArea = document.getElementById("outputText");
+                outputTextArea.value = outputString;
+            }
+        </script>
+    </head>
+    <body><div class="displayBlock">
+        <!-- header -->
+        <div class="logoSection">
+            <a class="headerLink" href="/web/home.html"><img class="headerLogo" src="/web/textlogo68.png"></a>
+        </div>
+        <div class="headerLinkSection">
+            <a class="headerLink" href="/web/home.html">Home</a>
+            <a class="headerLink" href="https://apogeejs.gitbook.io/apogeejs/">Getting Started</a>
+            <a class="headerLink" href="/web/reference/reference.html">Reference</a>
+            <a class="headerLink" href="/web/downloads/downloads.html">Downloads/Links</a>
+            <a class="headerLink" href="/web/about.html">About</a>
+        </div>
+        <hr class="headerBreak">
+        <!-- end header -->
+        <div class="contentBlock">
+            
+            <h1>Workspace File Version Converter</h1>
+            <p>This page will convert the file format for a Apogee workspace file. Scroll down to the
+            appropriate version and enter the workspace text. The submit button for that entry will
+            convert to the next file version. Repeat until you reach the desired file version.</p> 
+            <div>
+
+                <h2>Workspace Format Version 0.2</h2>
+                <p>Used in Apogee version 0.3.0 and above (current)</p>
+                <textarea class="workspaceText" id="outputText" rows="15"></textarea>
+                <h2>Workspace Format Version 0.1</h2>
+                <p>Used in Apogee version 0.0.1 to 0.2.0</p>
+                <input type="Submit" value="Convert 0.1 to 0.2" onclick="convertTo_0p2_File()"><br>
+                <textarea class="workspaceText" id="inputText" rows="15"></textarea>
+            </div>
+            
+        </div>
+    </div></body>
+</html>

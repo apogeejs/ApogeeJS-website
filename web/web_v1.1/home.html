@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Apogee Home</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="stylesheet" href="base.css">
+        <style>           
+            .compareTable {
+                margin: 0px;
+                padding: 0px;
+                /*border-collapse: collapse;*/
+                
+            }
+            .nodecoration:link {}
+            .nodecoration:visited {}
+            .nodecoration:hover {}
+            .nodecoration:active {}
+            .highlightBox {
+                margin-left: 20px;
+                /*margin-right: 20px;*/
+                margin-top: 10px;
+                margin-bottom: 10px;
+                margin-right: 20px;
+                padding: 15px;
+                border: 1px solid #2d3ea1;
+                background-color: rgb(220,220,240);
+                display: table;
+            }
+            .openButton {
+                float: right;
+                margin: 20px;
+                height: 60px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="displayBlock">
+            <!-- header -->
+            <div class="logoSection">
+                <a class="headerLink" href="home.html"><img class="headerLogo" src="resources/textlogo68.png"></a>
+            </div>
+            <div class="headerLinkSection">
+                <a class="headerLink" href="home.html">Home</a>
+                <a class="headerLink" href="gettingStarted.html">Getting Started</a>
+                <a class="headerLink" href="reference.html">Reference</a>
+                <a class="headerLink" href="downloads.html">Downloads/Links</a>
+                <a class="headerLink" href="about.html">About</a>
+            </div>
+            <hr class="headerBreak">
+            <div>
+                <span class="headerVersion">OLD APOGEE VERSION: v1.1</span><a href="/web/home.html">Current Version</a>
+            </div>
+            <hr class="headerBreak">
+            <!-- end header -->
+
+            <a href="apogee.html" class="openButtonLink"><img src="resources/openWebApp.png" class="openButton"></a>
+            <div class="contentBlock">
+                
+                <h2>Apogee - an <em>Easy Code</em> Environment</h2>
+                <p>Apogee is an easy-to-use javascript programming environment that allows you to do <em>iterative</em> programming. It's main motivation comes
+                    from the spreadsheet, and it also shares the literate programming interface of a Jupyter notebook. It is intended to be used as a general 
+                    programming tool.</p>
+                <p> Watch the video below for an introduction or <a href="apogee.html?url=/web_v1.1/examples/diveInWorkspace.json" target="_blank"><b>DIVE IN AND TRY IT ONLINE NOW!</b></a></p>
+                <div style="width: 33%; margin:auto;"><a href="https://youtu.be/BPKn31QH3EE" target="_blank" class="no_decoration"><image src="gettingStarted/apogeeIntroVideoThumb.png" style="width:100%"/></a></div>      
+                <p><b>Highlighted Example Workspace: <a target="_blank" href="apogee.html?url=/web_v1.1/examples/covidWorkspace.json">COVID Data Example</a></b></p>
+                <!--<p>For more help on using Apogee, go to <a href="gettingStarted.html">Getting Started</a>.</p> -->
+                <div class="highlightBox">
+                    <b>What can I do with Apogee?</b>
+                    <ul>
+                        <li><b>Data Wrangling/Data Munging</b> - Quick and dirty data manipulation.</li>
+                        <li><b>Analysis/Reporting</b> - Use it like a notebook for analysis and reports.</li>
+                        <li><b>Web Services</b> - Apogee can also be used to code web services. Learn more:
+                            <a href="/downloads/ApogeeWebServer_v1.1.pdf">Web Services</a>.
+                        </li>
+                        <li><b>Web Client Applictions</b> - Apogee can be used to write application code for single page web applications. Learn more:
+                            <a href="/downloads/ApogeeClientWebApp_v1.1.pdf">Web Client Applications</a>.
+                        </li>
+                    </ul>
+                </div>
+
+                <h2>Implementation</h2>
+                <p>The Apogee web application runs completely in the browser and is written in javascript. The user scripting language
+                    is also javascript. Alternative implementations in other languages like Python would also work well.
+                </p>
+                <p>Because Apogee is uses javascript, the main data format for data structures is JSON. This is a convenient
+                    because JSON is one of the most prevelent data formats, such as for metadata files and data transfer
+                    in web services.    
+                </p>
+                <p>An Electron desktop version of Apogee and the Apogee web server runtime is available from NPM. For more information on these
+                    see the assoicated links above.</p>
+                <p>Apogee is open source and hosted at <a href="https://github.com/sutter-dave/ApogeeJS">https://github.com/sutter-dave/ApogeeJS</a>.
+
+                <h2>Compatibility</h2>
+                <em>THIS NEEDS TO BE UPDATED!</em>
+                <ul>
+                    <li>Desktop Chrome, Firefox and new (Chromium based) Edge browsers tested. Safari also supported. ES6 is required and support for dynamic importing of ES6
+                        is recommended.</li>
+                    <li>Internet Explorer not supported.</li>
+                    <li>Desktop/mouse support only. Mobile/touch not currently supported.</li>
+                </ul>
+                
+            </div>
+        </div>
+    </body>
+</html>
