@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Apogee Home</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="stylesheet" href="base.css">
+        <style>   
+            body {
+                position: relative;
+            }        
+            .compareTable {
+                margin: 0px;
+                padding: 0px;
+                /*border-collapse: collapse;*/
+                
+            }
+            .nodecoration:link {}
+            .nodecoration:visited {}
+            .nodecoration:hover {}
+            .nodecoration:active {}
+            .highlightBox {
+                margin-left: 25px;
+                margin-top: 10px;
+                margin-bottom: 10px;
+                margin-right: 25px;
+                padding: 15px;
+                border: 1px solid #2d3ea1;
+                background-color: rgb(220,220,240);
+            }
+            .openButton {
+                float: right;
+                margin: 20px;
+                height: 60px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="displayBlock">
+            <!-- header -->
+            <div class="logoSection">
+                <a class="headerLink" href="home.html"><img class="headerLogo" src="resources/textlogo68.png"></a>
+            </div>
+            <div class="headerLinkSection">
+                <a class="headerLink" href="home.html">Home</a>
+                <a class="headerLink" href="gettingStarted.html">Getting Started</a>
+                <a class="headerLink" href="reference.html">Reference</a>
+                <a class="headerLink" href="downloads.html">Downloads/Links</a>
+                <a class="headerLink" href="about.html">About</a>
+            </div>
+            <hr class="headerBreak">
+            <!-- end header -->
+
+            <a href="apogee.html" class="openButtonLink"><img src="resources/openWebApp.png" class="openButton"></a>
+            <div class="contentBlock">
+                
+                <h2>Apogee - A Generalized Spreadsheet</h2>
+                <p>It looks like a Jupyter notebook but it works sort of like a spreadsheet. Whereas a spreadsheet is an easy <em>calculation</em> tool, 
+                    this is more of an easy <em>computation</em> tool, with all the power of a programming language, in this case Javascript.
+                </p>
+                
+                <p>Open this link to <span style="font-size:larger; font-weight:bold; padding:5px;">
+                    <a href="apogee.html?url=/web/examples/diveInWorkspace.json" target="_blank">DIVE IN AND TRY IT ONLINE NOW!</a></span>
+                    This is a live workspace you can edit.
+                </p>
+
+                <div class="highlightBox">
+                    <b>What do I do with Apogee?</b>
+                    <ul>
+                        <li>Quick and dirty calculations/computations, particularly when working with JSON or other data</li>
+                        <li>One-off code, like processing input files</li>
+                        <li>Converting data formats</li>
+                        <li>Prototyping code</li>
+                        <li>Testing and debugging of APIs</li>
+                        <li>Hacking to learn APIs and libraries</li>
+                        <li>jsFiddle for data</li>
+                        <li>and more! Advanced uses include web services and single page web applications.</li>
+                    </ul>
+                </div>
+
+                <p> For more information, go to the <a href="gettingStarted.html" Starget="_blank"><b>Getting Started</b></a> page.</p>
+
+                <h2>Implementation</h2>
+                <p>The Apogee web application runs completely in the browser and is written in javascript. The user scripting language
+                    is also javascript. Alternative implementations in other languages like Python would also work well.
+                </p>
+                <p>Because Apogee is uses javascript, the main data format for data structures is JSON. This is a convenient
+                    because JSON is one of the most prevelent data formats, such as for metadata files and data transfer
+                    in web services.    
+                </p>
+                <p>An Electron desktop version of Apogee and the Apogee web server runtime is available. For more information on these
+                    see the associated links in the reference section.</p>
+                <p>Apogee is open source and hosted at <a href="https://github.com/sutter-dave/ApogeeJS">https://github.com/sutter-dave/ApogeeJS</a>.
+
+                <h2>Compatibility</h2>
+                <ul>
+                    <li>Desktop Chrome, Firefox, Chromium-based Edge and Safari supported. ES6 is required, including support for dynamic 
+                        importing of ES modules.</li>
+                    <li>Internet Explorer not supported.</li>
+                    <li>Desktop/mouse support only. The application is not optimzed for touch and small screens.</li>
+                </ul>
+                
+            </div>
+        </div>
+    </body>
+</html>
